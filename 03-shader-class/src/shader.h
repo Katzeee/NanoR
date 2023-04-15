@@ -9,7 +9,7 @@ namespace xac {
 class Shader {
 public:
   Shader() = delete;
-  Shader(const char *vs_path, const char *ps_path);
+  Shader(const char *vs_path, const char *fs_path);
   ~Shader();
   void Use() const;
   void SetBool(const std::string &name, bool value) const;
@@ -34,6 +34,7 @@ auto Shader::ReadFromFile(const char *file_path) -> std::string {
     fs.close();
   } catch (std::exception &e) {
     // throw e;
+    std::cout << "ERROR::SHADER::READ_FAILED\n" << file_path << std::endl;
     exit(3);
   }
   return ss.str();
@@ -51,23 +52,23 @@ void Shader::CompileShader(unsigned int shader_id) {
   };
 }
 
-Shader::Shader(const char *vs_path, const char *ps_path) {
+Shader::Shader(const char *vs_path, const char *fs_path) {
   std::string vs_src_str(ReadFromFile(vs_path));
-  std::string ps_src_str(ReadFromFile(ps_path));
+  std::string fs_src_str(ReadFromFile(fs_path));
   const char *vs_src = vs_src_str.c_str();
-  const char *ps_src = ps_src_str.c_str();
+  const char *fs_src = fs_src_str.c_str();
 
   unsigned int vs = glCreateShader(GL_VERTEX_SHADER);
-  unsigned int ps = glCreateShader(GL_FRAGMENT_SHADER);
+  unsigned int fs = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(vs, 1, &vs_src, nullptr);
-  glShaderSource(ps, 1, &ps_src, nullptr);
+  glShaderSource(fs, 1, &fs_src, nullptr);
 
   CompileShader(vs);
-  CompileShader(ps);
+  CompileShader(fs);
 
   id_ = glCreateProgram();
   glAttachShader(id_, vs);
-  glAttachShader(id_, ps);
+  glAttachShader(id_, fs);
   glLinkProgram(id_);
 
   int success;
@@ -80,7 +81,7 @@ Shader::Shader(const char *vs_path, const char *ps_path) {
   }
 
   glDeleteShader(vs);
-  glDeleteShader(ps);
+  glDeleteShader(fs);
 }
 
 void Shader::Use() const { glUseProgram(id_); }

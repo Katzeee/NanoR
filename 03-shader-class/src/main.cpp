@@ -64,8 +64,8 @@ auto main() -> int {
                GL_STATIC_DRAW);
 
   // setup shaders
-  xac::Shader shader("../03-shader-class/shader/vs.glsl",
-                     "../03-shader-class/shader/ps.glsl");
+  xac::Shader shader("../03-shader-class/shader/vert.vs",
+                     "../03-shader-class/shader/frag.fs");
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
