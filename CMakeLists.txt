@@ -16,14 +16,16 @@ if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE Release)
 endif()
 
-set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+# set(EXECUTABLE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(glfw3 REQUIRED)
 find_package(glad REQUIRED)
 
-add_subdirectory(create-window)
-add_subdirectory(simple-triangle)
+add_subdirectory(01-create-window)
+add_subdirectory(02-simple-triangle)
+add_subdirectory(03-shader-class)
 
 
 
