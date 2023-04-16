@@ -22,10 +22,12 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(glfw3 REQUIRED)
 find_package(glad REQUIRED)
+find_package(glm REQUIRED)
 
 add_subdirectory(01-create-window)
 add_subdirectory(02-simple-triangle)
 add_subdirectory(03-shader-class)
+add_subdirectory(04-texture)
 
 
 
