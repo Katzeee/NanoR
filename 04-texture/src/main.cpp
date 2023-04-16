@@ -78,7 +78,7 @@ auto main() -> int {
 
   // setup texture
   int width, height, nr_channels;
-  unsigned char *tex_data = stbi_load("../04-texture/resources/container.jpg",
+  unsigned char *tex_data = stbi_load("../resources/textures/container.jpg",
                                       &width, &height, &nr_channels, 0);
   unsigned int box_tex;
   glGenTextures(1, &box_tex);
@@ -94,7 +94,7 @@ auto main() -> int {
   stbi_image_free(tex_data);
 
   stbi_set_flip_vertically_on_load(true);
-  tex_data = stbi_load("../04-texture/resources/awesomeface.png", &width,
+  tex_data = stbi_load("../resources/textures/awesomeface.png", &width,
                        &height, &nr_channels, 0);
   unsigned int face_tex;
   glGenTextures(1, &face_tex);

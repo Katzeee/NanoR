@@ -28,6 +28,7 @@ add_subdirectory(01-create-window)
 add_subdirectory(02-simple-triangle)
 add_subdirectory(03-shader-class)
 add_subdirectory(04-texture)
+add_subdirectory(05-simple-cube)
 
 
 
