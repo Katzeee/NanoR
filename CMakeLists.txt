@@ -30,6 +30,7 @@ add_subdirectory(03-shader-class)
 add_subdirectory(04-texture)
 add_subdirectory(05-simple-cube)
 add_subdirectory(06-camera)
+add_subdirectory(07-lighting)
 
 
 

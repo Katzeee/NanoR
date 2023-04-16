@@ -32,6 +32,7 @@ void CursorCB(GLFWwindow *window, double x_pos, double y_pos) {
     first = false;
     last_x_pos = static_cast<float>(x_pos);
     last_y_pos = static_cast<float>(y_pos);
+    return;
   }
   float x_offset = x_pos - last_x_pos;
   float y_offset = y_pos - last_y_pos;
@@ -81,6 +82,12 @@ void ProcessInput(GLFWwindow *window) {
     main_cam.PositionForward(glm::cross(main_cam.GetFornt(), main_cam.GetUp()) *
                              speed);
   }
+  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    main_cam.PositionForward(main_cam.GetUp() * speed);
+  }
+  if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+    main_cam.PositionForward(main_cam.GetUp() * -speed);
+  }
 }
 
 auto main() -> int {
@@ -107,50 +114,51 @@ auto main() -> int {
 
   // clang-format off
   float vertices[] = {
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
 
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
   };
-
   // clang-format on
+
+  // setup objs
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
@@ -159,54 +167,32 @@ auto main() -> int {
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                         reinterpret_cast<void *>(3 * sizeof(float)));
 
-  xac::Shader shader("../06-camera/shader/vert.vs",
-                     "../06-camera/shader/frag.fs");
-  // setup texture
-  int width, height, nr_channels;
-  unsigned char *tex_data = stbi_load("../resources/textures/container.jpg",
-                                      &width, &height, &nr_channels, 0);
-  unsigned int box_tex;
-  glGenTextures(1, &box_tex);
-  glActiveTexture(GL_TEXTURE0); // active texture0 before bind
-  glBindTexture(GL_TEXTURE_2D, box_tex);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, tex_data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(tex_data);
+  // setup light
+  unsigned int light_VAO;
+  glGenVertexArrays(1, &light_VAO);
+  glBindVertexArray(light_VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
 
-  stbi_set_flip_vertically_on_load(true);
-  tex_data = stbi_load("../resources/textures/awesomeface.png", &width, &height,
-                       &nr_channels, 0);
-  unsigned int face_tex;
-  glGenTextures(1, &face_tex);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, face_tex);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, tex_data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(tex_data);
-
-  shader.Use();
-  shader.SetInt("Texture1", 0);
-  shader.SetInt("Texture2", 1);
+  // setup shader
+  xac::Shader light_shader("../07-lighting/shader/light-vert.vs",
+                           "../07-lighting/shader/light-frag.fs");
+  xac::Shader obj_shader("../07-lighting/shader/vert.vs",
+                         "../07-lighting/shader/frag.fs");
 
   // setup matrices
   glm::mat4 model(1.0f);
+  glm::mat4 light_model(1.0f);
+  glm::vec3 light_pos(1.2f, 1.0f, 2.2f);
+  light_model = glm::translate(light_model, light_pos);
+  light_model = glm::scale(light_model, glm::vec3(0.2f));
 
   // other settings
   glEnable(GL_DEPTH_TEST);
@@ -217,23 +203,39 @@ auto main() -> int {
   while (!glfwWindowShouldClose(window)) {
     ProcessInput(window);
     static float last_frame_time = 0.0f;
-    float cur_frame_time = glfwGetTime();
+    float cur_frame_time = static_cast<float>(glfwGetTime());
     delta_time_per_frame = cur_frame_time - last_frame_time;
     last_frame_time = cur_frame_time;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    shader.Use();
 
-    auto time = static_cast<float>(glfwGetTime());
-    model = glm::rotate(model, std::sin(time) * 0.001f * glm::radians(50.0f),
+    glBindVertexArray(light_VAO);
+    light_shader.Use();
+    light_shader.SetMat4("model", light_model);
+    obj_shader.SetMat4("view", main_cam.GetViewMatrix());
+    obj_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glBindVertexArray(VAO);
+    obj_shader.Use();
+    model = glm::rotate(model,
+                        std::sin(cur_frame_time) * 0.001f * glm::radians(50.0f),
                         glm::vec3(0.5f, 1.0f, 0.0f));
-    model = glm::rotate(model, std::sin(time) * 0.001f * glm::radians(50.0f),
+    model = glm::rotate(model,
+                        std::sin(cur_frame_time) * 0.001f * glm::radians(50.0f),
                         glm::vec3(0.5f, 0.0f, 0.5f));
-    shader.SetMat4("model", model);
-    shader.SetMat4("view", main_cam.GetViewMatrix());
-    shader.SetMat4("projection", main_cam.GetProjectionMatrix());
+    obj_shader.SetMat4("model", model);
+    obj_shader.SetMat4("view", main_cam.GetViewMatrix());
+    obj_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
+    obj_shader.SetVec3("light_color", glm::vec3(1.0f));
+    obj_shader.SetVec3("obj_color", glm::vec3(1.0f, 0.5f, 0.31f));
+    obj_shader.SetVec3(
+        "light_pos",
+        glm::vec3(light_model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+    obj_shader.SetVec3("view_pos", main_cam.GetPosition());
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
