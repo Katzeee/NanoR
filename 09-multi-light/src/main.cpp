@@ -29,7 +29,7 @@ void CursorCB(GLFWwindow *window, double x_pos, double y_pos) {
   static bool first = true;
   static float last_x_pos;
   static float last_y_pos;
-  std::cout << first << " " << x_pos << " " << y_pos << std::endl;
+  // std::cout << first << " " << x_pos << " " << y_pos << std::endl;
   if (first) {
     first = false;
     last_x_pos = static_cast<float>(x_pos);
@@ -51,7 +51,7 @@ void CursorCB(GLFWwindow *window, double x_pos, double y_pos) {
   yaw += x_offset;
   pitch -= y_offset;
 
-  std::cout << yaw << " " << pitch << std::endl;
+  // std::cout << yaw << " " << pitch << std::endl;
 
   if (pitch > 89.0f) {
     pitch = 89.0f;
@@ -126,12 +126,12 @@ auto main() -> int {
     -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
 
     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
     -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
@@ -182,7 +182,7 @@ auto main() -> int {
                         reinterpret_cast<void *>(6 * sizeof(float)));
 
   // setup light
-  unsigned int light_VAO;
+  unsigned int light_VAO; // light also borrow the cube as its shape
   glGenVertexArrays(1, &light_VAO);
   glBindVertexArray(light_VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -190,10 +190,10 @@ auto main() -> int {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
 
   // setup shader
-  xac::Shader light_shader("../08-lighting-map/shader/light-vert.vs",
-                           "../08-lighting-map/shader/light-frag.fs");
-  xac::Shader obj_shader("../08-lighting-map/shader/vert.vs",
-                         "../08-lighting-map/shader/frag.fs");
+  xac::Shader light_shader("../09-multi-light/shader/light-vert.vs",
+                           "../09-multi-light/shader/light-frag.fs");
+  xac::Shader obj_shader("../09-multi-light/shader/vert.vs",
+                         "../09-multi-light/shader/frag.fs");
 
   // setup texture
   auto box_tex_diffuse = xac::TextureManager::GetInstance().CreateTexture(
@@ -208,6 +208,8 @@ auto main() -> int {
   glm::mat4 model(1.0f);
   glm::mat4 light_model(1.0f);
   glm::vec3 light_pos(1.2f, 1.0f, 2.2f);
+  // Because you do the transformation as the order scale->rotate->translate,
+  // the model matrix should reverse it, that is translate->rotate->scale
   light_model = glm::translate(light_model, light_pos);
   light_model = glm::scale(light_model, glm::vec3(0.2f));
 
@@ -229,8 +231,8 @@ auto main() -> int {
     glBindVertexArray(light_VAO);
     light_shader.Use();
     light_shader.SetMat4("model", light_model);
-    obj_shader.SetMat4("view", main_cam.GetViewMatrix());
-    obj_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
+    light_shader.SetMat4("view", main_cam.GetViewMatrix());
+    light_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glBindVertexArray(VAO);
@@ -244,14 +246,11 @@ auto main() -> int {
     obj_shader.SetMat4("model", model);
     obj_shader.SetMat4("view", main_cam.GetViewMatrix());
     obj_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
-    obj_shader.SetVec3("light_color", glm::vec3(1.0f));
-    // obj_shader.SetVec3("obj_color", glm::vec3(1.0f, 0.5f, 0.31f));
-    obj_shader.SetVec3(
-        "light_pos",
-        glm::vec3(light_model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+    obj_shader.SetVec3("p_light.position", light_pos);
+    obj_shader.SetVec3("p_light.color", glm::vec3(1.0f));
     obj_shader.SetVec3("view_pos", main_cam.GetPosition());
-    obj_shader.SetInt("mat.diffuse", box_tex_diffuse);
-    obj_shader.SetInt("mat.specular", box_tex_specular);
+    obj_shader.SetInt("mat.diffuse", static_cast<int>(box_tex_diffuse));
+    obj_shader.SetInt("mat.specular", static_cast<int>(box_tex_specular));
     obj_shader.SetFloat("mat.shininess", 8);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);

@@ -103,15 +103,15 @@ void Shader::SetFloat(const std::string &name, float value) const {
   glUniform1f(glGetUniformLocation(id_, name.c_str()), value);
 }
 
-void Shader::SetMat4(const std::string &name, const glm::mat4 &mat) const {
+void Shader::SetMat4(const std::string &name, const glm::mat4 &mat4) const {
 
   glUniformMatrix4fv(glGetUniformLocation(id_, name.c_str()), 1, GL_FALSE,
-                     glm::value_ptr(mat));
+                     glm::value_ptr(mat4));
 }
 
-void Shader::SetVec3(const std::string &name, const glm::vec3 &vec) const {
+void Shader::SetVec3(const std::string &name, const glm::vec3 &vec3) const {
 
-  glUniform3f(glGetUniformLocation(id_, name.c_str()), vec.x, vec.y, vec.z);
+  glUniform3f(glGetUniformLocation(id_, name.c_str()), vec3.x, vec3.y, vec3.z);
 }
 
 Shader::~Shader() { glDeleteProgram(id_); }

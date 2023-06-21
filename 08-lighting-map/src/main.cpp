@@ -227,6 +227,8 @@ auto main() -> int {
   glm::mat4 model(1.0f);
   glm::mat4 light_model(1.0f);
   glm::vec3 light_pos(1.2f, 1.0f, 2.2f);
+  // Because you do the transformation as the order scale->rotate->translate, 
+  // the model matrix should reverse it, that is translate->rotate->scale
   light_model = glm::translate(light_model, light_pos);
   light_model = glm::scale(light_model, glm::vec3(0.2f));
 
@@ -248,8 +250,8 @@ auto main() -> int {
     glBindVertexArray(light_VAO);
     light_shader.Use();
     light_shader.SetMat4("model", light_model);
-    obj_shader.SetMat4("view", main_cam.GetViewMatrix());
-    obj_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
+    light_shader.SetMat4("view", main_cam.GetViewMatrix());
+    light_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glBindVertexArray(VAO);
