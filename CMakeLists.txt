@@ -23,6 +23,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(glfw3 REQUIRED)
 find_package(glad REQUIRED)
 find_package(glm REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 
 add_subdirectory(01-create-window)
 add_subdirectory(02-simple-triangle)
@@ -32,8 +33,10 @@ add_subdirectory(05-simple-cube)
 add_subdirectory(06-camera)
 add_subdirectory(07-lighting)
 add_subdirectory(08-lighting-map)
+add_subdirectory(09-multi-light)
 
 
+# target_link_libraries(main PRIVATE assimp::assimp)
 
 #################################################
 
