@@ -161,6 +161,19 @@ auto main() -> int {
     -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
   };
+
+  glm::vec3 cube_positions[] = {
+    glm::vec3( 0.0f,  0.0f,  0.0f),
+    glm::vec3( 2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f,  2.0f, -2.5f),
+    glm::vec3( 1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+  };
   // clang-format on
 
   // setup objs
@@ -207,7 +220,7 @@ auto main() -> int {
   // setup matrices
   glm::mat4 model(1.0f);
   glm::mat4 light_model(1.0f);
-  glm::vec3 light_pos(1.2f, 1.0f, 2.2f);
+  glm::vec3 light_pos(0.0f, 0.0f, -2.0f);
   // Because you do the transformation as the order scale->rotate->translate,
   // the model matrix should reverse it, that is translate->rotate->scale
   light_model = glm::translate(light_model, light_pos);
@@ -237,23 +250,35 @@ auto main() -> int {
 
     glBindVertexArray(VAO);
     obj_shader.Use();
-    model = glm::rotate(model,
-                        std::sin(cur_frame_time) * 0.001f * glm::radians(50.0f),
-                        glm::vec3(0.5f, 1.0f, 0.0f));
-    model = glm::rotate(model,
-                        std::sin(cur_frame_time) * 0.001f * glm::radians(50.0f),
-                        glm::vec3(0.5f, 0.0f, 0.5f));
-    obj_shader.SetMat4("model", model);
-    obj_shader.SetMat4("view", main_cam.GetViewMatrix());
-    obj_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
     obj_shader.SetVec3("p_light.position", light_pos);
     obj_shader.SetVec3("p_light.color", glm::vec3(1.0f));
-    obj_shader.SetVec3("view_pos", main_cam.GetPosition());
+    obj_shader.SetFloat("d_light.intensity", 2.0f);
+    obj_shader.SetVec3("d_light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+    obj_shader.SetVec3("d_light.color", glm::vec3(0.2f, 0.5f, 0.2f));
+    obj_shader.SetFloat("p_light.intensity", 2.0f);
+    obj_shader.SetVec3("s_light.position", main_cam.GetPosition());
+    obj_shader.SetVec3("s_light.direction", main_cam.GetFornt());
+    obj_shader.SetVec3("s_light.color", glm::vec3(1.0f));
+    obj_shader.SetFloat("s_light.cutoff", glm::cos(glm::radians(12.5f)));
+    obj_shader.SetFloat("s_light.outer_cutoff", glm::cos(glm::radians(17.5f)));
+
+    obj_shader.SetMat4("view", main_cam.GetViewMatrix());
     obj_shader.SetInt("mat.diffuse", static_cast<int>(box_tex_diffuse));
     obj_shader.SetInt("mat.specular", static_cast<int>(box_tex_specular));
     obj_shader.SetFloat("mat.shininess", 8);
+    obj_shader.SetMat4("projection", main_cam.GetProjectionMatrix());
+    obj_shader.SetVec3("view_pos", main_cam.GetPosition());
 
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    for (unsigned int i = 0; i < 10; i++) {
+      model = glm::mat4(1.0f);
+      model = glm::translate(model, cube_positions[i]);
+      float angle = 20.0f * static_cast<float>(i);
+      model =
+          glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+      obj_shader.SetMat4("model", model);
+
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
