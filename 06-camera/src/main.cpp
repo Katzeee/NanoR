@@ -7,6 +7,7 @@
 #include "../../common/stb_image.h"
 #include "shader.h"
 #include "camera.h"
+// #include <unistd.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -42,7 +43,7 @@ void CursorCB(GLFWwindow *window, double x_pos, double y_pos) {
   x_offset *= sensitivity;
   y_offset *= sensitivity;
 
-  static float yaw = 0.0f;
+  static float yaw = -90.0f;
   static float pitch = 0.0f;
 
   yaw += x_offset;
@@ -90,6 +91,10 @@ auto main() -> int {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __linux__
+  glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
+  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "my instance");
+#endif
 
   GLFWwindow *window =
       glfwCreateWindow(640, 640, "Simple Cube", nullptr, nullptr);

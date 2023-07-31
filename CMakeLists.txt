@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 
 project(learn-opengl C CXX)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "") # works
 
 IF (WIN32)
 # add_definitions(-DWIN32)

@@ -11,6 +11,10 @@ auto main() -> int {
   if (!glfwInit()) {
     return -1;
   }
+#ifdef __linux__
+  glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
+  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "my instance");
+#endif
 
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);

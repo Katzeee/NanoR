@@ -114,5 +114,7 @@ void Shader::SetVec3(const std::string &name, const glm::vec3 &vec) const {
   glUniform3f(glGetUniformLocation(id_, name.c_str()), vec.x, vec.y, vec.z);
 }
 
-Shader::~Shader() { glDeleteProgram(id_); }
+Shader::~Shader() {
+  // glDeleteProgram(id_);
+}
 } // end namespace xac

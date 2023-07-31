@@ -22,9 +22,15 @@ auto main() -> int {
     return -1;
   }
 
+#ifdef __linux__
+  glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
+  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "my instance");
+#endif
+
   /* Create a windowed mode window and its OpenGL context */
   GLFWwindow *window =
       glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
+
   if (!window) {
     glfwTerminate();
     return -1;
@@ -89,7 +95,6 @@ auto main() -> int {
   glDeleteShader(vert_shader);
   glDeleteShader(frag_shader);
 
-
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
     /* Render here */
@@ -99,7 +104,8 @@ auto main() -> int {
     glUseProgram(shader_program);
 
     glBindBuffer(GL_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); // draw current EBO
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
+                   nullptr); // draw current EBO
     // another way to draw
     // glBindVertexArray(VAO);
     // glDrawArrays(GL_TRIANGLES, 0, 3); // draw current VAO

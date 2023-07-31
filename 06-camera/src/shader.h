@@ -108,5 +108,7 @@ void Shader::SetMat4(const std::string &name, const glm::mat4 &mat) const {
                      glm::value_ptr(mat));
 }
 
-Shader::~Shader() { glDeleteProgram(id_); }
+Shader::~Shader() {
+  // glDeleteProgram(id_);  // cause segfault, because async delete after glfwTerminate()
+}
 } // end namespace xac

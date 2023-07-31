@@ -21,6 +21,10 @@ auto main() -> int {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __linux__
+  glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
+  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "my instance");
+#endif
 
   GLFWwindow *window =
       glfwCreateWindow(640, 640, "Simple Cube", nullptr, nullptr);
