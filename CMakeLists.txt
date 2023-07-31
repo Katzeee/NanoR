@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 
-project(learn-opengl CXX)
+project(learn-opengl C CXX)
 
 IF (WIN32)
 # add_definitions(-DWIN32)
@@ -21,7 +21,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(glfw3 REQUIRED)
-find_package(glad REQUIRED)
+find_package(glad CONFIG)
+if (NOT glad::glad)
+  MESSAGE(WARNING "Cannot find glad, try compile from source.")
+  include_directories(/usr/include)
+  add_library(glad OBJECT common/glad/glad.c common/glad/glad.h)
+  target_include_directories(glad PUBLIC common/glad)
+  add_library(glad::glad ALIAS glad)
+endif()
 find_package(glm REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 
