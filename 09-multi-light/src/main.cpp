@@ -69,10 +69,10 @@ auto main() -> int {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __linux__
   glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
-  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "my instance");
+  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "opengl test");
 #endif
 
-  GLFWwindow *window = glfwCreateWindow(640, 640, "Simple Cube", nullptr, nullptr);
+  GLFWwindow *window = glfwCreateWindow(640, 640, "Hello OpenGL", nullptr, nullptr);
   if (!window) {
     glfwTerminate();
     return -1;

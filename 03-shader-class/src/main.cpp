@@ -13,12 +13,12 @@ auto main() -> int {
 
 #ifdef __linux__
   glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
-  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "my instance");
+  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "opengl test");
 #endif
 
   /* Create a windowed mode window and its OpenGL context */
   GLFWwindow *window =
-      glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
+      glfwCreateWindow(640, 480, "Hello OpenGL", nullptr, nullptr);
   if (!window) {
     glfwTerminate();
     return -1;

@@ -4,17 +4,19 @@
 // clang-format on
 #include <iostream>
 
-const char *vert_shader_src = "#version 330 core\n"
-                              "layout (location = 0) in vec3 aPos;\n"
-                              "void main() {\n"
-                              "  gl_Position = vec4(aPos, 1.0);\n"
-                              "}\0";
+const char *vert_shader_src =
+    "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main() {\n"
+    "  gl_Position = vec4(aPos, 1.0);\n"
+    "}\0";
 
-const char *frag_shader_src = "#version 330 core\n"
-                              "out vec4 FragColor;\n"
-                              "void main() {\n"
-                              "  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                              "}\0";
+const char *frag_shader_src =
+    "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main() {\n"
+    "  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "}\0";
 
 auto main() -> int {
   /* Initialize the library */
@@ -24,12 +26,11 @@ auto main() -> int {
 
 #ifdef __linux__
   glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
-  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "my instance");
+  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "opengl test");
 #endif
 
   /* Create a windowed mode window and its OpenGL context */
-  GLFWwindow *window =
-      glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
+  GLFWwindow *window = glfwCreateWindow(640, 480, "Hello OpenGL", nullptr, nullptr);
 
   if (!window) {
     glfwTerminate();
@@ -59,24 +60,23 @@ auto main() -> int {
   // setup VAO
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO); // stores the resolved data(knows the real meaning of
-                          // each vertex data layout)
+  glBindVertexArray(VAO);  // stores the resolved data(knows the real meaning of
+                           // each vertex data layout)
   // setup VBO
   unsigned int VBO;
   glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO); // VBO stores all vertex data unresolved
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);  // VBO stores all vertex data unresolved
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // resolve vertex data to current VAO
-  glEnableVertexAttribArray(0); // enable layout = 0
+  glEnableVertexAttribArray(0);  // enable layout = 0
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                        nullptr); // set data for layout = 0
+                        nullptr);  // set data for layout = 0
 
   // setup EBO
   unsigned int EBO;
   glGenBuffers(1, &EBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
   // setup shaders
   unsigned int vert_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -105,7 +105,7 @@ auto main() -> int {
 
     glBindBuffer(GL_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-                   nullptr); // draw current EBO
+                   nullptr);  // draw current EBO
     // another way to draw
     // glBindVertexArray(VAO);
     // glDrawArrays(GL_TRIANGLES, 0, 3); // draw current VAO
