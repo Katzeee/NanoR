@@ -17,6 +17,7 @@ if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE Release)
 endif()
 
+include(FetchContent)
 # set(EXECUTABLE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 17)
@@ -31,7 +32,12 @@ if (NOT glad::glad)
   add_library(glad::glad ALIAS glad)
 endif()
 find_package(glm REQUIRED)
-find_package(assimp CONFIG REQUIRED)
+# find_package(assimp CONFIG REQUIRED)
+FetchContent_Declare(assimp
+                     GIT_REPOSITORY https://github.com/assimp/assimp.git
+                     GIT_TAG        v5.2.5 
+)
+FetchContent_MakeAvailable(assimp)
 
 add_subdirectory(01-create-window)
 add_subdirectory(02-simple-triangle)
@@ -42,6 +48,7 @@ add_subdirectory(06-camera)
 add_subdirectory(07-lighting)
 add_subdirectory(08-lighting-map)
 add_subdirectory(09-multi-light)
+add_subdirectory(10-mesh)
 
 
 # target_link_libraries(main PRIVATE assimp::assimp)
