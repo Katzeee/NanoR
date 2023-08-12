@@ -5,18 +5,21 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
+#include <cmath>
 #include <filesystem>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-#include "camera.h"
+#include "camera.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
-#include "shader.h"
+#include "shader.hpp"
 
 glm::vec3 cam_pos(0.0f, 0.0f, 5.0f);
-glm::vec3 target_pos(0.0f, 0.0f, -2.0f);
+glm::vec3 target_pos(0.0f, 0.0f, 0.0f);
 xac::Camera main_cam(cam_pos, target_pos);
 float delta_time_per_frame;
 
@@ -84,7 +87,7 @@ auto main() -> int {
   glfwSetFramebufferSizeCallback(window, FrameBufferSizeCB);
 
   if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-    std::cout << "Failed to initialize GALD" << std::endl;
+    std::cout << "Failed to initialize GALD!" << std::endl;
     return -1;
   }
 
@@ -100,83 +103,53 @@ auto main() -> int {
 
   std::vector<xac::Mesh::Vertex> vertices{
     // positions              normals        texture coords
-    {.position = glm::vec3{-0.5f, -0.5f, -0.5f}, .normal = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord = glm::vec2{0.0f, 0.0f}},
-    {.position = glm::vec3{ 0.5f, -0.5f, -0.5f}, .normal = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord = glm::vec2{1.0f, 0.0f}},
-    {.position = glm::vec3{ 0.5f,  0.5f, -0.5f}, .normal = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord = glm::vec2{1.0f, 1.0f}},
-    {.position = glm::vec3{-0.5f,  0.5f, -0.5f}, .normal = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord = glm::vec2{0.0f, 1.0f}},
+    {.position_ = glm::vec3{-0.5f, -0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord_ = glm::vec2{0.0f, 0.0f}}, 
+    {.position_ = glm::vec3{ 0.5f, -0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord_ = glm::vec2{1.0f, 0.0f}}, 
+    {.position_ = glm::vec3{ 0.5f,  0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord_ = glm::vec2{1.0f, 1.0f}}, 
+    {.position_ = glm::vec3{-0.5f,  0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f, -1.0f}, .texcoord_ = glm::vec2{0.0f, 1.0f}}, 
                                                                                          
-    {.position = glm::vec3{-0.5f, -0.5f,  0.5f}, .normal = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord = glm::vec2{0.0f, 0.0f}},
-    {.position = glm::vec3{ 0.5f, -0.5f,  0.5f}, .normal = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord = glm::vec2{1.0f, 0.0f}},
-    {.position = glm::vec3{ 0.5f,  0.5f,  0.5f}, .normal = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord = glm::vec2{1.0f, 1.0f}},
-    {.position = glm::vec3{-0.5f,  0.5f,  0.5f}, .normal = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord = glm::vec2{0.0f, 1.0f}},
+    {.position_ = glm::vec3{-0.5f, -0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord_ = glm::vec2{0.0f, 0.0f}}, 
+    {.position_ = glm::vec3{ 0.5f, -0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord_ = glm::vec2{1.0f, 0.0f}}, 
+    {.position_ = glm::vec3{ 0.5f,  0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord_ = glm::vec2{1.0f, 1.0f}}, 
+    {.position_ = glm::vec3{-0.5f,  0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f,  0.0f,  1.0f}, .texcoord_ = glm::vec2{0.0f, 1.0f}}, 
                                                                                          
-    {.position = glm::vec3{-0.5f,  0.5f,  0.5f}, .normal = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 0.0f}},
-    {.position = glm::vec3{-0.5f,  0.5f, -0.5f}, .normal = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 1.0f}},
-    {.position = glm::vec3{-0.5f, -0.5f, -0.5f}, .normal = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 1.0f}},
-    {.position = glm::vec3{-0.5f, -0.5f,  0.5f}, .normal = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 0.0f}},
+    {.position_ = glm::vec3{-0.5f,  0.5f,  0.5f}, .normal_ = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 0.0f}}, 
+    {.position_ = glm::vec3{-0.5f,  0.5f, -0.5f}, .normal_ = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 1.0f}}, 
+    {.position_ = glm::vec3{-0.5f, -0.5f, -0.5f}, .normal_ = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 1.0f}}, 
+    {.position_ = glm::vec3{-0.5f, -0.5f,  0.5f}, .normal_ = glm::vec3{-1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 0.0f}}, 
                                                                                          
-    {.position = glm::vec3{ 0.5f,  0.5f,  0.5f}, .normal = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 0.0f}},
-    {.position = glm::vec3{ 0.5f,  0.5f, -0.5f}, .normal = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 1.0f}},
-    {.position = glm::vec3{ 0.5f, -0.5f, -0.5f}, .normal = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 1.0f}},
-    {.position = glm::vec3{ 0.5f, -0.5f,  0.5f}, .normal = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 0.0f}},
+    {.position_ = glm::vec3{ 0.5f,  0.5f,  0.5f}, .normal_ = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 0.0f}}, 
+    {.position_ = glm::vec3{ 0.5f,  0.5f, -0.5f}, .normal_ = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 1.0f}}, 
+    {.position_ = glm::vec3{ 0.5f, -0.5f, -0.5f}, .normal_ = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 1.0f}}, 
+    {.position_ = glm::vec3{ 0.5f, -0.5f,  0.5f}, .normal_ = glm::vec3{ 1.0f,  0.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 0.0f}}, 
                                                                                          
-    {.position = glm::vec3{-0.5f, -0.5f, -0.5f}, .normal = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 1.0f}},
-    {.position = glm::vec3{ 0.5f, -0.5f, -0.5f}, .normal = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 1.0f}},
-    {.position = glm::vec3{ 0.5f, -0.5f,  0.5f}, .normal = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 0.0f}},
-    {.position = glm::vec3{-0.5f, -0.5f,  0.5f}, .normal = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 0.0f}},
+    {.position_ = glm::vec3{-0.5f, -0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 1.0f}}, 
+    {.position_ = glm::vec3{ 0.5f, -0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 1.0f}}, 
+    {.position_ = glm::vec3{ 0.5f, -0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 0.0f}}, 
+    {.position_ = glm::vec3{-0.5f, -0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f, -1.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 0.0f}}, 
                                                                                          
-    {.position = glm::vec3{-0.5f,  0.5f, -0.5f}, .normal = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 1.0f}},
-    {.position = glm::vec3{ 0.5f,  0.5f, -0.5f}, .normal = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 1.0f}},
-    {.position = glm::vec3{ 0.5f,  0.5f,  0.5f}, .normal = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord = glm::vec2{1.0f, 0.0f}},
-    {.position = glm::vec3{-0.5f,  0.5f,  0.5f}, .normal = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord = glm::vec2{0.0f, 0.0f}},
+    {.position_ = glm::vec3{-0.5f,  0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 1.0f}}, 
+    {.position_ = glm::vec3{ 0.5f,  0.5f, -0.5f}, .normal_ = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 1.0f}}, 
+    {.position_ = glm::vec3{ 0.5f,  0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord_ = glm::vec2{1.0f, 0.0f}}, 
+    {.position_ = glm::vec3{-0.5f,  0.5f,  0.5f}, .normal_ = glm::vec3{ 0.0f,  1.0f,  0.0f}, .texcoord_ = glm::vec2{0.0f, 0.0f}}, 
   };
   // clang-format on
 
-  xac::Model model("../resources/models/Herta/heita.obj");
-
   // setup objs
-  xac::Mesh cube{std::move(vertices), std::move(indices)};
+  xac::Model herta("../resources/models/Herta/heita.obj");
+  xac::Mesh light_cube{std::move(vertices), std::move(indices), {}};
 
   // setup shader
-  xac::Shader light_shader("../10-mesh/shader/light_vert.glsl", "../10-mesh/shader/light_frag.glsl");
-  xac::Shader obj_shader("../10-mesh/shader/cube_vert.glsl", "../10-mesh/shader/cube_frag.glsl");
+  xac::Shader light_shader("../11-load-model/shader/light_vert.glsl", "../11-load-model/shader/light_frag.glsl");
+  light_cube.SetShader(light_shader);
+  xac::Shader herta_shader("../11-load-model/shader/herta_vert.glsl", "../11-load-model/shader/herta_frag.glsl");
+  herta.SetShader(herta_shader);
 
-  // setup texture
-  int width, height, nr_channels;
-  unsigned char *tex_data = stbi_load("../resources/textures/container2.png", &width, &height, &nr_channels, 0);
-  unsigned int box_tex_diffuse;
-  glGenTextures(1, &box_tex_diffuse);
-  glActiveTexture(GL_TEXTURE0);  // active texture0 before bind
-  glBindTexture(GL_TEXTURE_2D, box_tex_diffuse);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(tex_data);
-
-  tex_data = stbi_load("../resources/textures/container2_specular.png", &width, &height, &nr_channels, 0);
-  unsigned int box_tex_specular;
-  glGenTextures(1, &box_tex_specular);
-  glActiveTexture(GL_TEXTURE1);  // active texture0 before bind
-  glBindTexture(GL_TEXTURE_2D, box_tex_specular);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(tex_data);
-
-  // setup matrices
-  glm::mat4 model_matrix(1.0f);
-  glm::mat4 light_model(1.0f);
-  glm::vec3 light_pos(1.2f, 1.0f, 2.2f);
-  // Because you do the transformation as the order scale->rotate->translate,
-  // the model matrix should reverse it, that is translate->rotate->scale
-  light_model = glm::translate(light_model, light_pos);
-  light_model = glm::scale(light_model, glm::vec3(0.2f));
+  herta_shader.Use();
+  herta_shader.SetVec3("lights[0].color", glm::vec3(1));
+  herta_shader.SetFloat("lights[0].intensity", 5);
+  herta_shader.SetVec3("lights[1].color", glm::vec3(1));
+  herta_shader.SetFloat("lights[1].intensity", 13);
 
   // other settings
   glEnable(GL_DEPTH_TEST);
@@ -193,28 +166,40 @@ auto main() -> int {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glm::mat4 light_model(1.0f);
+    float rotate_speed = 0.5;
+    // make light rotate
+    float decimal = rotate_speed * cur_frame_time - std::floor(rotate_speed * cur_frame_time);
+    float phi = glm::radians(360 * decimal);
+    glm::vec3 light_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
+    light_pos = glm::rotate(glm::mat4(1.0f), glm::radians(60.0f), glm::vec3(1.0f)) * glm::vec4(light_pos, 1);
+    // Because you do the transformation as the order scale->rotate->translate,
+    // the model matrix should reverse it, that is translate->rotate->scale
+    light_model = glm::translate(light_model, light_pos);
+    light_model = glm::scale(light_model, glm::vec3(0.2f));
+
     light_shader.Use();
     light_shader.SetMat4("M", light_model);
     light_shader.SetMat4("V", main_cam.GetViewMatrix());
     light_shader.SetMat4("P", main_cam.GetProjectionMatrix());
-    // cube.Draw();
-    model.Draw();
+    light_cube.Draw();
 
-    obj_shader.Use();
-    model_matrix =
-        glm::rotate(model_matrix, std::sin(cur_frame_time) * 0.001f * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-    model_matrix =
-        glm::rotate(model_matrix, std::sin(cur_frame_time) * 0.001f * glm::radians(50.0f), glm::vec3(0.5f, 0.0f, 0.5f));
-    obj_shader.SetMat4("Model", model_matrix);
-    obj_shader.SetMat4("View", main_cam.GetViewMatrix());
-    obj_shader.SetMat4("Proj", main_cam.GetProjectionMatrix());
-    obj_shader.SetVec3("light.color", glm::vec3(1.0f));
-    obj_shader.SetVec3("light.ws_pos", glm::vec3(light_model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
-    obj_shader.SetVec3("ws_view_pos", main_cam.GetPosition());
-    obj_shader.SetInt("mat.diffuse", 0);
-    obj_shader.SetInt("mat.specular", 1);
-    obj_shader.SetFloat("mat.shininess", 64);
-    cube.Draw();
+    light_shader.Use();
+    glm::vec3 light2_pos{3, 2, 0};
+    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
+    light_shader.SetMat4("M", light2_model);
+    light_shader.SetMat4("V", main_cam.GetViewMatrix());
+    light_shader.SetMat4("P", main_cam.GetProjectionMatrix());
+    light_cube.Draw();
+
+    herta_shader.Use();
+    herta_shader.SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, -3, 0)), glm::vec3(0.4)));
+    herta_shader.SetMat4("View", main_cam.GetViewMatrix());
+    herta_shader.SetMat4("Proj", main_cam.GetProjectionMatrix());
+    herta_shader.SetVec3("ws_cam_pos", main_cam.GetPosition());
+    herta_shader.SetVec3("lights[0].ws_position", light_pos);
+    herta_shader.SetVec3("lights[1].ws_position", light2_pos);
+    herta.Draw();
 
     glfwSwapBuffers(window);
     glfwPollEvents();

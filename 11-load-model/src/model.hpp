@@ -1,5 +1,6 @@
 #pragma once
 // clang-format off
+#include <asm-generic/errno.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // clang-format on
@@ -17,6 +18,7 @@
 #include "../../common/stb_image.h"
 #include "assimp/material.h"
 #include "assimp/types.h"
+#include "material.hpp"
 #include "mesh.hpp"
 
 namespace xac {
@@ -36,7 +38,13 @@ class Model {
     ProcessNode(scene->mRootNode, scene);
   }
 
-  void Draw() {
+  void SetShader(Shader &shader) {
+    for (auto &mesh : meshes_) {
+      mesh.SetShader(shader);
+    }
+  }
+
+  void Draw() const {
     for (const auto &mesh : meshes_) {
       mesh.Draw();
     }
@@ -47,20 +55,20 @@ class Model {
   std::unordered_set<std::string> texture_loaded_;
   std::string path_;
 
-  auto ProcessMesh(aiMesh *mesh, const aiScene *scene) -> Mesh {
+  auto LoadMesh(aiMesh *mesh, const aiScene *scene) -> Mesh {
     // load vertices
     std::vector<Mesh::Vertex> vertices;
     vertices.reserve(mesh->mNumVertices);
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
       Mesh::Vertex vertex;
-      vertex.position = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
+      vertex.position_ = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
       if (mesh->mNormals) {
-        vertex.normal = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
+        vertex.normal_ = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
       }
       if (mesh->mTextureCoords[0]) {
-        vertex.texcoord = {mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y};
+        vertex.texcoord_ = {mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y};
       } else {
-        vertex.texcoord = {0.0f, 0.0f};
+        vertex.texcoord_ = {0.0f, 0.0f};
       }
       vertices.emplace_back(vertex);
     }
@@ -77,9 +85,15 @@ class Model {
     }
 
     // load materials
-    std::vector<Mesh::Texture> textures;
+    std::vector<Texture> textures;
+    aiColor3D Ka, Ks, Kd;
     if (scene->HasMaterials()) {
       auto *material = scene->mMaterials[mesh->mMaterialIndex];
+      // load Ka, Ks, Kd...
+      material->Get(AI_MATKEY_COLOR_AMBIENT, Ka);
+      material->Get(AI_MATKEY_COLOR_DIFFUSE, Kd);
+      material->Get(AI_MATKEY_COLOR_SPECULAR, Ks);
+
       auto diffuse_mats = LoadTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
       textures.insert(textures.end(), std::make_move_iterator(diffuse_mats.begin()),
                       std::make_move_iterator(diffuse_mats.end()));
@@ -90,19 +104,31 @@ class Model {
       textures.insert(textures.end(), std::make_move_iterator(normal_mats.begin()),
                       std::make_move_iterator(normal_mats.end()));
     }
-    std::cout << textures.size() << std::endl;
 
-    return {std::move(vertices), std::move(indices)};
+    return {
+        std::move(vertices),
+        std::move(indices),
+        Material(glm::vec3(Ka.r, Ka.g, Ka.b), glm::vec3(Kd.r, Kd.g, Kd.b), glm::vec3(Ks.r, Ks.g, Ks.b),
+                 std::move(textures)),
+    };
   }
 
-  std::vector<Mesh::Texture> LoadTextures(aiMaterial *material, aiTextureType type, std::string type_name) {
-    std::vector<Mesh::Texture> textures;
+  std::vector<Texture> LoadTextures(aiMaterial *material, aiTextureType type, std::string type_name) {
+    std::vector<Texture> textures;
     aiString path;
     for (auto i = 0; i < material->GetTextureCount(type); i++) {
       material->GetTexture(type, i, &path);
-      if (texture_loaded_.find(path.C_Str()) == texture_loaded_.end()) {  // havn't load this texture
+      if (texture_loaded_.find(path.C_Str()) == texture_loaded_.end()) {  // if havn't load this texture
         texture_loaded_.insert(path.C_Str());
-        textures.emplace_back(LoadTexture(&path), type_name);
+        auto &&texture_id = LoadTexture(&path);
+        Texture texture{texture_id, type_name};
+        textures.emplace_back(std::move(texture));
+
+        // aiTextureMapMode map_mode;
+        // material->Get(AI_MATKEY_MAPPINGMODE_U(type, i), map_mode);
+        // std::cout << map_mode << " ";
+        // material->Get(AI_MATKEY_MAPPINGMODE_V(type, i), map_mode);
+        // std::cout << map_mode << std::endl;
       }
     }
     return textures;
@@ -132,9 +158,9 @@ class Model {
       glBindTexture(GL_TEXTURE_2D, texture_id);
       glTexImage2D(GL_TEXTURE_2D, 0, format, x, y, 0, format, GL_UNSIGNED_BYTE, image_data);
       glGenerateTextureMipmap(GL_TEXTURE_2D);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       stbi_image_free(image_data);
     } else {
@@ -148,7 +174,7 @@ class Model {
     for (auto i = 0; i < node->mNumMeshes; i++) {
       aiMesh *mesh =
           scene->mMeshes[node->mMeshes[i]];  // scene->mMeshes stores real meshes, node->mMeshes stores indices to them
-      meshes_.emplace_back(ProcessMesh(mesh, scene));
+      meshes_.emplace_back(LoadMesh(mesh, scene));
     }
 
     for (auto i = 0; i < node->mNumChildren; i++) {

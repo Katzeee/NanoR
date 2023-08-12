@@ -1,6 +1,6 @@
 #pragma once
-#include <fstream>
 #include <glad/glad.h>
+#include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -10,7 +10,7 @@
 namespace xac {
 
 class Shader {
-public:
+ public:
   Shader() = delete;
   Shader(const char *vs_path, const char *fs_path);
   ~Shader();
@@ -22,11 +22,11 @@ public:
   void SetVec3(const std::string &name, const glm::vec3 &vec) const;
   [[nodiscard]] auto GetId() const -> const unsigned int & { return id_; }
 
-private:
+ private:
   static auto ReadFromFile(const char *file_path) -> std::string;
-  static void CompileShader(unsigned int shader_id);
+  static void CompileShader(unsigned int shader_id, const std::string &&type);
 
-private:
+ private:
   unsigned int id_;
 };
 
@@ -46,15 +46,14 @@ auto Shader::ReadFromFile(const char *file_path) -> std::string {
   return ss.str();
 }
 
-void Shader::CompileShader(unsigned int shader_id) {
+void Shader::CompileShader(unsigned int shader_id, const std::string &&type) {
   glCompileShader(shader_id);
   int success;
   char info[512];
   glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
   if (!static_cast<bool>(success)) {
     glGetShaderInfoLog(shader_id, 512, nullptr, info);
-    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-              << info << std::endl;
+    std::cout << "ERROR::SHADER::" << type << "::COMPILATION_FAILED\n" << info << std::endl;
   };
 }
 
@@ -69,8 +68,8 @@ Shader::Shader(const char *vs_path, const char *fs_path) {
   glShaderSource(vs, 1, &vs_src, nullptr);
   glShaderSource(fs, 1, &fs_src, nullptr);
 
-  CompileShader(vs);
-  CompileShader(fs);
+  CompileShader(vs, "VERTEX");
+  CompileShader(fs, "FRAGMENT");
 
   id_ = glCreateProgram();
   glAttachShader(id_, vs);
@@ -82,8 +81,7 @@ Shader::Shader(const char *vs_path, const char *fs_path) {
   glGetProgramiv(id_, GL_LINK_STATUS, &success);
   if (!static_cast<bool>(success)) {
     glGetProgramInfoLog(id_, 512, nullptr, info);
-    std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-              << info << std::endl;
+    std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << info << std::endl;
   }
 
   glDeleteShader(vs);
@@ -104,17 +102,14 @@ void Shader::SetFloat(const std::string &name, float value) const {
 }
 
 void Shader::SetMat4(const std::string &name, const glm::mat4 &mat) const {
-
-  glUniformMatrix4fv(glGetUniformLocation(id_, name.c_str()), 1, GL_FALSE,
-                     glm::value_ptr(mat));
+  glUniformMatrix4fv(glGetUniformLocation(id_, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 void Shader::SetVec3(const std::string &name, const glm::vec3 &vec) const {
-
   glUniform3f(glGetUniformLocation(id_, name.c_str()), vec.x, vec.y, vec.z);
 }
 
 Shader::~Shader() {
   // glDeleteProgram(id_);
 }
-} // end namespace xac
+}  // end namespace xac
