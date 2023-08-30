@@ -4,7 +4,7 @@
 // clang-format on
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
-#include "../../common/stb_image.h"
+#include "stb_image.h"
 #include "shader.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

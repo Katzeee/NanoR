@@ -15,7 +15,7 @@
 #include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../../common/stb_image.h"
+#include "stb_image.h"
 #include "assimp/material.h"
 #include "assimp/types.h"
 #include "material.hpp"

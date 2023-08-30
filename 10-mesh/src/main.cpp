@@ -10,7 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "../../common/stb_image.h"
+#include "stb_image.h"
 #include "camera.h"
 #include "mesh.hpp"
 #include "shader.h"

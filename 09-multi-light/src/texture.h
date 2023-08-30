@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // clang-format on
-#include "../../common/stb_image.h"
+#include "stb_image.h"
 #include <array>
 #include <memory>
 #include <exception>
