@@ -1,6 +1,4 @@
 cmake_minimum_required(VERSION 3.22)
-
-
 project(learn-opengl C CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "") # works
 
@@ -21,18 +19,22 @@ include(FetchContent)
 # set(EXECUTABLE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 20)
+include_directories(3rdparty)
 
 find_package(glfw3 REQUIRED)
+find_package(imgui CONFIG)
+if (NOT TARGET imgui)
+  include(3rdparty/imgui.cmake)
+endif()
 find_package(glad CONFIG)
-if (NOT glad::glad)
+if (NOT TARGET glad::glad)
   MESSAGE(STATUS "Cannot find glad, try compile from source.")
-  include_directories(/usr/include)
-  add_library(glad OBJECT common/glad/glad.c common/glad/glad.h)
-  target_include_directories(glad PUBLIC common/glad)
+  file(GLOB glad_src CONFIGURE_DEPENDS 3rdparty/glad/glad.c)
+  add_library(glad OBJECT ${glad_src})
+  target_include_directories(glad PUBLIC 3rdparty/glad)
   add_library(glad::glad ALIAS glad)
 endif()
 find_package(glm REQUIRED)
-# find_package(assimp CONFIG REQUIRED)
 FetchContent_Declare(assimp
                      GIT_REPOSITORY https://github.com/assimp/assimp.git
                      GIT_TAG        v5.2.5 
@@ -50,6 +52,9 @@ add_subdirectory(08-lighting-map)
 add_subdirectory(09-multi-light)
 add_subdirectory(10-mesh)
 add_subdirectory(11-load-model)
+add_subdirectory(12-imgui)
+add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
+target_link_libraries(imgui_demo PRIVATE glfw glad::glad imgui)
 
 
 # target_link_libraries(main PRIVATE assimp::assimp)
