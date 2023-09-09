@@ -140,18 +140,20 @@ auto main() -> int {
 #pragma region setup objs
   xac::Model herta("../resources/models/Herta/heita.obj");
   xac::Mesh light_cube{box_vertices, light_box_indices, {}, "light"};
+  auto cube = light_cube;
   xac::Mesh ground{plain_vertices, ground_indices, {}, "ground"};
 
-  // setup shader
   auto light_shader = std::make_shared<xac::Shader>("../14-depth-test/shader/light_vert.glsl",
                                                     "../14-depth-test/shader/light_frag.glsl");
-  light_cube.SetShader(light_shader);
   auto obj_shader =
       std::make_shared<xac::Shader>("../14-depth-test/shader/obj_vert.glsl", "../14-depth-test/shader/obj_frag.glsl");
-  herta.SetShader(obj_shader);
-  ground.SetShader(obj_shader);
+
   auto ground_texture_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto ground_texture_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
+  light_cube.SetShader(light_shader);
+  herta.SetShader(obj_shader);
+  ground.SetShader(obj_shader);
+  cube.SetShader(obj_shader);
 #pragma endregion
 
 #pragma region imgui variables
@@ -293,13 +295,39 @@ auto main() -> int {
     herta.Draw();
 #pragma endregion
 
+#pragma region render cubes
+    obj_shader->Use();
+    // you should do scale and rotation at origin!
+    auto cube_model = glm::mat4(1);
+    cube_model = glm::translate(cube_model, {-8.0, 0, -10.0});
+    cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
+    cube_model = glm::scale(cube_model, {5, 5, 5});
+    obj_shader->SetMat4("Model", cube_model);
+    obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
+    obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ground_texture_diffuse);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, ground_texture_specular);
+    obj_shader->SetInt("texture_diffuse0", 0);
+    obj_shader->SetInt("texture_specular0", 1);
+    cube.Draw();
+
+    cube_model = glm::mat4(1);
+    cube_model = glm::translate(cube_model, {28.0, 0, 20.0});
+    cube_model = glm::rotate(cube_model, glm::radians(45.0f), {0, 1, 0});
+    cube_model = glm::scale(cube_model, {5, 5, 5});
+    obj_shader->SetMat4("Model", cube_model);
+    cube.Draw();
+#pragma endregion
+
 #pragma region render ground
     obj_shader->Use();
     auto ground_model = glm::mat4(1);
     // you should do scale and rotation at origin!
     ground_model = glm::translate(ground_model, {0, -2.8, 0});
     ground_model = glm::rotate(ground_model, glm::radians(30.0f), {0, 1, 0});
-    ground_model = glm::scale(ground_model, {5, 1, 5});
+    ground_model = glm::scale(ground_model, {15, 1, 15});
     obj_shader->SetMat4("Model", ground_model);
     obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
     obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());

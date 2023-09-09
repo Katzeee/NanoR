@@ -18,7 +18,6 @@ class Mesh {
     Vertex() = default;
     Vertex(const glm::vec3 &position, const glm::vec3 &normal, const glm::vec2 &texcoord)
         : position(position), normal(normal), texcoord(texcoord) {}
-    Vertex(const Vertex &vertex) = default;
 
     glm::vec3 position;
     glm::vec3 normal;
@@ -39,6 +38,8 @@ class Mesh {
         name_(name) {
     Init();
   }
+
+  Mesh(const Mesh &mesh) : Mesh(mesh.vertices_, mesh.indices_, *mesh.material_, mesh.name_.c_str()) {}
 
   void Init() {
     glGenBuffers(1, &vbo_);

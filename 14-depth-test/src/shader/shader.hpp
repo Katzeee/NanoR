@@ -30,10 +30,9 @@ class Shader {
 
  private:
   static auto ReadFromFile(const char *file_path) -> std::string;
-  template<int type>
-  unsigned int CompileShader(std::string shader_str);
+  template <int type>
+  auto CompileShader(std::string shader_str) -> unsigned int;
 
- private:
   unsigned int id_ = 0;
   std::string vs_str_;
   std::string fs_str_;

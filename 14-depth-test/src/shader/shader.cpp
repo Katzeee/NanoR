@@ -17,7 +17,7 @@ auto Shader::ReadFromFile(const char *file_path) -> std::string {
 }
 
 template <int type>
-unsigned int Shader::CompileShader(std::string shader_str) {
+auto Shader::CompileShader(std::string shader_str) -> unsigned int {
   for (auto &&dc : define_consts_) {
     shader_str.insert(shader_str.find_first_of('\n'), "\n#define " + dc);
   }
