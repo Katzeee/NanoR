@@ -160,12 +160,20 @@ auto main() -> int {
   cube.SetShader(obj_shader);
 #pragma endregion
 
+  struct PointLight {
+    glm::vec4 color = glm::vec4{1};
+    float intensity = 5;
+  };
+  struct DirectLight {
+    glm::vec4 color = glm::vec4{1};
+    float intensity = 2;
+    glm::vec3 direction = glm::vec3{1, 1, 1};
+  };
+
 #pragma region imgui variables
   glm::vec4 background_color{};
-  glm::vec4 light1_color{1};
-  glm::vec4 light2_color{1};
-  float light1_intensity = 5;
-  float light2_intensity = 13;
+  PointLight p_lights[2];
+  DirectLight d_lights[1];
   glm::vec3 rotation_axis{1, 1, 1};
   float rotation_degree{60};
   int gl_func_item = 1;
@@ -187,9 +195,23 @@ auto main() -> int {
       ImGui::SetWindowFontScale(1.2);
 
       ImGui::ColorEdit4("BG_color", reinterpret_cast<float *>(&background_color), ImGuiColorEditFlags_AlphaPreview);
-      ImGui::ColorEdit3("light1", reinterpret_cast<float *>(&light1_color));
-      ImGui::ColorEdit3("light2", reinterpret_cast<float *>(&light2_color));
-      ImGui::DragFloat3("rotation_axis", reinterpret_cast<float *>(&rotation_axis), 0.005f, -1.0f, 1.0f);
+
+      if (ImGui::TreeNodeEx("Rotating light", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::ColorEdit3("p_light1", reinterpret_cast<float *>(&p_lights[0].color));
+        ImGui::Separator();
+        ImGui::ColorEdit3("p_light2", reinterpret_cast<float *>(&p_lights[1].color));
+        ImGui::DragFloat3("rotation_axis", reinterpret_cast<float *>(&rotation_axis), 0.005f, -1.0f, 1.0f);
+        ImGui::Separator();
+        ImGui::ColorEdit3("d_light1", reinterpret_cast<float *>(&d_lights[0].color));
+        ImGui::PushItemWidth(80);
+        ImGui::SliderFloat("X", &d_lights[0].direction.x, -1.0f, 1.0f);
+        ImGui::SameLine();
+        ImGui::SliderFloat("Y", &d_lights[0].direction.y, -1.0f, 1.0f, "%.3f" ,ImGuiSliderFlags_None);
+        ImGui::SameLine();
+        ImGui::SliderFloat("Z", &d_lights[0].direction.z, -1.0f, 1.0f);
+        ImGui::PopItemWidth();
+        ImGui::TreePop();
+      }
       ImGui::SliderFloat("Camera speed", &global_context.camera_->speed_, 5.0f, 30.0f);
       ImGui::SliderFloat("rotation_degree", &rotation_degree, 0, 360);
       if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -235,7 +257,60 @@ auto main() -> int {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // glStencilMask(0x00);
+#pragma region render light
+    glm::mat4 light_model(1.0f);
+    float rotate_speed = 0.5;
+    // make light rotate
+    float decimal = rotate_speed * cur_frame_time - std::floor(rotate_speed * cur_frame_time);
+    float phi = glm::radians(360 * decimal);
+    glm::vec3 light_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
+    light_pos = glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(light_pos, 1);
+    // Because you do the transformation by the order scale->rotate->translate,
+    // glm functions are doing right multiply, so
+    // the model matrix should reverse it, that is translate->rotate->scale
+    light_model = glm::translate(light_model, light_pos);
+    light_model = glm::scale(light_model, glm::vec3(0.2f));
+
+    light_shader->Use();
+    light_shader->SetMat4("V", global_context.camera_->GetViewMatrix());
+    light_shader->SetMat4("P", global_context.camera_->GetProjectionMatrix());
+
+    light_shader->Use();
+    light_shader->SetMat4("M", light_model);
+    light_shader->SetVec4("color", p_lights[0].color);
+    light_cube.Draw();
+
+    light_shader->Use();
+    glm::vec3 light2_pos{3, 2, 0};
+    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
+    light_shader->SetMat4("M", light2_model);
+    light_shader->SetVec4("color", p_lights[1].color);
+    light_cube.Draw();
+
+    light_shader->Use();
+    glm::vec3 d_light_pos = d_lights[0].direction * 40.0f;
+    auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light_pos), glm::vec3{3.0f});
+    light_shader->SetMat4("M", d_light_model);
+    light_shader->SetVec4("color", d_lights[0].color);
+    light_cube.Draw();
+
+#pragma endregion
+
+#pragma region common settings for obj shader
+    obj_shader->Use();
+    obj_shader->SetVec3("p_lights[0].ws_position", light_pos);
+    obj_shader->SetVec3("p_lights[1].ws_position", light2_pos);
+    obj_shader->SetVec3("p_lights[0].color", p_lights[0].color);
+    obj_shader->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
+    obj_shader->SetVec3("p_lights[1].color", p_lights[1].color);
+    obj_shader->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
+
+    obj_shader->SetVec3("d_lights[0].direction", d_lights[0].direction);
+    obj_shader->SetVec3("d_lights[0].color", d_lights[0].color);
+    obj_shader->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
+    obj_shader->SetVec3("ws_cam_pos", global_context.camera_->GetPosition());
+#pragma endregion
+
 #pragma region render ground
     obj_shader->Use();
     auto ground_model = glm::mat4(1);
@@ -253,37 +328,6 @@ auto main() -> int {
     obj_shader->SetInt("texture_diffuse0", 0);
     obj_shader->SetInt("texture_specular0", 1);
     ground.Draw();
-#pragma endregion
-
-#pragma region render light
-    glm::mat4 light_model(1.0f);
-    float rotate_speed = 0.5;
-    // make light rotate
-    float decimal = rotate_speed * cur_frame_time - std::floor(rotate_speed * cur_frame_time);
-    float phi = glm::radians(360 * decimal);
-    glm::vec3 light_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
-    light_pos = glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(light_pos, 1);
-    // Because you do the transformation by the order scale->rotate->translate,
-    // glm functions are doing right multiply, so
-    // the model matrix should reverse it, that is translate->rotate->scale
-    light_model = glm::translate(light_model, light_pos);
-    light_model = glm::scale(light_model, glm::vec3(0.2f));
-
-    light_shader->Use();
-    light_shader->SetMat4("M", light_model);
-    light_shader->SetMat4("V", global_context.camera_->GetViewMatrix());
-    light_shader->SetMat4("P", global_context.camera_->GetProjectionMatrix());
-    light_shader->SetVec4("color", light1_color);
-    light_cube.Draw();
-
-    light_shader->Use();
-    glm::vec3 light2_pos{3, 2, 0};
-    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
-    light_shader->SetMat4("M", light2_model);
-    light_shader->SetMat4("V", global_context.camera_->GetViewMatrix());
-    light_shader->SetMat4("P", global_context.camera_->GetProjectionMatrix());
-    light_shader->SetVec4("color", light2_color);
-    light_cube.Draw();
 #pragma endregion
 
     glStencilMask(0xFF);
@@ -313,6 +357,9 @@ auto main() -> int {
     cube_model = glm::rotate(cube_model, glm::radians(45.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
     obj_shader->SetMat4("Model", cube_model);
+    obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
+    obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+
     cube.Draw();
 #pragma endregion
 
@@ -341,18 +388,10 @@ auto main() -> int {
       last_debug_item = debug_item;
     }
     obj_shader->Use();
-    obj_shader->SetVec3("lights[0].color", light1_color);
-    obj_shader->SetFloat("lights[0].intensity", light1_intensity);
-    obj_shader->SetVec3("lights[1].color", light2_color);
-    obj_shader->SetFloat("lights[1].intensity", light2_intensity);
     obj_shader->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, -3, 0)), glm::vec3(0.4)));
-    obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
-    obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
-    obj_shader->SetVec3("ws_cam_pos", global_context.camera_->GetPosition());
-    obj_shader->SetVec3("lights[0].ws_position", light_pos);
-    obj_shader->SetVec3("lights[1].ws_position", light2_pos);
     herta.Draw();
 #pragma endregion
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
