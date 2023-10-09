@@ -55,6 +55,7 @@ add_subdirectory(11-load-model)
 add_subdirectory(12-imgui)
 add_subdirectory(13-input-system)
 add_subdirectory(14-depth-test)
+add_subdirectory(15-stencil-test)
 
 ##################### demo
 add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
