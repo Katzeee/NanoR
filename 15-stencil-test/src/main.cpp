@@ -99,6 +99,14 @@ auto main() -> int {
      0,  1,  2,  2,  3,  0, 
   };
 
+  std::vector<std::vector<unsigned int>> cage_face_indices{
+    { 0,  1,  2,  2,  3,  0}, 
+    { 4,  5,  6,  6,  7,  4},
+    { 8,  9, 10, 10, 11,  8},
+    {12, 13, 14, 14, 15, 12},
+    {16, 17, 18, 18, 19, 16},
+    {20, 21, 22, 22, 23, 20},
+  };
 
   std::vector<xac::Mesh::Vertex> plain_vertices{
     {{-5.0f,  0.0f, -5.0f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 1.0f}}, 
@@ -158,6 +166,13 @@ auto main() -> int {
   herta.SetShader(obj_shader);
   ground.SetShader(obj_shader);
   cube.SetShader(obj_shader);
+
+  std::array<std::shared_ptr<xac::Mesh>, 6> cage_faces;
+  for (int i = 0; i < 6; i++) {
+    cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
+    cage_faces[i]->SetShader(light_shader);
+  }
+
 #pragma endregion
 
   struct PointLight {
@@ -166,7 +181,7 @@ auto main() -> int {
   };
   struct DirectLight {
     glm::vec4 color = glm::vec4{1};
-    float intensity = 2;
+    float intensity = 1;
     glm::vec3 direction = glm::vec3{1, 1, 1};
   };
 
@@ -206,7 +221,7 @@ auto main() -> int {
         ImGui::PushItemWidth(80);
         ImGui::SliderFloat("X", &d_lights[0].direction.x, -1.0f, 1.0f);
         ImGui::SameLine();
-        ImGui::SliderFloat("Y", &d_lights[0].direction.y, -1.0f, 1.0f, "%.3f" ,ImGuiSliderFlags_None);
+        ImGui::SliderFloat("Y", &d_lights[0].direction.y, -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_None);
         ImGui::SameLine();
         ImGui::SliderFloat("Z", &d_lights[0].direction.z, -1.0f, 1.0f);
         ImGui::PopItemWidth();
@@ -330,11 +345,38 @@ auto main() -> int {
     ground.Draw();
 #pragma endregion
 
+#pragma region render cage
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
+    light_shader->Use();
+    auto cage_model = glm::scale(glm::translate(glm::mat4{1}, {10, 5, 15}), glm::vec3{15});
+    light_shader->SetMat4("M", cage_model);
+    light_shader->SetVec4("color", {0.5, 0.5, 0.9, 1.0});
+    cage_faces[3]->Draw();
+
+    glStencilFunc(GL_ALWAYS, 2, 0xFF);
+
+    light_shader->SetVec4("color", {0.5, 0.9, 0.5, 1.0});
+    cage_faces[1]->Draw();
+    // glad_glStencilMask(0x00);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    light_shader->SetVec4("color", {0.9, 0.9, 0.5, 1.0});
+    cage_faces[0]->Draw();
+    light_shader->SetVec4("color", {0.3, 0.3, 0.8, 1.0});
+    cage_faces[2]->Draw();
+    cage_faces[4]->Draw();
+    cage_faces[5]->Draw();
+    glClear(GL_DEPTH_BUFFER_BIT);
+#pragma endregion
+
 #pragma region render cubes
+
+    // glad_glStencilMask(0x00);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc(GL_EQUAL, 2, 0xFF);
     obj_shader->Use();
     // you should do scale and rotation at origin!
     auto cube_model = glm::mat4(1);
@@ -363,10 +405,9 @@ auto main() -> int {
     cube.Draw();
 #pragma endregion
 
-    glStencilFunc(GL_EQUAL, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
 #pragma region render herta
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+
     static int last_debug_item = 0;
     if (last_debug_item != debug_item) {
       switch (debug_item) {
@@ -390,8 +431,9 @@ auto main() -> int {
     obj_shader->Use();
     obj_shader->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, -3, 0)), glm::vec3(0.4)));
     herta.Draw();
-#pragma endregion
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glDepthFunc(GL_NEVER + gl_func_item);
+#pragma endregion
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
