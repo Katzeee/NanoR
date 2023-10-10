@@ -347,35 +347,33 @@ auto main() -> int {
 
 #pragma region render cage
     glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     light_shader->Use();
     auto cage_model = glm::scale(glm::translate(glm::mat4{1}, {10, 5, 15}), glm::vec3{15});
     light_shader->SetMat4("M", cage_model);
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
     light_shader->SetVec4("color", {0.5, 0.5, 0.9, 1.0});
     cage_faces[3]->Draw();
-
     glStencilFunc(GL_ALWAYS, 2, 0xFF);
-
     light_shader->SetVec4("color", {0.5, 0.9, 0.5, 1.0});
     cage_faces[1]->Draw();
-    // glad_glStencilMask(0x00);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
+    glStencilFunc(GL_ALWAYS, 3, 0xFF);
     light_shader->SetVec4("color", {0.9, 0.9, 0.5, 1.0});
     cage_faces[0]->Draw();
     light_shader->SetVec4("color", {0.3, 0.3, 0.8, 1.0});
     cage_faces[2]->Draw();
     cage_faces[4]->Draw();
     cage_faces[5]->Draw();
+    // HINT: only write stencil buffer when draw cage
+    glad_glStencilMask(0x00);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glClear(GL_DEPTH_BUFFER_BIT);
 #pragma endregion
 
 #pragma region render cubes
 
-    // glad_glStencilMask(0x00);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glStencilFunc(GL_EQUAL, 2, 0xFF);
     obj_shader->Use();
     // you should do scale and rotation at origin!
@@ -433,6 +431,8 @@ auto main() -> int {
     herta.Draw();
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glDepthFunc(GL_NEVER + gl_func_item);
+    // HINT: or else can't clear stencil buffer bit
+    glad_glStencilMask(0xFF);
 #pragma endregion
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
