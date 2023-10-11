@@ -16,6 +16,7 @@ in vec3 P;
 in vec3 N;
 in vec2 uv;
 
+uniform vec4 base_color = vec4(1, 1, 1, 1);
 uniform sampler2D texture_diffuse0;
 uniform sampler2D texture_specular0;
 uniform vec3 ws_cam_pos;
@@ -46,10 +47,10 @@ void main() {
     L = normalize(L);
     vec3 V = normalize(ws_cam_pos - P);
     vec3 R = reflect(-L, N);
-    diffuse += Kd * p_light.intensity * max(dot(L, N), 0) * texture(texture_diffuse0, uv).xyz * p_light.color /
+    diffuse += Kd * p_light.intensity * max(dot(L, N), 0) * texture(texture_diffuse0, uv).rgb * p_light.color /
                distance_square;
     specular += Ks * clamp(dot(N, L), 0, 1) * p_light.intensity * p_light.color *
-                pow(max(dot(R, V), 0), texture(texture_specular0, uv).a) * texture(texture_specular0, uv).xyz /
+                pow(max(dot(R, V), 0), texture(texture_specular0, uv).a) * texture(texture_specular0, uv).rgb /
                 distance_square;
   }
   // DirectLight
@@ -59,17 +60,17 @@ void main() {
     L = normalize(L);
     vec3 V = normalize(ws_cam_pos - P);
     vec3 R = reflect(-L, N);
-    diffuse += Kd * d_light.intensity * max(dot(L, N), 0) * texture(texture_diffuse0, uv).xyz * d_light.color;
+    diffuse += Kd * d_light.intensity * max(dot(L, N), 0) * texture(texture_diffuse0, uv).rgb * d_light.color;
     specular += Ks * clamp(dot(N, L), 0, 1) * d_light.intensity * d_light.color *
-                pow(max(dot(R, V), 0), texture(texture_specular0, uv).a) * texture(texture_specular0, uv).xyz;
+                pow(max(dot(R, V), 0), texture(texture_specular0, uv).a) * texture(texture_specular0, uv).rgb;
   }
 
-  vec3 ambient = Ka * texture(texture_diffuse0, uv).xyz;
+  vec3 ambient = Ka * texture(texture_diffuse0, uv).rgb;
 #ifdef DEBUG_DEPTH
   FragColor = vec4(vec3(LinearizeDepth(gl_FragCoord.z)) / far, 1);
 #elif defined(DEBUG_NORMAL)
   FragColor = vec4(N, 1);
 #else
-  FragColor = vec4(diffuse + specular + ambient, 1);
+  FragColor = base_color * vec4((diffuse + specular + ambient), texture(texture_specular0, uv).a);
 #endif
 }

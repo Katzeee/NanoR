@@ -150,27 +150,29 @@ auto main() -> int {
   // clang-format on
 
 #pragma region setup objs
-  xac::Model herta("../resources/models/Herta/heita.obj");
-  xac::Mesh light_cube{box_vertices, light_box_indices, {}, "light"};
-  auto cube = light_cube;
-  xac::Mesh ground{plain_vertices, ground_indices, {}, "ground"};
+  xac::Model m_herta("../resources/models/Herta/heita.obj");
+  xac::Mesh m_light_cube{box_vertices, light_box_indices, {}, "light"};
+  xac::Mesh m_cube = m_light_cube;
+  xac::Mesh m_ground{plain_vertices, ground_indices, {}, "ground"};
 
   auto light_shader = std::make_shared<xac::Shader>("../15-stencil-test/shader/light_vert.glsl",
                                                     "../15-stencil-test/shader/light_frag.glsl");
   auto obj_shader = std::make_shared<xac::Shader>("../15-stencil-test/shader/obj_vert.glsl",
                                                   "../15-stencil-test/shader/obj_frag.glsl");
 
-  auto ground_texture_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
-  auto ground_texture_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
-  light_cube.SetShader(light_shader);
-  herta.SetShader(obj_shader);
-  ground.SetShader(obj_shader);
-  cube.SetShader(obj_shader);
+  auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
+  auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
+  auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
 
-  std::array<std::shared_ptr<xac::Mesh>, 6> cage_faces;
+  m_light_cube.SetShader(light_shader);
+  m_herta.SetShader(obj_shader);
+  m_ground.SetShader(obj_shader);
+  m_cube.SetShader(obj_shader);
+
+  std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
-    cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
-    cage_faces[i]->SetShader(light_shader);
+    m_cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
+    m_cage_faces[i]->SetShader(obj_shader);
   }
 
 #pragma endregion
@@ -293,21 +295,21 @@ auto main() -> int {
     light_shader->Use();
     light_shader->SetMat4("M", light_model);
     light_shader->SetVec4("color", p_lights[0].color);
-    light_cube.Draw();
+    m_light_cube.Draw();
 
     light_shader->Use();
     glm::vec3 light2_pos{3, 2, 0};
     auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
     light_shader->SetMat4("M", light2_model);
     light_shader->SetVec4("color", p_lights[1].color);
-    light_cube.Draw();
+    m_light_cube.Draw();
 
     light_shader->Use();
     glm::vec3 d_light_pos = d_lights[0].direction * 40.0f;
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light_pos), glm::vec3{3.0f});
     light_shader->SetMat4("M", d_light_model);
     light_shader->SetVec4("color", d_lights[0].color);
-    light_cube.Draw();
+    m_light_cube.Draw();
 
 #pragma endregion
 
@@ -337,35 +339,35 @@ auto main() -> int {
     obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
     obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, ground_texture_diffuse);
+    glBindTexture(GL_TEXTURE_2D, t_white);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, ground_texture_specular);
+    glBindTexture(GL_TEXTURE_2D, 0);
     obj_shader->SetInt("texture_diffuse0", 0);
     obj_shader->SetInt("texture_specular0", 1);
-    ground.Draw();
+    m_ground.Draw();
 #pragma endregion
 
 #pragma region render cage
     glStencilMask(0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    light_shader->Use();
+    obj_shader->Use();
     auto cage_model = glm::scale(glm::translate(glm::mat4{1}, {10, 5, 15}), glm::vec3{15});
-    light_shader->SetMat4("M", cage_model);
+    obj_shader->SetMat4("Model", cage_model);
 
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    light_shader->SetVec4("color", {0.5, 0.5, 0.9, 1.0});
-    cage_faces[3]->Draw();
+    obj_shader->SetVec4("base_color", {0.5, 0.5, 0.9, 1.0});
+    m_cage_faces[3]->Draw();
     glStencilFunc(GL_ALWAYS, 2, 0xFF);
-    light_shader->SetVec4("color", {0.5, 0.9, 0.5, 1.0});
-    cage_faces[1]->Draw();
+    obj_shader->SetVec4("base_color", {0.5, 0.9, 0.5, 1.0});
+    m_cage_faces[1]->Draw();
     glStencilFunc(GL_ALWAYS, 3, 0xFF);
-    light_shader->SetVec4("color", {0.9, 0.9, 0.5, 1.0});
-    cage_faces[0]->Draw();
-    light_shader->SetVec4("color", {0.3, 0.3, 0.8, 1.0});
-    cage_faces[2]->Draw();
-    cage_faces[4]->Draw();
-    cage_faces[5]->Draw();
+    obj_shader->SetVec4("base_color", {0.9, 0.9, 0.5, 1.0});
+    m_cage_faces[0]->Draw();
+    obj_shader->SetVec4("base_color", {0.3, 0.3, 0.8, 1.0});
+    m_cage_faces[2]->Draw();
+    m_cage_faces[4]->Draw();
+    m_cage_faces[5]->Draw();
     // HINT: only write stencil buffer when draw cage
     glad_glStencilMask(0x00);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -376,6 +378,7 @@ auto main() -> int {
 
     glStencilFunc(GL_EQUAL, 2, 0xFF);
     obj_shader->Use();
+    obj_shader->SetVec4("base_color", glm::vec4{1});
     // you should do scale and rotation at origin!
     auto cube_model = glm::mat4(1);
     cube_model = glm::translate(cube_model, {-8.0, 0, -10.0});
@@ -385,12 +388,12 @@ auto main() -> int {
     obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
     obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, ground_texture_diffuse);
+    glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, ground_texture_specular);
+    glBindTexture(GL_TEXTURE_2D, t_ground_specular);
     obj_shader->SetInt("texture_diffuse0", 0);
     obj_shader->SetInt("texture_specular0", 1);
-    cube.Draw();
+    m_cube.Draw();
 
     cube_model = glm::mat4(1);
     cube_model = glm::translate(cube_model, {28.0, 0, 20.0});
@@ -400,7 +403,7 @@ auto main() -> int {
     obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
     obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
 
-    cube.Draw();
+    m_cube.Draw();
 #pragma endregion
 
 #pragma region render herta
@@ -428,7 +431,7 @@ auto main() -> int {
     }
     obj_shader->Use();
     obj_shader->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, -3, 0)), glm::vec3(0.4)));
-    herta.Draw();
+    m_herta.Draw();
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glDepthFunc(GL_NEVER + gl_func_item);
     // HINT: or else can't clear stencil buffer bit
