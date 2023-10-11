@@ -457,7 +457,9 @@ auto main() -> int {
     glBindTexture(GL_TEXTURE_2D, t_transparent_window);
     obj_shader->SetInt("texture_diffuse0", 0);
     // HINT: no specular texture
-    obj_shader->SetInt("texture_specular0", 10);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    obj_shader->SetInt("texture_specular0", 1);
 
     std::sort(window_positions.begin(), window_positions.end(), [](auto &&lhs, auto &&rhs) {
       auto cam_pos = global_context.camera_->GetPosition();
