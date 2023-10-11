@@ -7,6 +7,7 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
+#include <algorithm>
 #include <assimp/Importer.hpp>
 #include <cmath>
 #include <filesystem>
@@ -106,11 +107,11 @@ auto main() -> int {
   };
 
   std::vector<glm::vec3> window_positions {
-    { -1.5f,  0.0f, -0.48f },
-    {  1.5f,  0.0f,  0.51f },
-    {  0.0f,  0.0f,  0.7f },
-    { -0.3f,  0.0f, -2.3f },
-    {  0.5f,  0.0f, -0.6f },
+    {-15.0f, 0.0f, -4.8f },
+    { 15.0f, 0.0f, 5.1f },
+    { 0.0f, 0.0f, 7.0f },
+    {-3.0f, 0.0f, -23.f },
+    { 5.0f, 0.0f, -6.f }
   };
 
   std::vector<std::vector<unsigned int>> cage_face_indices {
@@ -452,21 +453,30 @@ auto main() -> int {
 
 #pragma region render window
     obj_shader->Use();
-    auto window_model = glm::mat4(1);
-    // you should do scale and rotation at origin!
-    window_model = glm::translate(window_model, {0, 10, 0});
-    // window_model = glm::rotate(window_model, glm::radians(30.0f), {0, 1, 0});
-    window_model = glm::scale(window_model, {1, 10, 10});
-    window_model = glm::translate(window_model, {0, 0.5, 0});  // move to origin then scale
-    obj_shader->SetMat4("Model", window_model);
-    obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
-    obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_transparent_window);
     obj_shader->SetInt("texture_diffuse0", 0);
     // HINT: no specular texture
     obj_shader->SetInt("texture_specular0", 10);
-    m_window.Draw();
+
+    std::sort(window_positions.begin(), window_positions.end(), [](auto &&lhs, auto &&rhs) {
+      auto cam_pos = global_context.camera_->GetPosition();
+      return glm::distance(cam_pos, lhs) > glm::distance(cam_pos, rhs);
+    });
+
+    for (auto &&window_position : window_positions) {
+      auto window_model = glm::mat4(1);
+      // you should do scale and rotation at origin!
+      window_model = glm::translate(window_model, window_position);
+      window_model = glm::scale(window_model, {1, 10, 10});
+      // move to origin then scale
+      window_model = glm::translate(window_model, {0, 0.5, 0});
+      obj_shader->SetMat4("Model", window_model);
+      obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
+      obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+      m_window.Draw();
+    }
+
 #pragma endregion
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
