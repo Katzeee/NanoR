@@ -71,6 +71,6 @@ void main() {
 #elif defined(DEBUG_NORMAL)
   FragColor = vec4(N, 1);
 #else
-  FragColor = base_color * vec4((diffuse + specular + ambient), texture(texture_specular0, uv).a);
+  FragColor = base_color * vec4((diffuse + specular + ambient), texture(texture_diffuse0, uv).a);
 #endif
 }
