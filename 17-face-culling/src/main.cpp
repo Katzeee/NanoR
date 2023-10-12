@@ -178,6 +178,7 @@ auto main() -> int {
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_transparent_window = xac::LoadTextureFromFile("../resources/textures/blending_transparent_window.png");
+  auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
 
   m_light_cube.SetShader(s_light);
   m_herta.SetShader(s_obj);
@@ -188,7 +189,7 @@ auto main() -> int {
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
     m_cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
-    m_cage_faces[i]->SetShader(s_light);
+    m_cage_faces[i]->SetShader(s_obj);
   }
 
 #pragma endregion
@@ -404,23 +405,29 @@ auto main() -> int {
     glStencilMask(0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    s_light->Use();
+    s_obj->Use();
     auto cage_model = glm::mat4{1};
     cage_model = glm::translate(cage_model, {10, 0, 15});
     cage_model = glm::scale(cage_model, glm::vec3{15});
     cage_model = glm::translate(cage_model, {0, 0.5, 0});
-    s_light->SetMat4("M", cage_model);
+    s_obj->SetMat4("Model", cage_model);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, t_white);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    s_obj->SetInt("texture_diffuse0", 0);
+    s_obj->SetInt("texture_specular0", 1);
 
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    s_light->SetVec4("color", {0.5, 0.5, 0.9, 1.0});
+    s_obj->SetVec4("base_color", {0.5, 0.5, 0.9, 1.0});
     m_cage_faces[3]->Draw();
     glStencilFunc(GL_ALWAYS, 2, 0xFF);
-    s_light->SetVec4("color", {0.5, 0.9, 0.5, 1.0});
+    s_obj->SetVec4("base_color", {0.5, 0.9, 0.5, 1.0});
     m_cage_faces[1]->Draw();
     glStencilFunc(GL_ALWAYS, 3, 0xFF);
-    s_light->SetVec4("color", {0.9, 0.9, 0.5, 1.0});
+    s_obj->SetVec4("base_color", {0.9, 0.9, 0.5, 1.0});
     m_cage_faces[0]->Draw();
-    s_light->SetVec4("color", {0.3, 0.3, 0.8, 1.0});
+    s_obj->SetVec4("base_color", {0.3, 0.3, 0.8, 1.0});
     m_cage_faces[2]->Draw();
     m_cage_faces[4]->Draw();
     m_cage_faces[5]->Draw();
@@ -433,6 +440,7 @@ auto main() -> int {
 #pragma region render cubes
     // glStencilFunc(GL_EQUAL, 2, 0xFF);
     s_obj->Use();
+    s_obj->SetVec4("base_color", glm::vec4{1});
     // you should do scale and rotation at origin!
     auto cube_model = glm::mat4(1);
     cube_model = glm::translate(cube_model, {-8.0, 0, -10.0});

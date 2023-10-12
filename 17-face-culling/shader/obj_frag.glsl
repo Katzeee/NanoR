@@ -16,6 +16,7 @@ in vec3 P;
 in vec3 N;
 in vec2 uv;
 
+uniform vec4 base_color = vec4(1, 1, 1, 1);
 uniform sampler2D texture_diffuse0;
 uniform sampler2D texture_specular0;
 uniform vec3 ws_cam_pos;
@@ -70,6 +71,6 @@ void main() {
 #elif defined(DEBUG_NORMAL)
   FragColor = vec4(N, 1);
 #else
-  FragColor = vec4(diffuse + specular + ambient, texture(texture_diffuse0, uv).a);
+  FragColor = base_color * vec4((diffuse + specular + ambient), texture(texture_specular0, uv).a);
 #endif
 }
