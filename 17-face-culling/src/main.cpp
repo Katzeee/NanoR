@@ -23,6 +23,12 @@
 #include "mesh.hpp"
 #include "model.hpp"
 #include "shader/shader.hpp"
+#include "utils.hpp"
+
+// HINT: variable prefix for specified kind of objects
+// Mesh, model: m
+// Shader: s
+// Texture: t
 
 void FrameBufferSizeCB(GLFWwindow *window, int width, int height) {
   glViewport(global_context.imgui_width_, 0, width - global_context.imgui_width_, height);
@@ -165,24 +171,24 @@ auto main() -> int {
   xac::Mesh m_ground{box_vertices, ground_indices, {}, "ground"};
   xac::Mesh m_window{box_vertices, window_indices, {}, "window"};
 
-  auto light_shader = std::make_shared<xac::Shader>("../17-face-culling/shader/light_vert.glsl",
-                                                    "../17-face-culling/shader/light_frag.glsl");
-  auto obj_shader = std::make_shared<xac::Shader>("../17-face-culling/shader/obj_vert.glsl",
-                                                  "../17-face-culling/shader/obj_frag.glsl");
+  auto s_light = std::make_shared<xac::Shader>("../17-face-culling/shader/light_vert.glsl",
+                                               "../17-face-culling/shader/light_frag.glsl");
+  auto s_obj = std::make_shared<xac::Shader>("../17-face-culling/shader/obj_vert.glsl",
+                                             "../17-face-culling/shader/obj_frag.glsl");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_transparent_window = xac::LoadTextureFromFile("../resources/textures/blending_transparent_window.png");
 
-  m_light_cube.SetShader(light_shader);
-  m_herta.SetShader(obj_shader);
-  m_ground.SetShader(obj_shader);
-  m_cube.SetShader(obj_shader);
-  m_window.SetShader(obj_shader);
+  m_light_cube.SetShader(s_light);
+  m_herta.SetShader(s_obj);
+  m_ground.SetShader(s_obj);
+  m_cube.SetShader(s_obj);
+  m_window.SetShader(s_obj);
 
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
     m_cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
-    m_cage_faces[i]->SetShader(light_shader);
+    m_cage_faces[i]->SetShader(s_light);
   }
 
 #pragma endregion
@@ -203,9 +209,37 @@ auto main() -> int {
   DirectLight d_lights[1];
   glm::vec3 rotation_axis{1, 1, 1};
   float rotation_degree{60};
-  int gl_func_item = 1;
-  int debug_item = 0;
 
+  int gl_depth_func = 1;
+  xac::CheckChangeThen check_gl_depth_func{&gl_depth_func, [](int new_val) { glDepthFunc(GL_NEVER + new_val); }};
+
+  int shader_debug_mode = 0;
+  xac::CheckChangeThen check_shader_debug_mode{&shader_debug_mode, [&](int new_val) {
+                                                 switch (new_val) {
+                                                   case 0:  // NO_DEBUG
+                                                     s_obj->ClearDefine();
+                                                     s_obj->CompileShaders();
+                                                     break;
+                                                   case 1:  // DEBUG_NORMAL
+                                                     s_obj->ClearDefine();
+                                                     s_obj->AddDefine("DEBUG_NORMAL");
+                                                     s_obj->CompileShaders();
+                                                     break;
+                                                   case 2:  // DEBUG_DEPTH
+                                                     s_obj->ClearDefine();
+                                                     s_obj->AddDefine("DEBUG_DEPTH");
+                                                     s_obj->CompileShaders();
+                                                     break;
+                                                 }
+                                               }};
+  bool face_culling = true;
+  xac::CheckChangeThen check_face_culling{&face_culling, [](bool new_val) {
+                                            if (new_val) {
+                                              glEnable(GL_CULL_FACE);
+                                            } else {
+                                              glDisable(GL_CULL_FACE);
+                                            }
+                                          }};
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
 #pragma endregion
@@ -241,10 +275,16 @@ auto main() -> int {
       }
       ImGui::SliderFloat("Camera speed", &global_context.camera_->speed_, 5.0f, 30.0f);
       ImGui::SliderFloat("rotation_degree", &rotation_degree, 0, 360);
+
       if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Combo("Debug Mode", &debug_item, "NODEBUG\0NORMAL\0DEPTH\0");
-        ImGui::Combo("Depth test", &gl_func_item,
+        ImGui::Combo("Debug Mode", &shader_debug_mode, "NODEBUG\0NORMAL\0DEPTH\0");
+        ImGui::Combo("Depth test", &gl_depth_func,
                      "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0");
+        ImGui::TreePop();
+      }
+
+      if (ImGui::TreeNodeEx("Face culling", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Checkbox("Face culling", &face_culling);
         ImGui::TreePop();
       }
 
@@ -272,7 +312,9 @@ auto main() -> int {
     }
 #pragma endregion
 
-    glDepthFunc(GL_NEVER + gl_func_item);
+    check_gl_depth_func();
+    check_face_culling();
+
     static float last_frame_time = 0.0f;
     auto cur_frame_time = static_cast<float>(glfwGetTime());
     delta_time_per_frame = cur_frame_time - last_frame_time;
@@ -298,63 +340,63 @@ auto main() -> int {
     light_model = glm::translate(light_model, light_pos);
     light_model = glm::scale(light_model, glm::vec3(0.2f));
 
-    light_shader->Use();
-    light_shader->SetMat4("V", global_context.camera_->GetViewMatrix());
-    light_shader->SetMat4("P", global_context.camera_->GetProjectionMatrix());
+    s_light->Use();
+    s_light->SetMat4("V", global_context.camera_->GetViewMatrix());
+    s_light->SetMat4("P", global_context.camera_->GetProjectionMatrix());
 
-    light_shader->Use();
-    light_shader->SetMat4("M", light_model);
-    light_shader->SetVec4("color", p_lights[0].color);
+    s_light->Use();
+    s_light->SetMat4("M", light_model);
+    s_light->SetVec4("color", p_lights[0].color);
     m_light_cube.Draw();
 
-    light_shader->Use();
+    s_light->Use();
     glm::vec3 light2_pos{3, 2, 0};
     auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
-    light_shader->SetMat4("M", light2_model);
-    light_shader->SetVec4("color", p_lights[1].color);
+    s_light->SetMat4("M", light2_model);
+    s_light->SetVec4("color", p_lights[1].color);
     m_light_cube.Draw();
 
-    light_shader->Use();
+    s_light->Use();
     glm::vec3 d_light_pos = d_lights[0].direction * 40.0f;
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light_pos), glm::vec3{3.0f});
-    light_shader->SetMat4("M", d_light_model);
-    light_shader->SetVec4("color", d_lights[0].color);
+    s_light->SetMat4("M", d_light_model);
+    s_light->SetVec4("color", d_lights[0].color);
     m_light_cube.Draw();
 
 #pragma endregion
 
 #pragma region common settings for obj shader
-    obj_shader->Use();
-    obj_shader->SetVec3("p_lights[0].ws_position", light_pos);
-    obj_shader->SetVec3("p_lights[1].ws_position", light2_pos);
-    obj_shader->SetVec3("p_lights[0].color", p_lights[0].color);
-    obj_shader->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
-    obj_shader->SetVec3("p_lights[1].color", p_lights[1].color);
-    obj_shader->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
+    s_obj->Use();
+    s_obj->SetVec3("p_lights[0].ws_position", light_pos);
+    s_obj->SetVec3("p_lights[1].ws_position", light2_pos);
+    s_obj->SetVec3("p_lights[0].color", p_lights[0].color);
+    s_obj->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
+    s_obj->SetVec3("p_lights[1].color", p_lights[1].color);
+    s_obj->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
 
-    obj_shader->SetVec3("d_lights[0].direction", d_lights[0].direction);
-    obj_shader->SetVec3("d_lights[0].color", d_lights[0].color);
-    obj_shader->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
-    obj_shader->SetVec3("ws_cam_pos", global_context.camera_->GetPosition());
+    s_obj->SetVec3("d_lights[0].direction", d_lights[0].direction);
+    s_obj->SetVec3("d_lights[0].color", d_lights[0].color);
+    s_obj->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
+    s_obj->SetVec3("ws_cam_pos", global_context.camera_->GetPosition());
 #pragma endregion
 
 #pragma region render ground
-    obj_shader->Use();
+    s_obj->Use();
     auto ground_model = glm::mat4(1);
     // you should do scale and rotation at origin!
     // ground_model = glm::translate(ground_model, {0, 0, 0});
     // ground_model = glm::rotate(ground_model, glm::radians(30.0f), {0, 1, 0});
     ground_model = glm::scale(ground_model, {150, 1, 150});
     ground_model = glm::translate(ground_model, {0, -0.5, 0});  // move to origin then scale
-    obj_shader->SetMat4("Model", ground_model);
-    obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
-    obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    s_obj->SetMat4("Model", ground_model);
+    s_obj->SetMat4("View", global_context.camera_->GetViewMatrix());
+    s_obj->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, t_ground_specular);
-    obj_shader->SetInt("texture_diffuse0", 0);
-    obj_shader->SetInt("texture_specular0", 1);
+    s_obj->SetInt("texture_diffuse0", 0);
+    s_obj->SetInt("texture_specular0", 1);
     m_ground.Draw();
 #pragma endregion
 
@@ -362,23 +404,23 @@ auto main() -> int {
     glStencilMask(0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    light_shader->Use();
+    s_light->Use();
     auto cage_model = glm::mat4{1};
     cage_model = glm::translate(cage_model, {10, 0, 15});
     cage_model = glm::scale(cage_model, glm::vec3{15});
     cage_model = glm::translate(cage_model, {0, 0.5, 0});
-    light_shader->SetMat4("M", cage_model);
+    s_light->SetMat4("M", cage_model);
 
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    light_shader->SetVec4("color", {0.5, 0.5, 0.9, 1.0});
+    s_light->SetVec4("color", {0.5, 0.5, 0.9, 1.0});
     m_cage_faces[3]->Draw();
     glStencilFunc(GL_ALWAYS, 2, 0xFF);
-    light_shader->SetVec4("color", {0.5, 0.9, 0.5, 1.0});
+    s_light->SetVec4("color", {0.5, 0.9, 0.5, 1.0});
     m_cage_faces[1]->Draw();
     glStencilFunc(GL_ALWAYS, 3, 0xFF);
-    light_shader->SetVec4("color", {0.9, 0.9, 0.5, 1.0});
+    s_light->SetVec4("color", {0.9, 0.9, 0.5, 1.0});
     m_cage_faces[0]->Draw();
-    light_shader->SetVec4("color", {0.3, 0.3, 0.8, 1.0});
+    s_light->SetVec4("color", {0.3, 0.3, 0.8, 1.0});
     m_cage_faces[2]->Draw();
     m_cage_faces[4]->Draw();
     m_cage_faces[5]->Draw();
@@ -390,22 +432,22 @@ auto main() -> int {
 
 #pragma region render cubes
     // glStencilFunc(GL_EQUAL, 2, 0xFF);
-    obj_shader->Use();
+    s_obj->Use();
     // you should do scale and rotation at origin!
     auto cube_model = glm::mat4(1);
     cube_model = glm::translate(cube_model, {-8.0, 0, -10.0});
     cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
     cube_model = glm::translate(cube_model, {0, 0.5, 0});
-    obj_shader->SetMat4("Model", cube_model);
-    obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
-    obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    s_obj->SetMat4("Model", cube_model);
+    s_obj->SetMat4("View", global_context.camera_->GetViewMatrix());
+    s_obj->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, t_ground_specular);
-    obj_shader->SetInt("texture_diffuse0", 0);
-    obj_shader->SetInt("texture_specular0", 1);
+    s_obj->SetInt("texture_diffuse0", 0);
+    s_obj->SetInt("texture_specular0", 1);
     m_cube.Draw();
 
     cube_model = glm::mat4(1);
@@ -413,54 +455,35 @@ auto main() -> int {
     cube_model = glm::rotate(cube_model, glm::radians(45.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
     cube_model = glm::translate(cube_model, {0, 0.5, 0});
-    obj_shader->SetMat4("Model", cube_model);
-    obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
-    obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    s_obj->SetMat4("Model", cube_model);
+    s_obj->SetMat4("View", global_context.camera_->GetViewMatrix());
+    s_obj->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
 
     m_cube.Draw();
 #pragma endregion
 
 #pragma region render herta
-    // glStencilFunc(GL_EQUAL, 1, 0xFF);
-
-    static int last_debug_item = 0;
-    if (last_debug_item != debug_item) {
-      switch (debug_item) {
-        case 0:  // NO_DEBUG
-          obj_shader->ClearDefine();
-          obj_shader->CompileShaders();
-          break;
-        case 1:  // DEBUG_NORMAL
-          obj_shader->ClearDefine();
-          obj_shader->AddDefine("DEBUG_NORMAL");
-          obj_shader->CompileShaders();
-          break;
-        case 2:  // DEBUG_DEPTH
-          obj_shader->ClearDefine();
-          obj_shader->AddDefine("DEBUG_DEPTH");
-          obj_shader->CompileShaders();
-          break;
-      }
-      last_debug_item = debug_item;
-    }
-    obj_shader->Use();
-    obj_shader->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
+    check_shader_debug_mode();
+    s_obj->Use();
+    s_obj->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
+    s_obj->SetMat4("View", global_context.camera_->GetViewMatrix());
+    s_obj->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
     m_herta.Draw();
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glDepthFunc(GL_NEVER + gl_func_item);
+    glDepthFunc(GL_NEVER + gl_depth_func);
     // HINT: or else can't clear stencil buffer bit
     glad_glStencilMask(0xFF);
 #pragma endregion
 
 #pragma region render window
-    obj_shader->Use();
+    s_obj->Use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_transparent_window);
-    obj_shader->SetInt("texture_diffuse0", 0);
+    s_obj->SetInt("texture_diffuse0", 0);
     // HINT: no specular texture
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, 0);
-    obj_shader->SetInt("texture_specular0", 1);
+    s_obj->SetInt("texture_specular0", 1);
 
     std::sort(window_positions.begin(), window_positions.end(), [](auto &&lhs, auto &&rhs) {
       auto cam_pos = global_context.camera_->GetPosition();
@@ -474,9 +497,9 @@ auto main() -> int {
       window_model = glm::scale(window_model, {1, 10, 10});
       // move to origin then scale
       window_model = glm::translate(window_model, {0, 0.5, 0});
-      obj_shader->SetMat4("Model", window_model);
-      obj_shader->SetMat4("View", global_context.camera_->GetViewMatrix());
-      obj_shader->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+      s_obj->SetMat4("Model", window_model);
+      s_obj->SetMat4("View", global_context.camera_->GetViewMatrix());
+      s_obj->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
       m_window.Draw();
     }
 
