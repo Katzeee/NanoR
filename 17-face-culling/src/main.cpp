@@ -55,6 +55,7 @@ auto main() -> int {
     return -1;
   }
   glfwMakeContextCurrent(window);
+  glfwSwapInterval(0);  // disable vsync
 
   glfwSetFramebufferSizeCallback(window, FrameBufferSizeCB);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
