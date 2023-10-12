@@ -371,6 +371,7 @@ auto main() -> int {
     // HINT: only write stencil buffer when draw cage
     glad_glStencilMask(0x00);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    // HINT: clear depth buffer to draw objects behind cage
     glClear(GL_DEPTH_BUFFER_BIT);
 #pragma endregion
 
