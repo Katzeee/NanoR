@@ -95,6 +95,7 @@ auto main() -> int {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+#pragma region mesh data
   // clang-format off
   std::vector<unsigned int> light_box_indices {
      0,  1,  2,  2,  3,  0, 
@@ -163,6 +164,7 @@ auto main() -> int {
     {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f}}, 
   };
   // clang-format on
+#pragma endregion
 
 #pragma region setup objs
   xac::Model m_herta("../resources/models/Herta/heita.obj");
@@ -191,7 +193,6 @@ auto main() -> int {
     m_cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
     m_cage_faces[i]->SetShader(s_obj);
   }
-
 #pragma endregion
 
   struct PointLight {
@@ -213,7 +214,6 @@ auto main() -> int {
 
   int gl_depth_func = 1;
   xac::CheckChangeThen check_gl_depth_func{&gl_depth_func, [](int new_val) { glDepthFunc(GL_NEVER + new_val); }};
-
   int shader_debug_mode = 0;
   xac::CheckChangeThen check_shader_debug_mode{&shader_debug_mode, [&](int new_val) {
                                                  switch (new_val) {
@@ -233,14 +233,17 @@ auto main() -> int {
                                                      break;
                                                  }
                                                }};
-  bool face_culling = true;
-  xac::CheckChangeThen check_face_culling{&face_culling, [](bool new_val) {
-                                            if (new_val) {
-                                              glEnable(GL_CULL_FACE);
-                                            } else {
-                                              glDisable(GL_CULL_FACE);
-                                            }
-                                          }};
+  bool face_culling_enable = true;
+  xac::CheckChangeThen check_face_culling_enable{&face_culling_enable, [](bool new_val) {
+                                                   if (new_val) {
+                                                     glEnable(GL_CULL_FACE);
+                                                   } else {
+                                                     glDisable(GL_CULL_FACE);
+                                                   }
+                                                 }};
+  int culled_face = 0;
+  xac::CheckChangeThen check_culled_face{&culled_face, [](int new_val) { glCullFace(GL_FRONT_LEFT + new_val); }};
+
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
 #pragma endregion
@@ -285,7 +288,10 @@ auto main() -> int {
       }
 
       if (ImGui::TreeNodeEx("Face culling", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Checkbox("Face culling", &face_culling);
+        ImGui::Checkbox("Face culling enable", &face_culling_enable);
+        ImGui::Combo("Face culling", &culled_face,
+                     "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
+                     "RIGHT\0GL_FRONT_AND_BACK\0");
         ImGui::TreePop();
       }
 
@@ -314,7 +320,8 @@ auto main() -> int {
 #pragma endregion
 
     check_gl_depth_func();
-    check_face_culling();
+    check_face_culling_enable();
+    check_culled_face();
 
     static float last_frame_time = 0.0f;
     auto cur_frame_time = static_cast<float>(glfwGetTime());
