@@ -131,6 +131,14 @@ auto main() -> int {
     {20, 21, 22, 22, 23, 20},
   };
 
+  std::vector<xac::Mesh::Vertex> quad_vertices {
+    // positions              normals        texture coords
+    {{-1.0f,  1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 1.0f}}, 
+    {{ 1.0f,  1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}}, 
+    {{ 1.0f, -1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f}}, 
+    {{-1.0f, -1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}}, 
+  };
+
   std::vector<xac::Mesh::Vertex> box_vertices {
     // positions              normals        texture coords
     {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}}, 
@@ -172,6 +180,7 @@ auto main() -> int {
   xac::Mesh m_cube = m_light_cube;
   xac::Mesh m_ground{box_vertices, ground_indices, {}, "ground"};
   xac::Mesh m_window{box_vertices, window_indices, {}, "window"};
+  xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
 
   auto s_unlit = std::make_shared<xac::Shader>("../18-frame-buffer/shader/common_vert.glsl",
                                                "../18-frame-buffer/shader/unlit_frag.glsl");
@@ -187,12 +196,40 @@ auto main() -> int {
   m_ground.SetShader(s_lit);
   m_cube.SetShader(s_lit);
   m_window.SetShader(s_lit);
+  m_quad.SetShader(s_unlit);
 
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
     m_cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
     m_cage_faces[i]->SetShader(s_lit);
   }
+
+#pragma endregion
+
+#pragma region frame buffer
+  unsigned int fbo;
+  glGenFramebuffers(1, &fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  unsigned int t_framebuffer_color;
+  glGenTextures(1, &t_framebuffer_color);
+  glBindTexture(GL_TEXTURE_2D, t_framebuffer_color);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, global_context.window_width_ - global_context.imgui_width_,
+               global_context.window_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  // HINT: bind color buffer
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t_framebuffer_color, 0);
+  unsigned int rbo;
+  glGenRenderbuffers(1, &rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                        global_context.window_width_ - global_context.imgui_width_, global_context.window_height_);
+  // HINT: bind depth buffer
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #pragma endregion
 
   struct PointLight {
@@ -248,8 +285,14 @@ auto main() -> int {
   ImGui_ImplGlfw_NewFrame();
 #pragma endregion
 
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
   // HINT: Render loop start
   while (!glfwWindowShouldClose(window)) {
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    // HINT: render starts from the top left of the whole window, not setting this will lead to black at left
+    glViewport(0, 0, global_context.window_width_ - global_context.imgui_width_, global_context.window_height_);
+    glEnable(GL_DEPTH_TEST);
 #pragma region render imgui
     {
       ImGui::NewFrame();
@@ -351,6 +394,9 @@ auto main() -> int {
     s_unlit->Use();
     s_unlit->SetMat4("View", global_context.camera_->GetViewMatrix());
     s_unlit->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, t_white);
+    s_unlit->SetInt("tex", 0);
 
     s_unlit->Use();
     s_unlit->SetMat4("Model", light_model);
@@ -519,8 +565,27 @@ auto main() -> int {
 
 #pragma endregion
 
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+#pragma region render to quad
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glViewport(global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+               global_context.window_height_);
 
+    glDisable(GL_DEPTH_TEST);
+    s_unlit->Use();
+    s_unlit->SetMat4("Model", glm::mat4{1.0f});
+    s_unlit->SetMat4("View", glm::mat4{1.0f});
+    s_unlit->SetMat4("Proj", glm::mat4{1.0f});
+    s_unlit->SetVec4("color", glm::vec4{1.0f});
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, t_framebuffer_color);
+    s_unlit->SetInt("tex", 0);
+    m_quad.Draw();
+
+#pragma endregion
+
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
@@ -528,6 +593,7 @@ auto main() -> int {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
+  glDeleteFramebuffers(1, &fbo);
 
   glfwDestroyWindow(window);
   glfwTerminate();
