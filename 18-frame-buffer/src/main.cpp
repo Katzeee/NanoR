@@ -176,8 +176,10 @@ auto main() -> int {
 
 #pragma region setup objs
   xac::Model m_herta("../resources/models/Herta/heita.obj");
-  xac::Mesh m_light_cube{box_vertices, light_box_indices, {}, "light"};
-  xac::Mesh m_cube = m_light_cube;
+  xac::Model m_sphere("../resources/models/Sphere/sphere.obj");
+  // xac::Mesh m_sphere{box_vertices, light_box_indices, {}, "light"};
+  // xac::Mesh m_cube = m_light_cube;
+  xac::Model m_cube("../resources/models/Cube/cube.obj");
   xac::Mesh m_ground{box_vertices, ground_indices, {}, "ground"};
   xac::Mesh m_window{box_vertices, window_indices, {}, "window"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
@@ -191,7 +193,7 @@ auto main() -> int {
   auto t_transparent_window = xac::LoadTextureFromFile("../resources/textures/blending_transparent_window.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
 
-  m_light_cube.SetShader(s_unlit);
+  m_sphere.SetShader(s_unlit);
   m_herta.SetShader(s_lit);
   m_ground.SetShader(s_lit);
   m_cube.SetShader(s_lit);
@@ -401,21 +403,21 @@ auto main() -> int {
     s_unlit->Use();
     s_unlit->SetMat4("Model", light_model);
     s_unlit->SetVec4("color", p_lights[0].color);
-    m_light_cube.Draw();
+    m_sphere.Draw();
 
     s_unlit->Use();
     glm::vec3 light2_pos{3, 2, 0};
     auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
     s_unlit->SetMat4("Model", light2_model);
     s_unlit->SetVec4("color", p_lights[1].color);
-    m_light_cube.Draw();
+    m_sphere.Draw();
 
     s_unlit->Use();
     glm::vec3 d_light_pos = d_lights[0].direction * 40.0f;
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light_pos), glm::vec3{3.0f});
     s_unlit->SetMat4("Model", d_light_model);
     s_unlit->SetVec4("color", d_lights[0].color);
-    m_light_cube.Draw();
+    m_sphere.Draw();
 #pragma endregion
 
 #pragma region common settings for obj shader
@@ -498,7 +500,7 @@ auto main() -> int {
     cube_model = glm::translate(cube_model, {-8.0, 0, -10.0});
     cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
-    cube_model = glm::translate(cube_model, {0, 0.5, 0});
+    // cube_model = glm::translate(cube_model, {0, 0.5, 0});
     s_lit->SetMat4("Model", cube_model);
     s_lit->SetMat4("View", global_context.camera_->GetViewMatrix());
     s_lit->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
@@ -514,7 +516,7 @@ auto main() -> int {
     cube_model = glm::translate(cube_model, {28.0, 0, 20.0});
     cube_model = glm::rotate(cube_model, glm::radians(45.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
-    cube_model = glm::translate(cube_model, {0, 0.5, 0});
+    // cube_model = glm::translate(cube_model, {0, 0.5, 0});
     s_lit->SetMat4("Model", cube_model);
     s_lit->SetMat4("View", global_context.camera_->GetViewMatrix());
     s_lit->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
