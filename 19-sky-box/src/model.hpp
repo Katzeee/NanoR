@@ -23,6 +23,32 @@
 
 namespace xac {
 
+static auto LoadCubemapFromFile(std::vector<std::string> file_paths) -> unsigned int {
+  unsigned int texture_id;
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+
+  int x;
+  int y;
+  int nchs;
+  for (auto i = 0; i < file_paths.size(); i++) {
+    unsigned char *image_data = stbi_load(file_paths[i].c_str(), &x, &y, &nchs, 0);
+    if (image_data) {
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+      std::cout << "LoadTex: " << file_paths[i] << ", channels: " << nchs << std::endl;
+    } else {
+      std::cout << "ERROR::LoadTex: " << file_paths[i] << std::endl;
+    }
+    stbi_image_free(image_data);
+  }
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  return texture_id;
+}
+
 static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int {
   unsigned int texture_id;
   glGenTextures(1, &texture_id);

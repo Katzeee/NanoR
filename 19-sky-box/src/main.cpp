@@ -190,6 +190,14 @@ auto main() -> int {
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_transparent_window = xac::LoadTextureFromFile("../resources/textures/blending_transparent_window.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
+  auto t_skybox = xac::LoadCubemapFromFile({
+      "../resources/textures/skybox/right.jpg",
+      "../resources/textures/skybox/left.jpg",
+      "../resources/textures/skybox/top.jpg",
+      "../resources/textures/skybox/bottom.jpg",
+      "../resources/textures/skybox/front.jpg",
+      "../resources/textures/skybox/back.jpg",
+  });
 
   m_sphere.SetShader(s_unlit);
   m_herta.SetShader(s_lit);
