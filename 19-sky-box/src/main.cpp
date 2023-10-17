@@ -237,6 +237,7 @@ auto main() -> int {
   xac::Mesh m_window{cage_vertices, window_indices, {}, "window"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
   xac::Model m_skybox = m_cube;
+  xac::Model m_light = m_sphere;
 
   auto s_unlit =
       std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/unlit.frag.glsl");
@@ -244,6 +245,8 @@ auto main() -> int {
       std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/lit.frag.glsl");
   auto s_skybox =
       std::make_shared<xac::Shader>("../19-sky-box/shader/skybox.vert.glsl", "../19-sky-box/shader/skybox.frag.glsl");
+  auto s_refract =
+      std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/refract.frag.glsl");
 
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
@@ -258,13 +261,14 @@ auto main() -> int {
       "../resources/textures/skybox/back.jpg",
   });
 
-  m_sphere.SetShader(s_unlit);
+  m_light.SetShader(s_unlit);
   m_herta.SetShader(s_lit);
   m_ground.SetShader(s_lit);
   m_cube.SetShader(s_lit);
   m_window.SetShader(s_lit);
   m_quad.SetShader(s_unlit);
   m_skybox.SetShader(s_skybox);
+  m_sphere.SetShader(s_refract);
 
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
@@ -486,21 +490,21 @@ auto main() -> int {
     s_unlit->Use();
     s_unlit->SetMat4("Model", light_model);
     s_unlit->SetVec4("color", p_lights[0].color);
-    m_sphere.Draw();
+    m_light.Draw();
 
     s_unlit->Use();
     glm::vec3 light2_pos{3, 2, 0};
     auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
     s_unlit->SetMat4("Model", light2_model);
     s_unlit->SetVec4("color", p_lights[1].color);
-    m_sphere.Draw();
+    m_light.Draw();
 
     s_unlit->Use();
     glm::vec3 d_light_pos = d_lights[0].direction * 40.0f;
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light_pos), glm::vec3{3.0f});
     s_unlit->SetMat4("Model", d_light_model);
     s_unlit->SetVec4("color", d_lights[0].color);
-    m_sphere.Draw();
+    m_light.Draw();
 #pragma endregion
 
 #pragma region common settings for obj shader
@@ -605,6 +609,18 @@ auto main() -> int {
     s_lit->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
 
     m_cube.Draw();
+#pragma endregion
+
+#pragma region render sphere
+    s_refract->Use();
+    s_refract->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(0, 30, 0)), glm::vec3{3.0f}));
+    s_refract->SetMat4("View", global_context.camera_->GetViewMatrix());
+    s_refract->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    s_refract->SetVec3("ws_cam_pos", global_context.camera_->GetPosition());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
+    s_refract->SetInt("skybox", 0);
+    m_sphere.Draw();
 #pragma endregion
 
 #pragma region render herta
