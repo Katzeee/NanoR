@@ -139,7 +139,7 @@ auto main() -> int {
     {{-1.0f, -1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}}, 
   };
 
-  std::vector<xac::Mesh::Vertex> box_vertices {
+  std::vector<xac::Mesh::Vertex> cage_vertices {
     // positions              normals        texture coords
     {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}}, 
     {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f}}, 
@@ -177,17 +177,15 @@ auto main() -> int {
 #pragma region setup objs
   xac::Model m_herta("../resources/models/Herta/heita.obj");
   xac::Model m_sphere("../resources/models/Sphere/sphere.obj");
-  // xac::Mesh m_sphere{box_vertices, light_box_indices, {}, "light"};
-  // xac::Mesh m_cube = m_light_cube;
   xac::Model m_cube("../resources/models/Cube/cube.obj");
-  xac::Mesh m_ground{box_vertices, ground_indices, {}, "ground"};
-  xac::Mesh m_window{box_vertices, window_indices, {}, "window"};
+  xac::Mesh m_ground{cage_vertices, ground_indices, {}, "ground"};
+  xac::Mesh m_window{cage_vertices, window_indices, {}, "window"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
 
-  auto s_unlit = std::make_shared<xac::Shader>("../18-frame-buffer/shader/common_vert.glsl",
-                                               "../18-frame-buffer/shader/unlit_frag.glsl");
-  auto s_lit = std::make_shared<xac::Shader>("../18-frame-buffer/shader/common_vert.glsl",
-                                             "../18-frame-buffer/shader/obj_frag.glsl");
+  auto s_unlit = std::make_shared<xac::Shader>("../18-frame-buffer/shader/common.vert.glsl",
+                                               "../18-frame-buffer/shader/unlit.frag.glsl");
+  auto s_lit = std::make_shared<xac::Shader>("../18-frame-buffer/shader/common.vert.glsl",
+                                             "../18-frame-buffer/shader/lit.frag.glsl");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_transparent_window = xac::LoadTextureFromFile("../resources/textures/blending_transparent_window.png");
@@ -202,7 +200,7 @@ auto main() -> int {
 
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
-    m_cage_faces[i] = std::make_shared<xac::Mesh>(box_vertices, cage_face_indices[i], xac::Material{});
+    m_cage_faces[i] = std::make_shared<xac::Mesh>(cage_vertices, cage_face_indices[i], xac::Material{});
     m_cage_faces[i]->SetShader(s_lit);
   }
 
