@@ -171,6 +171,61 @@ auto main() -> int {
     {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 1.0f}}, 
     {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f}}, 
   };
+
+    float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+
   // clang-format on
 #pragma endregion
 
@@ -181,11 +236,15 @@ auto main() -> int {
   xac::Mesh m_ground{cage_vertices, ground_indices, {}, "ground"};
   xac::Mesh m_window{cage_vertices, window_indices, {}, "window"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
+  xac::Model m_skybox = m_cube;
 
   auto s_unlit =
       std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/unlit.frag.glsl");
   auto s_lit =
       std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/lit.frag.glsl");
+  auto s_skybox =
+      std::make_shared<xac::Shader>("../19-sky-box/shader/skybox.vert.glsl", "../19-sky-box/shader/skybox.frag.glsl");
+
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_transparent_window = xac::LoadTextureFromFile("../resources/textures/blending_transparent_window.png");
@@ -205,6 +264,7 @@ auto main() -> int {
   m_cube.SetShader(s_lit);
   m_window.SetShader(s_lit);
   m_quad.SetShader(s_unlit);
+  m_skybox.SetShader(s_skybox);
 
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
@@ -235,7 +295,7 @@ auto main() -> int {
   // HINT: bind depth buffer
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    std::cout << "ERROR::FRAMEBUFFER: Framebuffer is not complete!" << std::endl;
   }
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #pragma endregion
@@ -257,7 +317,7 @@ auto main() -> int {
   glm::vec3 rotation_axis{1, 1, 1};
   float rotation_degree{60};
 
-  int gl_depth_func = 1;
+  int gl_depth_func = GL_LEQUAL - GL_NEVER;
   xac::CheckChangeThen check_gl_depth_func{&gl_depth_func, [](int new_val) { glDepthFunc(GL_NEVER + new_val); }};
   int shader_debug_mode = 0;
   xac::CheckChangeThen check_shader_debug_mode{&shader_debug_mode, [&](int new_val) {
@@ -384,6 +444,23 @@ auto main() -> int {
 
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+#pragma region render skybox
+    glDepthMask(GL_FALSE);
+    glBindVertexArray(skyboxVAO);
+
+    glm::mat4 skybox_view = glm::mat4(glm::mat3(global_context.camera_->GetViewMatrix()));
+    s_skybox->Use();
+    // s_skybox->SetMat4("View", skybox_view);
+    s_skybox->SetMat4("View", skybox_view);
+    s_skybox->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
+    s_skybox->SetInt("skybox", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // m_skybox.Draw();
+    glDepthMask(GL_TRUE);
+#pragma endregion
 
 #pragma region render light
     glm::mat4 light_model(1.0f);
