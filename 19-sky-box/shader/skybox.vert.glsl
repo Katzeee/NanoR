@@ -9,7 +9,6 @@ out vec3 uv;
 
 void main() {
   uv = P;
-  // vec4 pos = Proj * View * vec4(P, 1);
-  // gl_Position = pos.xyww;
-  gl_Position = Proj * View * vec4(P, 1);
+  vec4 pos = Proj * View * vec4(P, 1);
+  gl_Position = pos.xyww;
 }

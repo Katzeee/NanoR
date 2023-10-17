@@ -449,23 +449,6 @@ auto main() -> int {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-#pragma region render skybox
-    glDepthMask(GL_FALSE);
-    glBindVertexArray(skyboxVAO);
-
-    glm::mat4 skybox_view = glm::mat4(glm::mat3(global_context.camera_->GetViewMatrix()));
-    s_skybox->Use();
-    // s_skybox->SetMat4("View", skybox_view);
-    s_skybox->SetMat4("View", skybox_view);
-    s_skybox->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
-    s_skybox->SetInt("skybox", 0);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    // m_skybox.Draw();
-    glDepthMask(GL_TRUE);
-#pragma endregion
-
 #pragma region render light
     glm::mat4 light_model(1.0f);
     float rotate_speed = 0.5;
@@ -636,7 +619,24 @@ auto main() -> int {
     glad_glStencilMask(0xFF);
 #pragma endregion
 
-#pragma region render window
+#pragma region render skybox
+    glDepthMask(GL_FALSE);
+    glBindVertexArray(skyboxVAO);
+
+    glm::mat4 skybox_view = glm::mat4(glm::mat3(global_context.camera_->GetViewMatrix()));
+    s_skybox->Use();
+    // s_skybox->SetMat4("View", skybox_view);
+    s_skybox->SetMat4("View", skybox_view);
+    s_skybox->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
+    s_skybox->SetInt("skybox", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // m_skybox.Draw();
+    glDepthMask(GL_TRUE);
+#pragma endregion
+
+#pragma region render transparent window
     s_lit->Use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_transparent_window);
@@ -663,7 +663,6 @@ auto main() -> int {
       s_lit->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
       m_window.Draw();
     }
-
 #pragma endregion
 
 #pragma region render to quad
@@ -683,7 +682,6 @@ auto main() -> int {
     glBindTexture(GL_TEXTURE_2D, t_framebuffer_color);
     s_unlit->SetInt("tex", 0);
     m_quad.Draw();
-
 #pragma endregion
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
