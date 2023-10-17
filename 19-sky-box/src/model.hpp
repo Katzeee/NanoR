@@ -34,7 +34,7 @@ static auto LoadCubemapFromFile(std::vector<std::string> file_paths) -> unsigned
   for (auto i = 0; i < file_paths.size(); i++) {
     unsigned char *image_data = stbi_load(file_paths[i].c_str(), &x, &y, &nchs, 0);
     if (image_data) {
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
       std::cout << "LoadTex: " << file_paths[i] << ", channels: " << nchs << std::endl;
     } else {
       std::cout << "ERROR::LoadTex: " << file_paths[i] << std::endl;
