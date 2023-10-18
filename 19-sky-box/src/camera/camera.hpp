@@ -40,30 +40,42 @@ class Camera {
     throw std::logic_error("not implemented");
   }
 
+  auto SetPosition(glm::vec3 position) { position_ = position; }
+  auto GetFornt() -> glm::vec3 { return front_; }
+  auto GetUp() -> glm::vec3 { return up_; }
+  auto GetPosition() -> glm::vec3 { return position_; }
+  auto SetAspect(float aspect) -> void { aspect_ = aspect; }
+  auto SetFov(float fov) { fov_ = fov; }
+  void UpdateFreeCamera(float delta_time);
+  void Tick(float delta_time);
   void UpdateScroll(double y_offset) {
     if (fov_ >= 1.0f && fov_ <= 45.0f) {
-      fov_ -= static_cast<float>(y_offset) * 0.05;
+      auto fov = fov_ - static_cast<float>(y_offset) * 0.05;
+      SetFov(fov);
     }
     if (fov_ <= 1.0f) {
-      fov_ = 1.0f;
+      SetFov(1.0f);
     }
     if (fov_ >= 45.0f) {
-      fov_ = 45.0f;
+      SetFov(45.0f);
     }
   }
-
   void UpdateCursorMove(float x_offset, float y_offset) {
     yaw_ += x_offset * Camera::sensitivity_;
     pitch_ -= y_offset * Camera::sensitivity_;
     CheckPitchSafety();
     UpdateVectors();
   }
-  auto GetFornt() -> glm::vec3 { return front_; }
-  auto GetUp() -> glm::vec3 { return up_; }
-  auto GetPosition() -> glm::vec3 { return position_; }
-  auto SetAspect(float aspect) -> void { aspect_ = aspect; }
-  void UpdateFreeCamera(float delta_time);
-  void Tick(float delta_time);
+  auto GetYaw() -> float { return glm::degrees(yaw_); }
+  auto GetPitch() -> float { return glm::degrees(pitch_); }
+  void SetYaw(float yaw) {
+    yaw_ = glm::radians(yaw);
+    UpdateVectors();
+  }
+  void SetPitch(float pitch) {
+    pitch_ = glm::radians(pitch);
+    UpdateVectors();
+  }
 
   float speed_ = 15.0f;
 
@@ -99,6 +111,13 @@ class Camera {
     front_.x = std::cos(pitch_) * std::cos(yaw_);
     front_.z = std::cos(pitch_) * std::sin(yaw_);
     front_ = glm::normalize(front_);
+    if (glm::distance(front_, glm::vec3{0, -1, 0}) < 0.01) {
+      up_ = glm::vec3{0, 0, 1};
+      return;
+    } else if (glm::distance(front_, glm::vec3{0, 1, 0}) < 0.01) {
+      up_ = glm::vec3{0, 0, -1};
+      return;
+    }
     glm::vec3 right = glm::normalize(glm::cross(front_, Camera::world_up_));
     up_ = glm::normalize(glm::cross(right, front_));
   };
