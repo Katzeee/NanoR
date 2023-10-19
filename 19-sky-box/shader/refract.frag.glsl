@@ -12,5 +12,9 @@ void main() {
   vec3 V = normalize(ws_cam_pos - P);
   float ratio = 1.00 / 1.52;
   vec3 Refract = refract(-V, normalize(N), ratio);
-  FragColor = texture(skybox, Refract);
+  vec3 R = reflect(V, normalize(N));
+  // FragColor = texture(skybox, R);
+  FragColor = texture(skybox, vec3(R.xy, -R.z));
+
+  // FragColor = texture(skybox, Refract);
 }

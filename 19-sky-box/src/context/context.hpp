@@ -18,8 +18,8 @@ class GlobalContext {
   std::unique_ptr<Camera> camera_;
 
   uint32_t control_commad_ = 0;
-  int window_width_ = 1300;
-  int window_height_ = 600;
+  int window_width_ = 1540;
+  int window_height_ = 900;
   int imgui_width_ = 340;
 
  private:
