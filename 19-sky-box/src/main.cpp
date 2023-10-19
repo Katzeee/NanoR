@@ -246,8 +246,8 @@ auto main() -> int {
       std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/lit.frag.glsl");
   auto s_skybox =
       std::make_shared<xac::Shader>("../19-sky-box/shader/skybox.vert.glsl", "../19-sky-box/shader/skybox.frag.glsl");
-  auto s_refract =
-      std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/refract.frag.glsl");
+  auto s_reflect =
+      std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/reflect.frag.glsl");
 
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
@@ -270,7 +270,7 @@ auto main() -> int {
   m_quad.SetShader(s_unlit);
   // m_skybox.SetShader(s_skybox);
   // m_sphere.SetShader(s_refract);
-  m_cube.SetShader(s_refract);
+  m_cube.SetShader(s_reflect);
 
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
@@ -775,14 +775,14 @@ auto main() -> int {
       DrawScene(delta_time_per_frame, *global_context.camera_);
 
 #pragma region render cube
-      s_refract->Use();
-      s_refract->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(0, 30, 0)), glm::vec3{4.0f}));
-      s_refract->SetMat4("View", global_context.camera_->GetViewMatrix());
-      s_refract->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
-      s_refract->SetVec3("ws_cam_pos", global_context.camera_->GetPosition());
+      s_reflect->Use();
+      s_reflect->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(0, 30, 0)), glm::vec3{4.0f}));
+      s_reflect->SetMat4("View", global_context.camera_->GetViewMatrix());
+      s_reflect->SetMat4("Proj", global_context.camera_->GetProjectionMatrix());
+      s_reflect->SetVec3("ws_cam_pos", global_context.camera_->GetPosition());
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_CUBE_MAP, t_fb_cube_map);
-      s_refract->SetInt("skybox", 0);
+      s_reflect->SetInt("skybox", 0);
       m_cube.Draw();
 #pragma endregion
     }
