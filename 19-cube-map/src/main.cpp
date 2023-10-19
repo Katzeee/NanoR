@@ -241,13 +241,13 @@ auto main() -> int {
   xac::Model m_light = m_sphere;
 
   auto s_unlit =
-      std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/unlit.frag.glsl");
+      std::make_shared<xac::Shader>("../19-cube-map/shader/common.vert.glsl", "../19-cube-map/shader/unlit.frag.glsl");
   auto s_lit =
-      std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/lit.frag.glsl");
+      std::make_shared<xac::Shader>("../19-cube-map/shader/common.vert.glsl", "../19-cube-map/shader/lit.frag.glsl");
   auto s_skybox =
-      std::make_shared<xac::Shader>("../19-sky-box/shader/skybox.vert.glsl", "../19-sky-box/shader/skybox.frag.glsl");
-  auto s_reflect =
-      std::make_shared<xac::Shader>("../19-sky-box/shader/common.vert.glsl", "../19-sky-box/shader/reflect.frag.glsl");
+      std::make_shared<xac::Shader>("../19-cube-map/shader/skybox.vert.glsl", "../19-cube-map/shader/skybox.frag.glsl");
+  auto s_reflect = std::make_shared<xac::Shader>("../19-cube-map/shader/common.vert.glsl",
+                                                 "../19-cube-map/shader/reflect.frag.glsl");
 
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");

@@ -59,7 +59,7 @@ add_subdirectory(15-stencil-test)
 add_subdirectory(16-alpha-blend)
 add_subdirectory(17-face-culling)
 add_subdirectory(18-frame-buffer)
-add_subdirectory(19-sky-box)
+add_subdirectory(19-cube-map)
 
 ##################### demo
 add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
