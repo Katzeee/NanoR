@@ -725,7 +725,7 @@ auto main() -> int {
 
     // top
     if (debug_sky_map) {
-      glViewport(640, 600, 300, 300);
+      glViewport(640, 0, 300, 300);  // show at bottom
     } else {
       glBindFramebuffer(GL_FRAMEBUFFER, fbo_dem[2]);
     }
@@ -735,7 +735,7 @@ auto main() -> int {
 
     // bottom
     if (debug_sky_map) {
-      glViewport(640, 0, 300, 300);
+      glViewport(640, 600, 300, 300);  // show at top
     } else {
       glBindFramebuffer(GL_FRAMEBUFFER, fbo_dem[3]);
     }
