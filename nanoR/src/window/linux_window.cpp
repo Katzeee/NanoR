@@ -1,4 +1,5 @@
 #include "linux_window.h"
+
 #include "window.h"
 
 namespace nanoR {
@@ -38,5 +39,7 @@ auto LinuxWindow::Shutdown() -> void {
   window_ = nullptr;
 }
 
-LinuxWindow::~LinuxWindow() { Shutdown(); }
+LinuxWindow::~LinuxWindow() {
+  Shutdown();
+}
 }  // namespace nanoR
