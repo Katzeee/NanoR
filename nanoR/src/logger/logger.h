@@ -26,6 +26,7 @@ enum class LogLevel { kTrace = 0, kDebug, kInfo, kWarning, kError, kFatal };
 class Logger {
  public:
   template <typename... T>
+  // HINT: fmt::format_string requires fmt to be a constexpr
   void Log(LogLevel level, SourceLocationHelper<fmt::format_string<T...>> fmt, T &&...args) {
     if (level >= level_) {
       std::cout << fmt::format("[{:^9}] {:<30}:{:<30}:{:>4}|| ", LevelToString(level) + 1, fmt.location_.file_name(),
