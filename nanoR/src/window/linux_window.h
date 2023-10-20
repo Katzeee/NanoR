@@ -14,6 +14,8 @@ class LinuxWindow final : public Window {
   auto Shutdown() -> void override;
   ~LinuxWindow() override;
 
+  auto WindowResizeCallback(GLFWwindow *window, int width, int height) -> void;
+
  private:
   GLFWwindow *window_;
 };

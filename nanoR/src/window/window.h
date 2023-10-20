@@ -1,4 +1,8 @@
 #pragma once
+#include <functional>
+#include <memory>
+
+#include "event/event.h"
 
 namespace nanoR {
 struct WindowProp {
@@ -12,11 +16,16 @@ struct WindowProp {
 
 class Window {
  public:
+  struct UserData {
+    std::function<void(std::shared_ptr<Event>)> event_callback;
+  };
   Window() = default;
   virtual auto Init(WindowProp window_prop) -> void = 0;
   virtual auto Tick() -> void = 0;
   virtual auto Shutdown() -> void = 0;
   virtual ~Window() = default;
+
+  UserData user_data_;
 
  protected:
 };

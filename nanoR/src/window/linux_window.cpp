@@ -1,6 +1,6 @@
-#include "linux_window.h"
+#include <functional>
 
-#include "window.h"
+#include "nanorpch.h"
 
 namespace nanoR {
 LinuxWindow::LinuxWindow(WindowProp window_prop) {
@@ -9,6 +9,7 @@ LinuxWindow::LinuxWindow(WindowProp window_prop) {
   }
 }
 auto LinuxWindow::Init(WindowProp window_prop) -> void {
+  // SECTION: Create window
   if (!glfwInit()) {
     LOG_FATAL("GLFW initialize failed!\n");
     glfwTerminate();
@@ -27,6 +28,19 @@ auto LinuxWindow::Init(WindowProp window_prop) -> void {
   LOG_INFO("Window initialize with width {} height {} title \"{}\".\n", window_prop.width, window_prop.height,
            window_prop.title);
   glfwMakeContextCurrent(window_);
+  glfwSetWindowUserPointer(window_, reinterpret_cast<void *>(&user_data_));
+
+  // SECTION: Setup callbacks
+  glfwSetWindowSizeCallback(window_, [](GLFWwindow *window, int width, int height) {
+    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto window_resize_event = std::make_shared<WindowResizeEvent>(width, height);
+    user_data->event_callback(window_resize_event);
+  });
+  glfwSetWindowCloseCallback(window_, [](GLFWwindow *window) {
+    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto window_close_event = std::make_shared<WindowCloseEvent>();
+    user_data->event_callback(window_close_event);
+  });
 }
 
 auto LinuxWindow::Tick() -> void {
@@ -42,4 +56,6 @@ auto LinuxWindow::Shutdown() -> void {
 LinuxWindow::~LinuxWindow() {
   Shutdown();
 }
+
+auto LinuxWindow::WindowResizeCallback(GLFWwindow *window, int width, int height) -> void {}
 }  // namespace nanoR
