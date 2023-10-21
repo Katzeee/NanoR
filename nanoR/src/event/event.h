@@ -10,7 +10,7 @@ enum class EventType {
   kUnknown,
   kWindowResize, kWindowClose, kWindowMove, kWindowFocus, kWindowUnFocus,
   kKeyDown, kKeyUp, 
-  kMouseButtonDown, kMouseButtonUp, kMouseButtonScroll, kMouseCursorMove,
+  kMouseCursorMove, kMouseButtonDown, kMouseButtonUp, kMouseButtonScroll,
 };
 // clang-format on 
 

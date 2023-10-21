@@ -41,6 +41,26 @@ auto LinuxWindow::Init(WindowProp window_prop) -> void {
     auto window_close_event = std::make_shared<WindowCloseEvent>();
     user_data->event_callback(window_close_event);
   });
+  glfwSetCursorPosCallback(window_, [](GLFWwindow *window, double x, double y) {
+    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto mouse_cursor_move_event = std::make_shared<MouseCursorMoveEvent>(x, y);
+    user_data->event_callback(mouse_cursor_move_event);
+  });
+  glfwSetMouseButtonCallback(window_, [](GLFWwindow *window, int button, int action, int mods) {
+    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    if (action == GLFW_PRESS) {
+      auto mouse_button_down_event = std::make_shared<MouseButtonDownEvent>(button, mods);
+      user_data->event_callback(mouse_button_down_event);
+    } else if (action == GLFW_RELEASE) {
+      auto mouse_button_up_event = std::make_shared<MouseButtonUpEvent>(button, mods);
+      user_data->event_callback(mouse_button_up_event);
+    }
+  });
+  glfwSetScrollCallback(window_, [](GLFWwindow *window, double xoffset, double yoffset) {
+    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto mouse_button_scroll_event = std::make_shared<MouseButtonScrollEvent>(xoffset, yoffset);
+    user_data->event_callback(mouse_button_scroll_event);
+  });
 }
 
 auto LinuxWindow::Tick() -> void {

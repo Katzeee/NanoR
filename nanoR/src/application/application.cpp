@@ -12,7 +12,7 @@ auto Application::Init() -> void {
   window_->user_data_.event_callback = std::bind(&Application::EventCallback, this, std::placeholders::_1);
 }
 
-auto Application::Tick() -> void {
+auto Application::Run() -> void {
   while (is_running_) {
     window_->Tick();
   }

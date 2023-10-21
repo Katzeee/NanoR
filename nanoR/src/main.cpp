@@ -5,7 +5,7 @@
 
 int main() {
   std::unique_ptr<nanoR::Application> app = std::make_unique<nanoR::Application>();
-  app->Tick();
+  app->Run();
 
   return 0;
 }

@@ -9,7 +9,7 @@ class Application {
   Application();
   virtual ~Application() = default;
   virtual auto Init() -> void;
-  virtual auto Tick() -> void;
+  virtual auto Run() -> void;
   auto EventCallback(std::shared_ptr<Event> event) -> void;
 
  protected:
