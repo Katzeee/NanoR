@@ -20,6 +20,9 @@ auto Application::Tick() -> void {
 
 auto Application::EventCallback(std::shared_ptr<Event> event) -> void {
   LOG_TRACE("{}", event->ToString());
+  if (event->GetType() == EventType::kWindowClose) {
+    is_running_ = false;
+  }
 }
 
 }  // namespace nanoR
