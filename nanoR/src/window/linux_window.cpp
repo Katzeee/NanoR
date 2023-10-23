@@ -1,5 +1,6 @@
 #include "linux_window.h"
 
+#include "event/key_event.h"
 #include "event/mouse_event.h"
 #include "event/window_event.h"
 #include "nanorpch.h"
@@ -62,6 +63,16 @@ auto LinuxWindow::Init(WindowProp window_prop) -> void {
     UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     auto mouse_button_scroll_event = std::make_shared<MouseButtonScrollEvent>(xoffset, yoffset);
     user_data->event_callback(mouse_button_scroll_event);
+  });
+  glfwSetKeyCallback(window_, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    if (action == GLFW_PRESS) {
+      auto key_down_event = std::make_shared<KeyDownEvent>(scancode, mods);
+      user_data->event_callback(key_down_event);
+    } else if (action == GLFW_RELEASE) {
+      auto key_up_event = std::make_shared<KeyUpEvent>(scancode, mods);
+      user_data->event_callback(key_up_event);
+    }
   });
 }
 

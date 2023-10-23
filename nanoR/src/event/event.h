@@ -12,15 +12,30 @@ enum class EventType {
 };
 // clang-format on 
 
-#define DECLARE_EVENT_TYPE(event_name) static auto Type() -> EventType { return EventType::event_name; } \
-                                       auto GetType() -> EventType override { return EventType::event_name; } \
-                                       auto GetName() -> std::string override { return "Event::" #event_name; }
+
+// HINT: enum class cannot use operator | 
+struct EventCategory {
+  static const uint32_t kUnknown  = 1;
+  static const uint32_t kInput    = 1 << 1;
+  static const uint32_t kKey      = 1 << 2;
+  static const uint32_t kMouse    = 1 << 3;
+  static const uint32_t kWindow   = 1 << 4;
+
+  static const uint32_t kMaxSize  = 1 << 30;
+};
+
+#define DECLARE_EVENT_TYPE(event_type) static auto Type() -> EventType { return EventType::event_type; } \
+                                       auto GetType() const -> EventType override { return EventType::event_type; } \
+                                       auto GetName() const -> std::string override { return "Event::" #event_type; }
+
+#define DECLARE_EVENT_CATEGORY(event_category) auto GetCategory() const -> uint32_t override { return event_category; }
 
 class Event {
 public:
-  virtual auto ToString() -> std::string { return fmt::format("[{}] ToString NOT IMPLEMENTED\n", GetName()); } 
-  virtual auto GetType() -> EventType { return EventType::kUnknown; } 
-  virtual auto GetName() -> std::string { return "EventType::kUnknown"; } 
+  virtual auto ToString() const -> std::string { return fmt::format("[{}] ToString NOT IMPLEMENTED\n", GetName()); } 
+  virtual auto GetType() const -> EventType { return EventType::kUnknown; } 
+  virtual auto GetName() const -> std::string { return "EventType::kUnknown"; } 
+  virtual auto GetCategory() const -> uint32_t = 0;
 };
 
 }  // namespace nanoR

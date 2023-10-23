@@ -6,9 +6,10 @@ namespace nanoR {
 class MouseCursorMoveEvent final : public Event {
  public:
   DECLARE_EVENT_TYPE(kMouseCursorMove)
+  DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
   MouseCursorMoveEvent(double xpos, double ypos) : xpos_(xpos), ypos_(ypos) {}
-  auto ToString() -> std::string override {
+  auto ToString() const -> std::string override {
     return fmt::format("[MouseCursorMoveEvent] xpos: {}, ypos: {}\n", xpos_, ypos_);
   }
 
@@ -21,9 +22,10 @@ class MouseCursorMoveEvent final : public Event {
 class MouseButtonDownEvent final : public Event {
  public:
   DECLARE_EVENT_TYPE(kMouseButtonDown)
+  DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
   MouseButtonDownEvent(int button_code, int mods) : button_code_(button_code), mods_(mods) {}
-  auto ToString() -> std::string override {
+  auto ToString() const -> std::string override {
     return fmt::format("[MouseButtonDownEvent] button: {}, mods: {}\n", button_code_, mods_);
   }
 
@@ -35,9 +37,10 @@ class MouseButtonDownEvent final : public Event {
 class MouseButtonUpEvent final : public Event {
  public:
   DECLARE_EVENT_TYPE(kMouseButtonUp)
+  DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
   MouseButtonUpEvent(int button_code, int mods) : button_code_(button_code), mods_(mods) {}
-  auto ToString() -> std::string override {
+  auto ToString() const -> std::string override {
     return fmt::format("[MouseButtonUpEvent] button: {}, mods: {}\n", button_code_, mods_);
   }
 
@@ -49,9 +52,10 @@ class MouseButtonUpEvent final : public Event {
 class MouseButtonScrollEvent final : public Event {
  public:
   DECLARE_EVENT_TYPE(kMouseButtonScroll)
+  DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
   MouseButtonScrollEvent(double xoffset, double yoffset) : xoffset_(xoffset), yoffset_(yoffset) {}
-  auto ToString() -> std::string override {
+  auto ToString() const -> std::string override {
     return fmt::format("[MouseButtonScrollEvent] xoffset: {}, yoffset: {}\n", xoffset_, yoffset_);
   }
 

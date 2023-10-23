@@ -6,9 +6,10 @@ namespace nanoR {
 class WindowResizeEvent final : public Event {
  public:
   DECLARE_EVENT_TYPE(kWindowResize)
+  DECLARE_EVENT_CATEGORY(EventCategory::kWindow)
 
   WindowResizeEvent(int width, int height) : width_(width), height_(height) {}
-  auto ToString() -> std::string override {
+  auto ToString() const -> std::string override {
     return fmt::format("[WindowResizeEvent] width: {}, height: {}\n", width_, height_);
   }
 
@@ -20,9 +21,10 @@ class WindowResizeEvent final : public Event {
 class WindowCloseEvent final : public Event {
  public:
   DECLARE_EVENT_TYPE(kWindowClose)
+  DECLARE_EVENT_CATEGORY(EventCategory::kWindow)
 
   WindowCloseEvent() = default;
-  auto ToString() -> std::string override {
+  auto ToString() const -> std::string override {
     return fmt::format("[WindowCloseEvent]\n");
   }
 };
