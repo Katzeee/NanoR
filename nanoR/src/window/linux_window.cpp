@@ -1,5 +1,7 @@
-#include <functional>
+#include "linux_window.h"
 
+#include "event/mouse_event.h"
+#include "event/window_event.h"
 #include "nanorpch.h"
 
 namespace nanoR {

@@ -1,7 +1,5 @@
 #pragma once
-#include <string>
-
-#include "fmt/core.h"
+#include "nanorpch.h"
 
 namespace nanoR {
 
@@ -23,7 +21,6 @@ public:
   virtual auto ToString() -> std::string { return fmt::format("[{}] ToString NOT IMPLEMENTED\n", GetName()); } 
   virtual auto GetType() -> EventType { return EventType::kUnknown; } 
   virtual auto GetName() -> std::string { return "EventType::kUnknown"; } 
-
-
 };
+
 }  // namespace nanoR

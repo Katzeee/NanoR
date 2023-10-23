@@ -1,6 +1,4 @@
 #pragma once
-#include <functional>
-#include <memory>
 
 #include "event/event.h"
 

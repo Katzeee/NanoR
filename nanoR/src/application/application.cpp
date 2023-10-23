@@ -1,5 +1,7 @@
 #include "application.h"
 
+#include "window/linux_window.h"
+
 namespace nanoR {
 
 Application::Application() {

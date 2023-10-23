@@ -1,12 +1,13 @@
 #pragma once
 #ifndef NDEBUG
-#include <fmt/core.h>
 
 #include <experimental/source_location>
 #include <iostream>
 #include <source_location>
 #include <type_traits>
 #include <utility>
+
+#include "nanorpch.h"
 
 namespace nanoR {
 template <typename T>
@@ -34,7 +35,9 @@ class Logger {
                        fmt::vformat(fmt.fmt_, fmt::make_format_args(args...));
     }
   }
-  void SetLogLevel(LogLevel level) { level_ = level; }
+  void SetLogLevel(LogLevel level) {
+    level_ = level;
+  }
 
  private:
   LogLevel level_ = LogLevel::kTrace;

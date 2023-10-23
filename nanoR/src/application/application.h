@@ -1,9 +1,12 @@
 #pragma once
-#include <memory>
-
 #include "nanorpch.h"
+#include "window/window.h"
 
 namespace nanoR {
+
+class Window;
+class Event;
+
 class Application {
  public:
   Application();

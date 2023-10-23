@@ -1,7 +1,6 @@
 #pragma once
 #include <GLFW/glfw3.h>
 
-#include "logger/logger.h"
 #include "window.h"
 
 namespace nanoR {
