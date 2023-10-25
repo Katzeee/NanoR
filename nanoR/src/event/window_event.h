@@ -10,7 +10,7 @@ class WindowResizeEvent final : public Event {
 
   WindowResizeEvent(int width, int height) : width_(width), height_(height) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[WindowResizeEvent] width: {}, height: {}\n", width_, height_);
+    return fmt::format("[WindowResizeEvent] width: {}, height: {}", width_, height_);
   }
 
  private:
@@ -25,7 +25,7 @@ class WindowCloseEvent final : public Event {
 
   WindowCloseEvent() = default;
   auto ToString() const -> std::string override {
-    return fmt::format("[WindowCloseEvent]\n");
+    return fmt::format("[WindowCloseEvent]");
   }
 };
 

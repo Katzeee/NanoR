@@ -32,7 +32,7 @@ struct EventCategory {
 
 class Event {
 public:
-  virtual auto ToString() const -> std::string { return fmt::format("[{}] ToString NOT IMPLEMENTED\n", GetName()); } 
+  virtual auto ToString() const -> std::string { return fmt::format("[{}] ToString NOT IMPLEMENTED", GetName()); } 
   virtual auto GetType() const -> EventType { return EventType::kUnknown; } 
   virtual auto GetName() const -> std::string { return "EventType::kUnknown"; } 
   virtual auto GetCategory() const -> uint32_t = 0;

@@ -10,7 +10,7 @@ class KeyDownEvent final : public Event {
 
   KeyDownEvent(int key_code, int mods) : key_code_(key_code), mods_(mods) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[KeyDownEvent] button: {}, mods: {}\n", key_code_, mods_);
+    return fmt::format("[KeyDownEvent] button: {}, mods: {}", key_code_, mods_);
   }
 
  private:
@@ -25,7 +25,7 @@ class KeyUpEvent final : public Event {
 
   KeyUpEvent(int key_code, int mods) : key_code_(key_code), mods_(mods) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[KeyUpEvent] button: {}, mods: {}\n", key_code_, mods_);
+    return fmt::format("[KeyUpEvent] button: {}, mods: {}", key_code_, mods_);
   }
 
  private:

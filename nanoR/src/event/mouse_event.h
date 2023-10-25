@@ -10,7 +10,7 @@ class MouseCursorMoveEvent final : public Event {
 
   MouseCursorMoveEvent(double xpos, double ypos) : xpos_(xpos), ypos_(ypos) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseCursorMoveEvent] xpos: {}, ypos: {}\n", xpos_, ypos_);
+    return fmt::format("[MouseCursorMoveEvent] xpos: {}, ypos: {}", xpos_, ypos_);
   }
 
  private:
@@ -26,7 +26,7 @@ class MouseButtonDownEvent final : public Event {
 
   MouseButtonDownEvent(int button_code, int mods) : button_code_(button_code), mods_(mods) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseButtonDownEvent] button: {}, mods: {}\n", button_code_, mods_);
+    return fmt::format("[MouseButtonDownEvent] button: {}, mods: {}", button_code_, mods_);
   }
 
  private:
@@ -41,7 +41,7 @@ class MouseButtonUpEvent final : public Event {
 
   MouseButtonUpEvent(int button_code, int mods) : button_code_(button_code), mods_(mods) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseButtonUpEvent] button: {}, mods: {}\n", button_code_, mods_);
+    return fmt::format("[MouseButtonUpEvent] button: {}, mods: {}", button_code_, mods_);
   }
 
  private:
@@ -56,7 +56,7 @@ class MouseButtonScrollEvent final : public Event {
 
   MouseButtonScrollEvent(double xoffset, double yoffset) : xoffset_(xoffset), yoffset_(yoffset) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseButtonScrollEvent] xoffset: {}, yoffset: {}\n", xoffset_, yoffset_);
+    return fmt::format("[MouseButtonScrollEvent] xoffset: {}, yoffset: {}", xoffset_, yoffset_);
   }
 
  private:
