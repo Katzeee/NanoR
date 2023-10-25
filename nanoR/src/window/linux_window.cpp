@@ -28,7 +28,7 @@ auto LinuxWindow::Init(WindowProp window_prop) -> void {
     LOG_FATAL("Window initialize failed!\n");
     throw std::runtime_error("Window initialize failed!");
   }
-  LOG_INFO("Window initialize with width {} height {} title \"{}\".\n", window_prop.width, window_prop.height,
+  LOG_INFO("Window initialize with width {} height {} title \"{}\"\n", window_prop.width, window_prop.height,
            window_prop.title);
   glfwMakeContextCurrent(window_);
   glfwSetWindowUserPointer(window_, reinterpret_cast<void *>(&user_data_));
