@@ -26,11 +26,6 @@ include_directories(3rdparty)
 
 find_package(glfw3 REQUIRED)
 
-find_package(imgui CONFIG)
-if (NOT TARGET imgui)
-  include(3rdparty/imgui.cmake)
-endif()
-
 find_package(glad CONFIG)
 if (NOT TARGET glad::glad)
   MESSAGE(STATUS "Cannot find glad, try compile from source.")
@@ -38,6 +33,7 @@ if (NOT TARGET glad::glad)
   add_library(glad OBJECT ${glad_src})
   target_include_directories(glad PUBLIC 3rdparty/glad)
   add_library(glad::glad ALIAS glad)
+  MESSAGE(STATUS "Glad compile done.")
 endif()
 
 find_package(glm REQUIRED)
@@ -46,13 +42,19 @@ FetchContent_Declare(assimp
                      GIT_REPOSITORY https://github.com/assimp/assimp.git
                      GIT_TAG        v5.2.5 
 )
-FetchContent_MakeAvailable(assimp)
 
 FetchContent_Declare(fmt
                      GIT_REPOSITORY https://github.com/fmtlib/fmt
                      GIT_TAG        10.1.0
 )
-FetchContent_MakeAvailable(fmt)
+
+FetchContent_Declare(imgui
+                     GIT_REPOSITORY https://github.com/ocornut/imgui
+                     GIT_TAG        v1.89.9-docking
+)
+
+FetchContent_MakeAvailable(assimp fmt imgui)
+include(3rdparty/imgui.cmake)
 
 add_subdirectory(nanoR)
 add_subdirectory(01-create-window)
@@ -76,5 +78,5 @@ add_subdirectory(18-frame-buffer)
 add_subdirectory(19-cube-map)
 
 ##################### demo
-add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
-target_link_libraries(imgui_demo PRIVATE glfw glad::glad imgui)
+# add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
+# target_link_libraries(imgui_demo PRIVATE glfw glad::glad imgui)

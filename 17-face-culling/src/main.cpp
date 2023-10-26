@@ -4,9 +4,10 @@
 // clang-format on
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
-#include <imgui/imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+#include <imgui.h>
+
 #include <algorithm>
 #include <assimp/Importer.hpp>
 #include <cmath>
@@ -17,6 +18,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+
 #include "camera/camera.hpp"
 #include "context/context.hpp"
 #include "input/input_system.hpp"
@@ -24,6 +26,7 @@
 #include "model.hpp"
 #include "shader/shader.hpp"
 #include "utils.hpp"
+
 
 // HINT: variable prefix for specified kind of objects
 // Mesh, model: m
