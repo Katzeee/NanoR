@@ -12,7 +12,7 @@ class Layer {
     return name_;
   }
 
- private:
+ protected:
   std::string name_;
 };
 }  // namespace nanoR

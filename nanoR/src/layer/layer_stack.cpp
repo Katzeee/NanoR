@@ -4,11 +4,13 @@ namespace nanoR {
 
 auto LayerStack::PushLayer(std::shared_ptr<Layer> layer) -> void {
   layers_.insert(layers_.begin() + last_overlay_layer_ + 1, layer);
+  layer->OnAttach();
 }
 
 auto LayerStack::PushOverlayLayer(std::shared_ptr<Layer> layer) -> void {
   layers_.emplace_front(layer);
   last_overlay_layer_++;
+  layer->OnAttach();
 }
 
 auto LayerStack::PopLayer(std::shared_ptr<Layer> layer) -> void {
@@ -18,6 +20,7 @@ auto LayerStack::PopLayer(std::shared_ptr<Layer> layer) -> void {
       last_overlay_layer_--;
     }
     layers_.erase(layer_it);
+    layer->OnDetach();
   }
 }
 
