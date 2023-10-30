@@ -27,7 +27,6 @@
 #include "shader/shader.hpp"
 #include "utils.hpp"
 
-
 // HINT: variable prefix for specified kind of objects
 // Mesh, model: m
 // Shader: s
@@ -390,8 +389,6 @@ auto main() -> int {
   bool debug_sky_map = false;
   xac::CheckChangeThen check_debug_sky_map{&debug_sky_map, [](int new_val) {}};
 
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
 #pragma endregion
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -606,82 +603,6 @@ auto main() -> int {
 
   // HINT: Render loop start
   while (!glfwWindowShouldClose(window)) {
-#pragma region render imgui
-    {
-      ImGui::NewFrame();
-      ImGui::SetNextWindowPos({0, 0});
-      ImGui::SetNextWindowSize(
-          {static_cast<float>(global_context.imgui_width_), static_cast<float>(global_context.window_height_)});
-      ImGui::Begin("Hello, World!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-      ImGui::SetWindowFontScale(1.2);
-
-      ImGui::ColorEdit4("BG_color", reinterpret_cast<float *>(&background_color), ImGuiColorEditFlags_AlphaPreview);
-
-      if (ImGui::TreeNodeEx("Rotating light", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::ColorEdit3("p_light1", reinterpret_cast<float *>(&p_lights[0].color));
-        ImGui::Separator();
-        ImGui::ColorEdit3("p_light2", reinterpret_cast<float *>(&p_lights[1].color));
-        ImGui::DragFloat3("rotation_axis", reinterpret_cast<float *>(&rotation_axis), 0.005f, -1.0f, 1.0f);
-        ImGui::Separator();
-        ImGui::ColorEdit3("d_light1", reinterpret_cast<float *>(&d_lights[0].color));
-        ImGui::PushItemWidth(80);
-        ImGui::SliderFloat("X", &d_lights[0].direction.x, -1.0f, 1.0f);
-        ImGui::SameLine();
-        ImGui::SliderFloat("Y", &d_lights[0].direction.y, -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_None);
-        ImGui::SameLine();
-        ImGui::SliderFloat("Z", &d_lights[0].direction.z, -1.0f, 1.0f);
-        ImGui::PopItemWidth();
-        ImGui::TreePop();
-      }
-      ImGui::SliderFloat("Camera speed", &global_context.camera_->speed_, 5.0f, 30.0f);
-      ImGui::SliderFloat("rotation_degree", &rotation_degree, 0, 360);
-
-      if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Combo("Debug Mode", &shader_debug_mode, "NODEBUG\0NORMAL\0DEPTH\0");
-        ImGui::Combo("Depth test", &gl_depth_func,
-                     "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0");
-        ImGui::TreePop();
-      }
-
-      if (ImGui::TreeNodeEx("Face culling", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Checkbox("Face culling enable", &face_culling_enable);
-        ImGui::SameLine();
-        ImGui::Checkbox("Debug sky map", &debug_sky_map);
-        ImGui::Combo("Face culling", &culled_face,
-                     "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
-                     "RIGHT\0GL_FRONT_AND_BACK\0");
-        ImGui::TreePop();
-      }
-
-      if (ImGui::CollapsingHeader("Section 2", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("yaw: %f\npitch: %f", global_context.camera_->GetYaw(), global_context.camera_->GetPitch());
-          ImGui::TreePop();
-        }
-
-        if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("xoffset: %f\nyoffset: %f", xac::InputSystem::cursor_x_offset_,
-                      xac::InputSystem::cursor_y_offset_);
-          ImVec2 mouse_position_absolute = ImGui::GetMousePos();
-          ImGui::Text("Position: %f, %f", mouse_position_absolute.x, mouse_position_absolute.y);
-          ImGui::TreePop();
-        }
-        if (ImGui::TreeNodeEx("Command", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("FORWARD: %d, BACKWARD: %d", xac::InCommand(xac::ControlCommand::FORWARD),
-                      xac::InCommand(xac::ControlCommand::BACKWARD));
-          ImGui::Text("LEFT: %4d, RIGHT: %4d", xac::InCommand(xac::ControlCommand::LEFT),
-                      xac::InCommand(xac::ControlCommand::RIGHT));
-          ImGui::Text("DOWN: %4d, UP: %7d", xac::InCommand(xac::ControlCommand::DOWN),
-                      xac::InCommand(xac::ControlCommand::UP));
-          ImGui::TreePop();
-        }
-        ImGui::Text("Frame rate: %f", 1.0 / delta_time_per_frame);
-      }
-      ImGui::End();
-      ImGui::Render();
-    }
-#pragma endregion
-
     check_gl_depth_func();
     check_face_culling_enable();
     check_culled_face();
@@ -810,7 +731,85 @@ auto main() -> int {
     //     glEnable(GL_DEPTH_TEST);
     // #pragma endregion
 
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+#pragma region render imgui
+    {
+      ImGui_ImplOpenGL3_NewFrame();
+      ImGui_ImplGlfw_NewFrame();
+      ImGui::NewFrame();
+      ImGui::SetNextWindowPos({0, 0});
+      ImGui::SetNextWindowSize(
+          {static_cast<float>(global_context.imgui_width_), static_cast<float>(global_context.window_height_)});
+      ImGui::Begin("Hello, World!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+      ImGui::SetWindowFontScale(1.2);
+
+      ImGui::ColorEdit4("BG_color", reinterpret_cast<float *>(&background_color), ImGuiColorEditFlags_AlphaPreview);
+
+      if (ImGui::TreeNodeEx("Rotating light", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::ColorEdit3("p_light1", reinterpret_cast<float *>(&p_lights[0].color));
+        ImGui::Separator();
+        ImGui::ColorEdit3("p_light2", reinterpret_cast<float *>(&p_lights[1].color));
+        ImGui::DragFloat3("rotation_axis", reinterpret_cast<float *>(&rotation_axis), 0.005f, -1.0f, 1.0f);
+        ImGui::Separator();
+        ImGui::ColorEdit3("d_light1", reinterpret_cast<float *>(&d_lights[0].color));
+        ImGui::PushItemWidth(80);
+        ImGui::SliderFloat("X", &d_lights[0].direction.x, -1.0f, 1.0f);
+        ImGui::SameLine();
+        ImGui::SliderFloat("Y", &d_lights[0].direction.y, -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_None);
+        ImGui::SameLine();
+        ImGui::SliderFloat("Z", &d_lights[0].direction.z, -1.0f, 1.0f);
+        ImGui::PopItemWidth();
+        ImGui::TreePop();
+      }
+      ImGui::SliderFloat("Camera speed", &global_context.camera_->speed_, 5.0f, 30.0f);
+      ImGui::SliderFloat("rotation_degree", &rotation_degree, 0, 360);
+
+      if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Combo("Debug Mode", &shader_debug_mode, "NODEBUG\0NORMAL\0DEPTH\0");
+        ImGui::Combo("Depth test", &gl_depth_func,
+                     "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0");
+        ImGui::TreePop();
+      }
+
+      if (ImGui::TreeNodeEx("Face culling", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Checkbox("Face culling enable", &face_culling_enable);
+        ImGui::SameLine();
+        ImGui::Checkbox("Debug sky map", &debug_sky_map);
+        ImGui::Combo("Face culling", &culled_face,
+                     "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
+                     "RIGHT\0GL_FRONT_AND_BACK\0");
+        ImGui::TreePop();
+      }
+
+      if (ImGui::CollapsingHeader("Section 2", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
+          ImGui::Text("yaw: %f\npitch: %f", global_context.camera_->GetYaw(), global_context.camera_->GetPitch());
+          ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
+          ImGui::Text("xoffset: %f\nyoffset: %f", xac::InputSystem::cursor_x_offset_,
+                      xac::InputSystem::cursor_y_offset_);
+          ImVec2 mouse_position_absolute = ImGui::GetMousePos();
+          ImGui::Text("Position: %f, %f", mouse_position_absolute.x, mouse_position_absolute.y);
+          ImGui::TreePop();
+        }
+        if (ImGui::TreeNodeEx("Command", ImGuiTreeNodeFlags_DefaultOpen)) {
+          ImGui::Text("FORWARD: %d, BACKWARD: %d", xac::InCommand(xac::ControlCommand::FORWARD),
+                      xac::InCommand(xac::ControlCommand::BACKWARD));
+          ImGui::Text("LEFT: %4d, RIGHT: %4d", xac::InCommand(xac::ControlCommand::LEFT),
+                      xac::InCommand(xac::ControlCommand::RIGHT));
+          ImGui::Text("DOWN: %4d, UP: %7d", xac::InCommand(xac::ControlCommand::DOWN),
+                      xac::InCommand(xac::ControlCommand::UP));
+          ImGui::TreePop();
+        }
+        ImGui::Text("Frame rate: %f", 1.0 / delta_time_per_frame);
+      }
+      ImGui::End();
+      ImGui::Render();
+      ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+#pragma endregion
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
