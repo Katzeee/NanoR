@@ -1,7 +1,7 @@
 #pragma once
 #include <GLFW/glfw3.h>
 
-#include "window.h"
+#include "window/window.h"
 
 namespace nanoR {
 class LinuxWindow final : public Window {
@@ -11,6 +11,7 @@ class LinuxWindow final : public Window {
   auto Init(WindowProp window_prop = WindowProp{}) -> void override;
   auto Tick() -> void override;
   auto Shutdown() -> void override;
+  auto GetRawWindow() -> void * override;
   ~LinuxWindow() override;
 
   auto WindowResizeCallback(GLFWwindow *window, int width, int height) -> void;

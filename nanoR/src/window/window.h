@@ -21,6 +21,7 @@ class Window {
   virtual auto Init(WindowProp window_prop) -> void = 0;
   virtual auto Tick() -> void = 0;
   virtual auto Shutdown() -> void = 0;
+  virtual auto GetRawWindow() -> void * = 0;
   virtual ~Window() = default;
 
   UserData user_data_;

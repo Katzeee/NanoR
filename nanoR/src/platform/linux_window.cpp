@@ -86,6 +86,10 @@ auto LinuxWindow::Shutdown() -> void {
   window_ = nullptr;
 }
 
+auto LinuxWindow::GetRawWindow() -> void * {
+  return static_cast<void *>(window_);
+}
+
 LinuxWindow::~LinuxWindow() {
   Shutdown();
 }

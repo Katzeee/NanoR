@@ -1,4 +1,5 @@
 #pragma once
+#include "event/event.h"
 #include "nanorpch.h"
 
 namespace nanoR {
@@ -8,6 +9,8 @@ class Layer {
   virtual auto OnAttach() -> void = 0;
   virtual auto Tick() -> void = 0;
   virtual auto OnDetach() -> void = 0;
+  virtual auto OnEvent(Event& event) -> void = 0;
+  virtual auto TickUI() -> void = 0;
   auto GetName() const -> std::string {
     return name_;
   }

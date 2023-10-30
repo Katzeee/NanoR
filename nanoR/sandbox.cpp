@@ -9,6 +9,8 @@ class TestLayer : public nanoR::Layer {
   auto OnAttach() -> void override {}
   auto Tick() -> void override {}
   auto OnDetach() -> void override {}
+  auto OnEvent(nanoR::Event& event) -> void override {}
+  auto TickUI() -> void override {}
 };
 
 class Sandbox : public nanoR::Application {

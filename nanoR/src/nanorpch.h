@@ -2,6 +2,7 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <imgui.h>
 
 #include <deque>
 #include <functional>

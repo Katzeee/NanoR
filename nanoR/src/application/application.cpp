@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include "window/linux_window.h"
+#include "platform/linux_window.h"
 
 namespace nanoR {
 
@@ -18,6 +18,9 @@ auto Application::Init() -> void {
 
 auto Application::Run() -> void {
   while (is_running_) {
+    for (auto&& it : layer_stack_->GetLayers()) {
+      it->Tick();
+    }
     window_->Tick();
   }
 }
