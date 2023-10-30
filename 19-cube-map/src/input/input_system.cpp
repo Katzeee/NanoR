@@ -1,5 +1,7 @@
 #include "input/input_system.hpp"
+
 #include "context/context.hpp"
+#include "imgui.h"
 
 namespace xac {
 
@@ -72,6 +74,10 @@ void InputSystem::OnKey(GLFWwindow *window, int key, int scancode, int action, i
 
 void InputSystem::OnButton(GLFWwindow *window, int button, int action, int mods) {
   double cursor_x, cursor_y;
+  ImGuiIO &io = ImGui::GetIO();
+  if (io.WantCaptureMouse) {
+    return;
+  }
   if (action == GLFW_PRESS) {
   } else if (action == GLFW_RELEASE) {
     switch (button) {
