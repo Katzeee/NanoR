@@ -1,22 +1,24 @@
 #pragma once
 #include <GLFW/glfw3.h>
 
-#include "window/window.h"
+#include "window/window_base.h"
+#include "window/window_prop.h"
 
 namespace nanoR {
-class LinuxWindow final : public Window {
+
+class WindowLinux final : public WindowBase {
  public:
-  LinuxWindow() : LinuxWindow(WindowProp{}) {}
-  LinuxWindow(WindowProp window_prop);
+  WindowLinux() : WindowLinux(WindowProp{}) {}
+  WindowLinux(WindowProp window_prop);
   auto Init(WindowProp window_prop = WindowProp{}) -> void override;
   auto Tick() -> void override;
   auto Shutdown() -> void override;
   auto GetRawWindow() -> void * override;
-  ~LinuxWindow() override;
+  ~WindowLinux() override;
 
   auto WindowResizeCallback(GLFWwindow *window, int width, int height) -> void;
 
  private:
-  GLFWwindow *window_;
+  GLFWwindow *window_ = nullptr;
 };
 }  // namespace nanoR

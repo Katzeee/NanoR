@@ -1,4 +1,4 @@
-#include "linux_window.h"
+#include "window_linux.h"
 
 #include "event/key_event.h"
 #include "event/mouse_event.h"
@@ -6,12 +6,12 @@
 #include "nanorpch.h"
 
 namespace nanoR {
-LinuxWindow::LinuxWindow(WindowProp window_prop) {
+WindowLinux::WindowLinux(WindowProp window_prop) {
   if (!window_) {
     Init(window_prop);
   }
 }
-auto LinuxWindow::Init(WindowProp window_prop) -> void {
+auto WindowLinux::Init(WindowProp window_prop) -> void {
   // SECTION: Create window
   if (!glfwInit()) {
     LOG_FATAL("GLFW initialize failed!\n");
@@ -76,23 +76,23 @@ auto LinuxWindow::Init(WindowProp window_prop) -> void {
   });
 }
 
-auto LinuxWindow::Tick() -> void {
+auto WindowLinux::Tick() -> void {
   glfwSwapBuffers(window_);
   glfwPollEvents();
 }
 
-auto LinuxWindow::Shutdown() -> void {
+auto WindowLinux::Shutdown() -> void {
   glfwDestroyWindow(window_);
   window_ = nullptr;
 }
 
-auto LinuxWindow::GetRawWindow() -> void * {
+auto WindowLinux::GetRawWindow() -> void * {
   return static_cast<void *>(window_);
 }
 
-LinuxWindow::~LinuxWindow() {
+WindowLinux::~WindowLinux() {
   Shutdown();
 }
 
-auto LinuxWindow::WindowResizeCallback(GLFWwindow *window, int width, int height) -> void {}
+auto WindowLinux::WindowResizeCallback(GLFWwindow *window, int width, int height) -> void {}
 }  // namespace nanoR

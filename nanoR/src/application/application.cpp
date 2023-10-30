@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include "platform/linux_window.h"
+#include "global/global_context.h"
 
 namespace nanoR {
 
@@ -9,11 +9,9 @@ Application::Application() {
 }
 
 auto Application::Init() -> void {
-  window_ = std::make_unique<LinuxWindow>();
-  window_->user_data_.event_callback = std::bind(&Application::EventCallback, this, std::placeholders::_1);
-  layer_stack_ = std::make_unique<LayerStack>();
-
-  is_running_ = true;
+  auto window = std::make_shared<Window>();
+  window->user_data_.event_callback = std::bind(&Application::EventCallback, this, std::placeholders::_1);
+  GlobalContext::Instance().window_ = window;
 }
 
 auto Application::Run() -> void {
@@ -21,7 +19,13 @@ auto Application::Run() -> void {
     for (auto&& it : layer_stack_->GetLayers()) {
       it->Tick();
     }
-    window_->Tick();
+
+    ui_layer_->Begin();
+    for (auto&& it : layer_stack_->GetLayers()) {
+      it->TickUI();
+    }
+    ui_layer_->End();
+    GlobalContext::Instance().window_->Tick();
   }
 }
 
