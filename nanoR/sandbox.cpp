@@ -30,6 +30,7 @@ class Sandbox : public nanoR::ApplicationOpenGL {
 int main() {
   std::unique_ptr<Sandbox> sandbox = std::make_unique<Sandbox>();
   std::shared_ptr<TestLayer> test_layer1 = std::make_shared<TestLayer>("test_layer1");
+  sandbox->PushLayer(test_layer1);
   LOG_TRACE("{}\n", sandbox->GetLayerStack().ToString());
 
   sandbox->Run();

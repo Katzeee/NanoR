@@ -1,8 +1,12 @@
 #pragma once
 
+// clang-format off
+#include <glad.h>
+#include <GLFW/glfw3.h>
+// clang-format on
+
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <imgui.h>
 
 #include <deque>
 #include <functional>
