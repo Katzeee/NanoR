@@ -95,6 +95,10 @@ auto main() -> int {
   glDeleteShader(vert_shader);
   glDeleteShader(frag_shader);
 
+  // HINT: EBO is stored in VAO some type, so you can unbind EBO if not currently bind a VAO
+  glBindVertexArray(0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
     /* Render here */
@@ -103,9 +107,8 @@ auto main() -> int {
 
     glUseProgram(shader_program);
 
-    glBindBuffer(GL_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-                   nullptr);  // draw current EBO
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);  // draw current EBO
     // another way to draw
     // glBindVertexArray(VAO);
     // glDrawArrays(GL_TRIANGLES, 0, 3); // draw current VAO
