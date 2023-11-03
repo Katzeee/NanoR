@@ -32,11 +32,37 @@ class TestLayer : public nanoR::Layer {
     auto bind_index_buffer_info = nanoR::RHIBindIndexBufferInfoOpenGL{};
     bind_index_buffer_info.count = 3;
     rhi_.BindIndexBuffer(bind_index_buffer_info, vao, ebo);
+
+    const char* vert_shader_src = R"(#version 450
+                                     layout(location = 0) in vec2 position;
+                                     void main() {
+                                       gl_Position = vec4(position, 1, 1);
+                                     }
+                                    )";
+    const char* frag_shader_src = R"(#version 450
+                                     out vec4 FragColor;
+                                     void main() {
+                                       FragColor = vec4(1, 0, 1, 1);
+                                     }
+                                    )";
+    std::shared_ptr<nanoR::RHIShaderModule> vert_shader;
+    std::shared_ptr<nanoR::RHIShaderModule> frag_shader;
+    auto shader_module_create_info = nanoR::RHIShaderModuleCreateInfoOpenGL{};
+    shader_module_create_info.type = GL_VERTEX_SHADER;
+    shader_module_create_info.src = vert_shader_src;
+    rhi_.CreateShaderModule(shader_module_create_info, vert_shader);
+    shader_module_create_info.type = GL_FRAGMENT_SHADER;
+    shader_module_create_info.src = frag_shader_src;
+    rhi_.CreateShaderModule(shader_module_create_info, frag_shader);
+    auto shader_program_create_info = nanoR::RHIShaderProgramCreateInfoOpenGL{};
+    shader_program_create_info.shaders.push_back(vert_shader);
+    shader_program_create_info.shaders.push_back(frag_shader);
+    rhi_.CreateShaderProgram(shader_program_create_info, shader_program);
   }
   auto Tick() -> void override {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-    rhi_.Draw(vao);
+    rhi_.Draw(vao, shader_program);
   }
   auto OnDetach() -> void override {}
   auto OnEvent(nanoR::Event& event) -> void override {}
@@ -50,6 +76,7 @@ class TestLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIVertexArray> vao;
   std::shared_ptr<nanoR::RHIBuffer> vbo;
   std::shared_ptr<nanoR::RHIBuffer> ebo;
+  std::shared_ptr<nanoR::RHIShaderProgram> shader_program;
   nanoR::RHIOpenGL rhi_;
 };
 

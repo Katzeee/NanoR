@@ -5,7 +5,7 @@
 namespace nanoR {
 
 struct RHIBufferOpenGL : public RHIBuffer {
-  ~RHIBufferOpenGL() {
+  ~RHIBufferOpenGL() override {
     if (id != 0) {
       glDeleteBuffers(1, &id);
       id = 0;
@@ -18,11 +18,11 @@ struct RHIBufferOpenGL : public RHIBuffer {
 struct RHIBufferCreateInfoOpenGL : public RHIBufferCreateInfo {
   GLsizeiptr size;
   const void *data;
-  GLbitfield flags;
+  GLbitfield flags = 0;
 };
 
 struct RHIVertexArrayOpenGL : public RHIVertexArray {
-  ~RHIVertexArrayOpenGL() {
+  ~RHIVertexArrayOpenGL() override {
     if (id != 0) {
       glDeleteVertexArrays(1, &id);
       id = 0;
@@ -45,6 +45,33 @@ struct RHIBindVertexBufferInfoOpenGL : public RHIBindVertexBufferInfo {
 
 struct RHIBindIndexBufferInfoOpenGL : public RHIBindIndexBufferInfo {
   GLsizei count;
+};
+
+struct RHIShaderModuleCreateInfoOpenGL : public RHIShaderModuleCreateInfo {
+  GLenum type;
+  const GLchar *src;
+  GLint count = 1;
+  GLint *length = nullptr;
+};
+
+struct RHIShaderModuleOpenGL : public RHIShaderModule {
+  ~RHIShaderModuleOpenGL() override {
+    glDeleteShader(id);
+  }
+
+  GLuint id;
+};
+
+struct RHIShaderProgramCreateInfoOpenGL : public RHIShaderProgramCreateInfo {
+  std::vector<std::shared_ptr<RHIShaderModule>> shaders;
+};
+
+struct RHIShaderProgramOpenGL : public RHIShaderProgram {
+  ~RHIShaderProgramOpenGL() override {
+    glDeleteProgram(id);
+  }
+
+  GLuint id;
 };
 
 }  // namespace nanoR

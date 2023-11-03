@@ -18,5 +18,6 @@ class WindowBase {
   virtual ~WindowBase() = default;
 
   UserData user_data_;
+  WindowProp window_prop_;
 };
 }  // namespace nanoR

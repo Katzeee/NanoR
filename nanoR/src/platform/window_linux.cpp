@@ -13,6 +13,7 @@ WindowLinux::WindowLinux(WindowProp window_prop) {
 }
 auto WindowLinux::Init(WindowProp window_prop) -> void {
   // SECTION: Create window
+  window_prop_ = window_prop;
   if (!glfwInit()) {
     LOG_FATAL("GLFW initialize failed!\n");
     glfwTerminate();

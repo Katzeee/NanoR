@@ -20,4 +20,21 @@ struct RHIBindVertexBufferInfo {
 struct RHIBindIndexBufferInfo {
   virtual ~RHIBindIndexBufferInfo() = default;
 };
+
+struct RHIShaderModuleCreateInfo {
+  virtual ~RHIShaderModuleCreateInfo() = default;
+};
+
+struct RHIShaderModule {
+  virtual ~RHIShaderModule() = default;
+};
+
+struct RHIShaderProgramCreateInfo {
+  virtual ~RHIShaderProgramCreateInfo() = default;
+};
+
+struct RHIShaderProgram {
+  virtual ~RHIShaderProgram() = default;
+};
+
 }  // namespace nanoR
