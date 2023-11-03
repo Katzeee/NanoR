@@ -1,7 +1,12 @@
 #pragma once
 #ifndef NDEBUG
 
+#ifdef _WIN32
+#include <source_location>
+#else
 #include <experimental/source_location>
+using source_location = experimental::fundamentals_v2::source_location
+#endif
 #include <iostream>
 #include <source_location>
 #include <type_traits>
@@ -14,12 +19,11 @@ template <typename T>
 class SourceLocationHelper {
  public:
   template <typename U>
-  requires std::constructible_from<T, U>
-  consteval SourceLocationHelper(U &&fmt, std::experimental::fundamentals_v2::source_location location =
-                                              std::experimental::fundamentals_v2::source_location::current())
+    requires std::constructible_from<T, U>
+  consteval SourceLocationHelper(U &&fmt, std::source_location location = std::source_location::current())
       : fmt_(std::forward<U>(fmt)), location_(location) {}
   T fmt_;
-  std::experimental::fundamentals_v2::source_location location_;
+  std::source_location location_;
 };
 
 enum class LogLevel { kTrace = 0, kDebug, kInfo, kWarning, kError, kFatal };
@@ -30,9 +34,10 @@ class Logger {
   // HINT: fmt::format_string requires fmt to be a constexpr
   void Log(LogLevel level, SourceLocationHelper<fmt::format_string<T...>> fmt, T &&...args) {
     if (level >= level_) {
-      std::cout << fmt::format("[{:^9}] {:<30}:{:<30}:{:>4}|| ", LevelToString(level) + 1, fmt.location_.file_name(),
-                               fmt.location_.function_name(), fmt.location_.line()) +
-                       fmt::vformat(fmt.fmt_, fmt::make_format_args(args...));
+      std::cout << fmt::format(
+                       "[{:^9}] {:<30}:{:<30}:{:>4}|| ", LevelToString(level) + 1, fmt.location_.file_name(),
+                       fmt.location_.function_name(), fmt.location_.line()
+                   ) + fmt::vformat(fmt.fmt_, fmt::make_format_args(args...));
     }
   }
   void SetLogLevel(LogLevel level) {

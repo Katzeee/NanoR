@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "glad.h"
+#include "glad/glad.h"
 #include "imgui.h"
 #include "nanor.h"
 
