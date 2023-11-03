@@ -5,4 +5,5 @@
 #include "layer/layer.h"
 #include "layer/layer_stack.h"
 #include "platform/application_opengl.h"
+#include "platform/opengl/rhi_opengl.h"
 #include "platform/ui_layer_glfw_opengl3.h"
