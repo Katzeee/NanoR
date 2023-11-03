@@ -1,6 +1,5 @@
 #pragma once
 // clang-format off
-#include <asm-generic/errno.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // clang-format on

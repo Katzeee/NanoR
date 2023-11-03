@@ -8,6 +8,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
 
+#include <array>
 #include <algorithm>
 #include <assimp/Importer.hpp>
 #include <cmath>
