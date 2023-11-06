@@ -10,7 +10,7 @@ class TestLayer : public nanoR::Layer {
 
   auto OnAttach() -> void override {
     float vertices[] = {0.0, 0.5, -0.5, 0.0, 0.5, 0.0};
-    int indices[] = {1, 2, 3};
+    int indices[] = {0, 1, 2};
     auto buffer_create_info = nanoR::RHIBufferCreateInfoOpenGL{};
     buffer_create_info.size = sizeof(vertices);
     buffer_create_info.data = vertices;
