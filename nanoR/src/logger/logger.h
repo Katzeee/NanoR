@@ -2,10 +2,11 @@
 #ifndef NDEBUG
 
 #ifdef _WIN32
-#include <source_location>
+#include <source_location>  // MSVC
+using source_location = std::source_location;
 #else
 #include <experimental/source_location>
-using source_location = experimental::fundamentals_v2::source_location
+using source_location = std::experimental::fundamentals_v2::source_location;
 #endif
 #include <iostream>
 #include <source_location>
@@ -19,11 +20,11 @@ template <typename T>
 class SourceLocationHelper {
  public:
   template <typename U>
-    requires std::constructible_from<T, U>
-  consteval SourceLocationHelper(U &&fmt, std::source_location location = std::source_location::current())
+  requires std::constructible_from<T, U>
+  consteval SourceLocationHelper(U &&fmt, source_location location = source_location::current())
       : fmt_(std::forward<U>(fmt)), location_(location) {}
   T fmt_;
-  std::source_location location_;
+  source_location location_;
 };
 
 enum class LogLevel { kTrace = 0, kDebug, kInfo, kWarning, kError, kFatal };

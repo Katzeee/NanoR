@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 project(learn-opengl C CXX)
 set(EXPORT_COMPILE_COMMANDS ON) # generate compile database
 
