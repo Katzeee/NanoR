@@ -44,7 +44,7 @@ class TestLayer : public nanoR::Layer {
                                      void main() {
                                        FragColor = vec4(1, 0, 1, 1);
                                      }
-                                    )";
+                                    )" ;
     std::shared_ptr<nanoR::RHIShaderModule> vert_shader;
     std::shared_ptr<nanoR::RHIShaderModule> frag_shader;
     auto shader_module_create_info = nanoR::RHIShaderModuleCreateInfoOpenGL{};
