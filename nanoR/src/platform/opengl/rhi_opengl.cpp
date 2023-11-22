@@ -30,9 +30,10 @@ bool RHIOpenGL::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array)
 }
 
 bool RHIOpenGL::BindVertexBuffer(const RHIBindVertexBufferInfo &bind_vertex_buffer_info,
-                                 std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIBuffer> buffer) {
+                                 std::shared_ptr<RHIVertexArray> vertex_array,
+                                 std::shared_ptr<RHIBuffer> vertex_buffer) {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
-  auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(buffer.get());
+  auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(vertex_buffer.get());
   const auto &[bind_index, attr_index, attr_size, type, normalized, offset, stride] =
       dynamic_cast<const RHIBindVertexBufferInfoOpenGL &>(bind_vertex_buffer_info);
   // Enable the attribute.
@@ -46,9 +47,9 @@ bool RHIOpenGL::BindVertexBuffer(const RHIBindVertexBufferInfo &bind_vertex_buff
   return OpenGLCheckError();
 }
 bool RHIOpenGL::BindIndexBuffer(const RHIBindIndexBufferInfo &bind_index_buffer_info,
-                                std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIBuffer> buffer) {
+                                std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIBuffer> index_buffer) {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
-  auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(buffer.get());
+  auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(index_buffer.get());
   const auto &[count] = dynamic_cast<const RHIBindIndexBufferInfoOpenGL &>(bind_index_buffer_info);
   vertex_array_opengl->count = count;
   glVertexArrayElementBuffer(vertex_array_opengl->id, buffer_opengl->id);
@@ -99,7 +100,9 @@ bool RHIOpenGL::Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_p
   glUseProgram(dynamic_cast<RHIShaderProgramOpenGL *>(shader_program.get())->id);
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   glBindVertexArray(vertex_array_opengl->id);
+  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 2);
   glDrawElements(GL_TRIANGLES, vertex_array_opengl->count, GL_UNSIGNED_INT, nullptr);
+  // glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindVertexArray(0);
   glUseProgram(0);
   return OpenGLCheckError();
