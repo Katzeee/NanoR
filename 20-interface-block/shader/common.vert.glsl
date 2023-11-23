@@ -10,13 +10,15 @@ layout(std140, binding = 0) uniform Matrices {
   mat4 Proj;
 };
 
-out vec3 P;
-out vec3 N;
-out vec2 uv;
+out VS_OUT {
+  vec3 P;
+  vec3 N;
+  vec2 uv;
+} vs_out;
 
 void main() {
   gl_Position = Proj * View * Model * vec4(lP, 1);
-  P = (Model * vec4(lP, 1)).xyz;
-  uv = inuv;
-  N = inN;
+  vs_out.P = (Model * vec4(lP, 1)).xyz;
+  vs_out.uv = inuv;
+  vs_out.N = inN;
 }

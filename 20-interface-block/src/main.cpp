@@ -262,9 +262,9 @@ auto main() -> int {
   auto s_skybox = std::make_shared<xac::Shader>(
       "../20-interface-block/shader/skybox.vert.glsl", "../20-interface-block/shader/skybox.frag.glsl"
   );
-  auto s_reflect = std::make_shared<xac::Shader>(
-      "../20-interface-block/shader/common.vert.glsl", "../20-interface-block/shader/reflect.frag.glsl"
-  );
+  // auto s_reflect = std::make_shared<xac::Shader>(
+  //     "../20-interface-block/shader/common.vert.glsl", "../20-interface-block/shader/reflect.frag.glsl"
+  // );
 
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
@@ -284,7 +284,7 @@ auto main() -> int {
   m_box.SetShader(s_lit);
   m_window.SetShader(s_lit);
   m_quad.SetShader(s_unlit);
-  m_cube.SetShader(s_reflect);
+  // m_cube.SetShader(s_reflect);
 
   std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
   for (int i = 0; i < 6; i++) {
