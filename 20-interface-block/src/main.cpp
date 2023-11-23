@@ -222,17 +222,24 @@ auto main() -> int {
         -1.0f, -1.0f,  1.0f,
          1.0f, -1.0f,  1.0f
     };
-
-    unsigned int skyboxVAO, skyboxVBO;
-    glGenVertexArrays(1, &skyboxVAO);
-    glGenBuffers(1, &skyboxVBO);
-    glBindVertexArray(skyboxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-
   // clang-format on
+
+  unsigned int skyboxVAO, skyboxVBO;
+  glGenVertexArrays(1, &skyboxVAO);
+  glGenBuffers(1, &skyboxVBO);
+  glBindVertexArray(skyboxVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+#pragma endregion
+
+#pragma region uniform buffer object
+  unsigned int ubo;
+  glCreateBuffers(1, &ubo);
+  glNamedBufferStorage(ubo, 2 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_STORAGE_BIT);
+  glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
+
 #pragma endregion
 
 #pragma region setup objs
@@ -343,6 +350,12 @@ auto main() -> int {
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 proj = camera.GetProjectionMatrix();
+
+    glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&view));
+    glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
+
 #pragma region render light
     glm::mat4 light_model(1.0f);
     float rotate_speed = 0.5;
@@ -359,8 +372,6 @@ auto main() -> int {
     light_model = glm::scale(light_model, glm::vec3(0.2f));
 
     s_unlit->Use();
-    s_unlit->SetMat4("View", camera.GetViewMatrix());
-    s_unlit->SetMat4("Proj", camera.GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_white);
     s_unlit->SetInt("tex", 0);
@@ -409,8 +420,6 @@ auto main() -> int {
     ground_model = glm::scale(ground_model, {150, 1, 150});
     ground_model = glm::translate(ground_model, {0, -0.5, 0});  // move to origin then scale
     s_lit->SetMat4("Model", ground_model);
-    s_lit->SetMat4("View", camera.GetViewMatrix());
-    s_lit->SetMat4("Proj", camera.GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
     glActiveTexture(GL_TEXTURE1);
@@ -467,8 +476,6 @@ auto main() -> int {
     cube_model = glm::scale(cube_model, {5, 5, 5});
     // cube_model = glm::translate(cube_model, {0, 0.5, 0});
     s_lit->SetMat4("Model", cube_model);
-    s_lit->SetMat4("View", camera.GetViewMatrix());
-    s_lit->SetMat4("Proj", camera.GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
     glActiveTexture(GL_TEXTURE1);
@@ -483,8 +490,6 @@ auto main() -> int {
     cube_model = glm::scale(cube_model, glm::vec3{2});
     // cube_model = glm::translate(cube_model, {0, 0.5, 0});
     s_lit->SetMat4("Model", cube_model);
-    s_lit->SetMat4("View", camera.GetViewMatrix());
-    s_lit->SetMat4("Proj", camera.GetProjectionMatrix());
 
     m_box.Draw();
 #pragma endregion
@@ -492,8 +497,6 @@ auto main() -> int {
 #pragma region render herta
     s_lit->Use();
     s_lit->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
-    s_lit->SetMat4("View", camera.GetViewMatrix());
-    s_lit->SetMat4("Proj", camera.GetProjectionMatrix());
     m_herta.Draw();
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glDepthFunc(GL_NEVER + gl_depth_func);

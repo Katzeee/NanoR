@@ -5,8 +5,10 @@ layout(location = 1) in vec3 inN;
 layout(location = 2) in vec2 inuv;
 
 uniform mat4 Model;
-uniform mat4 View;
-uniform mat4 Proj;
+layout(std140, binding = 0) uniform Matrices {
+  mat4 View;
+  mat4 Proj;
+};
 
 out vec3 P;
 out vec3 N;
