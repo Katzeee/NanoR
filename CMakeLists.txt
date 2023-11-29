@@ -21,8 +21,8 @@ include(FetchContent)
 set(EXECUTABLE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 include_directories(3rdparty)
 
@@ -83,6 +83,7 @@ add_subdirectory(18-frame-buffer)
 add_subdirectory(19-cube-map)
 add_subdirectory(20-interface-block)
 add_subdirectory(21-blinn-phong)
+add_subdirectory(22-shadow)
 
 ##################### demo
 # add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)

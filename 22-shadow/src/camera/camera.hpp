@@ -24,7 +24,7 @@ class Camera {
 
   Camera() : Camera(glm::vec3{0, 0, 5}, glm::vec3{0}) {}
 
-  Camera(glm::vec3 position, glm::vec3 target) : position_(position) {
+  Camera(glm::vec3 position, glm::vec3 target, ProjectionMethod projection_method = ProjectionMethod::PERSP) : position_(position) {
     front_ = glm::normalize(target - position);
     pitch_ = std::asin(front_.y);
     yaw_ = (front_.z < 0 ? -1 : 1) * glm::acos(front_.x / std::cos(pitch_));
@@ -36,6 +36,8 @@ class Camera {
   auto GetProjectionMatrix() -> glm::mat4 {
     if (projection_method_ == ProjectionMethod::PERSP) {
       return glm::perspective(fov_, aspect_, near_, far_);
+    } else if (projection_method_ == ProjectionMethod::ORTHO) {
+      return glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_, far_);
     }
     throw std::logic_error("not implemented");
   }
@@ -94,7 +96,7 @@ class Camera {
   float fov_ = 45.0f;
   float aspect_ = 1.5f;
   float near_ = 0.1f;
-  float far_ = 100.0f;
+  float far_ = 200.0f;
 
   void PositionForward(glm::vec3 forward) { position_ += forward; }
 

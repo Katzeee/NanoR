@@ -20,8 +20,10 @@ in VS_OUT {
 fs_in;
 
 uniform vec4 base_color = vec4(1, 1, 1, 1);
+uniform mat4 world_to_light_space_matrix;
 uniform sampler2D texture_diffuse0;
 uniform sampler2D texture_specular0;
+uniform sampler2D depth_map;
 uniform vec3 ws_cam_pos;
 uniform PointLight p_lights[5];
 uniform DirectLight d_lights[1];
@@ -32,11 +34,20 @@ uniform vec3 Ks;
 out vec4 FragColor;
 
 float near = 0.1;
-float far = 100;
+float far = 200;
 
 float LinearizeDepth(float depth) {
   float z = depth * 2 - 1;  // to NDC
   return (2 * near * far) / (far + near - z * (far - near));
+}
+
+float IsInShadow() {
+  vec4 lightP = world_to_light_space_matrix * vec4(fs_in.P, 1);
+  lightP = vec4(lightP.xyz / lightP.w, 1);
+  lightP = lightP * 0.5 + 0.5;
+  float cur_depth = lightP.z;
+  float closet_depth = texture(depth_map, lightP.xy).r;
+  return cur_depth > closet_depth ? 0 : 1.0;
 }
 
 void main() {
@@ -82,6 +93,6 @@ void main() {
 #elif defined(DEBUG_NORMAL)
   FragColor = vec4(fs_in.N, 1);
 #else
-  FragColor = base_color * vec4((diffuse + specular + ambient), texture(texture_diffuse0, fs_in.uv).a);
+  FragColor = base_color * vec4(((diffuse + specular) * IsInShadow() + ambient), texture(texture_diffuse0, fs_in.uv).a);
 #endif
 }

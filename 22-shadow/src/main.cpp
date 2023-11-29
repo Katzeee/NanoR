@@ -287,7 +287,31 @@ auto main() -> int {
     m_cage_faces[i] = std::make_shared<xac::Mesh>(cage_vertices, cage_face_indices[i], xac::Material{});
     m_cage_faces[i]->SetShader(s_lit);
   }
+#pragma endregion
 
+#pragma region depth framebuffer
+  float depth_map_h_w = 1024;
+  unsigned int fbo_depth_map; 
+  glGenFramebuffers(1, &fbo_depth_map);
+  unsigned int t_depth_map;
+  glGenTextures(1, &t_depth_map);
+  glBindTexture(GL_TEXTURE_2D, t_depth_map);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t_depth_map, 0);
+  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t_depth_map, 0);
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  // glBindTexture(GL_TEXTURE_2D, 0);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #pragma endregion
 
 #pragma region imgui variables
@@ -357,6 +381,7 @@ auto main() -> int {
 #pragma endregion
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glm::vec3 d_light0_pos;
 
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
@@ -374,12 +399,12 @@ auto main() -> int {
     static float decimal = 0;
     decimal += rotate_speed * delta_time - std::floor(rotate_speed * delta_time);
     float phi = glm::radians(360 * decimal);
-    glm::vec3 light0_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
-    light0_pos = glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(light0_pos, 1);
+    glm::vec3 p_light0_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
+    p_light0_pos = glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(p_light0_pos, 1);
     // Because you do the transformation by the order scale->rotate->translate,
     // glm functions are doing right multiply, so
     // the model matrix should reverse it, that is translate->rotate->scale
-    light0_model = glm::translate(light0_model, light0_pos);
+    light0_model = glm::translate(light0_model, p_light0_pos);
     light0_model = glm::scale(light0_model, glm::vec3(0.2f));
 
     s_unlit->Use();
@@ -393,22 +418,22 @@ auto main() -> int {
     m_light.Draw();
 
     s_unlit->Use();
-    glm::vec3 light1_pos{3, 2, 0};
-    auto light1_model = glm::scale(glm::translate(glm::mat4{1}, light1_pos), glm::vec3{0.2});
+    glm::vec3 p_light1_pos{3, 2, 0};
+    auto light1_model = glm::scale(glm::translate(glm::mat4{1}, p_light1_pos), glm::vec3{0.2});
     s_unlit->SetMat4("Model", light1_model);
     s_unlit->SetVec4("color", p_lights[1].color);
     m_light.Draw();
 
     s_unlit->Use();
-    glm::vec3 light2_pos{-30, 20, 0};
-    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{2});
+    glm::vec3 p_light2_pos{-30, 20, 0};
+    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, p_light2_pos), glm::vec3{2});
     s_unlit->SetMat4("Model", light2_model);
     s_unlit->SetVec4("color", p_lights[2].color);
     m_light.Draw();
 
     s_unlit->Use();
-    glm::vec3 d_light_pos = d_lights[0].direction * 40.0f;
-    auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light_pos), glm::vec3{3.0f});
+    d_light0_pos = d_lights[0].direction * 40.0f;
+    auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light0_pos), glm::vec3{3.0f});
     s_unlit->SetMat4("Model", d_light_model);
     s_unlit->SetVec4("color", d_lights[0].color);
     m_light.Draw();
@@ -416,19 +441,19 @@ auto main() -> int {
 
 #pragma region common settings for obj shader
     s_lit->Use();
-    s_lit->SetVec3("p_lights[0].ws_position", light0_pos);
+    s_lit->SetVec3("p_lights[0].ws_position", p_light0_pos);
     s_lit->SetVec3("p_lights[0].color", p_lights[0].color);
     s_lit->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
-    s_lit->SetVec3("p_lights[1].ws_position", light1_pos);
+    s_lit->SetVec3("p_lights[1].ws_position", p_light1_pos);
     s_lit->SetVec3("p_lights[1].color", p_lights[1].color);
     s_lit->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
-    s_lit->SetVec3("p_lights[2].ws_position", light2_pos);
-    s_lit->SetVec3("p_lights[2].color", p_lights[2].color);
-    s_lit->SetFloat("p_lights[2].intensity", p_lights[2].intensity * 300);
+    // s_lit->SetVec3("p_lights[2].ws_position", light2_pos);
+    // s_lit->SetVec3("p_lights[2].color", p_lights[2].color);
+    // s_lit->SetFloat("p_lights[2].intensity", p_lights[2].intensity * 300);
 
-    // s_lit->SetVec3("d_lights[0].direction", d_lights[0].direction);
-    // s_lit->SetVec3("d_lights[0].color", d_lights[0].color);
-    // s_lit->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
+    s_lit->SetVec3("d_lights[0].direction", d_lights[0].direction);
+    s_lit->SetVec3("d_lights[0].color", d_lights[0].color);
+    s_lit->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
     s_lit->SetVec3("ws_cam_pos", camera.GetPosition());
 #pragma endregion
 
@@ -451,43 +476,41 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region render cage
-    glStencilMask(0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+//     glStencilMask(0xFF);
+//     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    s_lit->Use();
-    auto cage_model = glm::mat4{1};
-    cage_model = glm::translate(cage_model, {10, 0, 15});
-    cage_model = glm::scale(cage_model, glm::vec3{15});
-    cage_model = glm::translate(cage_model, {0, 0.5, 0});
-    s_lit->SetMat4("Model", cage_model);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_white);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    s_lit->SetInt("texture_diffuse0", 0);
-    s_lit->SetInt("texture_specular0", 1);
+//     s_lit->Use();
+//     auto cage_model = glm::mat4{1};
+//     cage_model = glm::translate(cage_model, {10, 0, 15});
+//     cage_model = glm::scale(cage_model, glm::vec3{15});
+//     cage_model = glm::translate(cage_model, {0, 0.5, 0});
+//     s_lit->SetMat4("Model", cage_model);
+//     glActiveTexture(GL_TEXTURE0);
+//     glBindTexture(GL_TEXTURE_2D, t_white);
+//     glActiveTexture(GL_TEXTURE1);
+//     glBindTexture(GL_TEXTURE_2D, 0);
+//     s_lit->SetInt("texture_diffuse0", 0);
+//     s_lit->SetInt("texture_specular0", 1);
 
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    s_lit->SetVec4("base_color", {0.5, 0.5, 0.9, 1.0});
-    m_cage_faces[3]->Draw();
-    glStencilFunc(GL_ALWAYS, 2, 0xFF);
-    s_lit->SetVec4("base_color", {0.5, 0.9, 0.5, 1.0});
-    m_cage_faces[1]->Draw();
-    glStencilFunc(GL_ALWAYS, 3, 0xFF);
-    s_lit->SetVec4("base_color", {0.9, 0.9, 0.5, 1.0});
-    m_cage_faces[0]->Draw();
-    s_lit->SetVec4("base_color", {0.3, 0.3, 0.8, 1.0});
-    m_cage_faces[2]->Draw();
-    m_cage_faces[4]->Draw();
-    m_cage_faces[5]->Draw();
-    // HINT: only write stencil buffer when draw cage
-    glad_glStencilMask(0x00);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    // glClear(GL_DEPTH_BUFFER_BIT);
+//     glStencilFunc(GL_ALWAYS, 1, 0xFF);
+//     s_lit->SetVec4("base_color", {0.5, 0.5, 0.9, 1.0});
+//     m_cage_faces[3]->Draw();
+//     glStencilFunc(GL_ALWAYS, 2, 0xFF);
+//     s_lit->SetVec4("base_color", {0.5, 0.9, 0.5, 1.0});
+//     m_cage_faces[1]->Draw();
+//     glStencilFunc(GL_ALWAYS, 3, 0xFF);
+//     s_lit->SetVec4("base_color", {0.9, 0.9, 0.5, 1.0});
+//     m_cage_faces[0]->Draw();
+//     s_lit->SetVec4("base_color", {0.3, 0.3, 0.8, 1.0});
+//     m_cage_faces[2]->Draw();
+//     m_cage_faces[4]->Draw();
+//     m_cage_faces[5]->Draw();
+//     // HINT: only write stencil buffer when draw cage
+//     glad_glStencilMask(0x00);
+//     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 #pragma endregion
 
 #pragma region render cubes
-    // glStencilFunc(GL_EQUAL, 2, 0xFF);
     s_lit->Use();
     s_lit->SetVec4("base_color", glm::vec4{1});
     // you should do scale and rotation at origin!
@@ -495,7 +518,6 @@ auto main() -> int {
     cube_model = glm::translate(cube_model, {-8.0, 0, -10.0});
     cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
-    // cube_model = glm::translate(cube_model, {0, 0.5, 0});
     s_lit->SetMat4("Model", cube_model);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_box_diffuse);
@@ -509,7 +531,6 @@ auto main() -> int {
     cube_model = glm::translate(cube_model, {0, 45.0, 0});
     cube_model = glm::rotate(cube_model, glm::radians(45.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, glm::vec3{2});
-    // cube_model = glm::translate(cube_model, {0, 0.5, 0});
     s_lit->SetMat4("Model", cube_model);
 
     m_box.Draw();
@@ -525,19 +546,19 @@ auto main() -> int {
     glad_glStencilMask(0xFF);
 #pragma endregion
 
-#pragma region render skybox
-    glDepthMask(GL_FALSE);
-    glBindVertexArray(skyboxVAO);
-    glm::mat4 skybox_view = glm::mat4(glm::mat3(camera.GetViewMatrix()));  // HINT: remove translate trasition
-    s_skybox->Use();
-    s_skybox->SetMat4("View", skybox_view);
-    s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
-    s_skybox->SetInt("skybox", 0);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glDepthMask(GL_TRUE);
-#pragma endregion
+// #pragma region render skybox
+//     glDepthMask(GL_FALSE);
+//     glBindVertexArray(skyboxVAO);
+//     glm::mat4 skybox_view = glm::mat4(glm::mat3(camera.GetViewMatrix()));  // HINT: remove translate trasition
+//     s_skybox->Use();
+//     s_skybox->SetMat4("View", skybox_view);
+//     s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
+//     glActiveTexture(GL_TEXTURE0);
+//     glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
+//     s_skybox->SetInt("skybox", 0);
+//     glDrawArrays(GL_TRIANGLES, 0, 36);
+//     glDepthMask(GL_TRUE);
+// #pragma endregion
   };
 
   // HINT: Render loop start
@@ -556,7 +577,24 @@ auto main() -> int {
     global_context.camera_->Tick(delta_time_per_frame);
     xac::InputSystem::Tick();
 
+#pragma region Render Depth Map
+    auto light_cam = xac::Camera(d_light0_pos, glm::vec3{0}, xac::Camera::ProjectionMethod::ORTHO);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
+    glViewport(0, 0, depth_map_h_w, depth_map_h_w);
+    DrawScene(delta_time_per_frame, light_cam);
+#pragma endregion
+
+#pragma region render to quad
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+               global_context.window_height_);
+    s_lit->Use();
+    s_lit->SetMat4("world_to_light_space_matrix",light_cam.GetProjectionMatrix() * light_cam.GetViewMatrix());
+    glActiveTexture(GL_TEXTURE12);
+    glBindTexture(GL_TEXTURE_2D, t_depth_map);
+    s_lit->SetInt("depth_map", 12);
     DrawScene(delta_time_per_frame, *global_context.camera_);
+#pragma endregion
 
 #pragma region render imgui
     {
@@ -642,6 +680,10 @@ auto main() -> int {
         }
         ImGui::Text("Frame rate: %f", 1.0 / delta_time_per_frame);
       }
+      ImGui::End();
+      ImGui::Begin("Debug image");
+      // FIX: Can't see anything without doing LinearizeDepth
+      ImGui::Image(reinterpret_cast<void *>(t_depth_map), ImVec2{256, 256});
       ImGui::End();
       ImGui::Render();
       ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

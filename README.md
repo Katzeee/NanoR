@@ -1,0 +1,1 @@
+Windows should use `amd64_x86` MSVC to compile.
