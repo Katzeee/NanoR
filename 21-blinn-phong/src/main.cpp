@@ -254,13 +254,13 @@ auto main() -> int {
   xac::Model m_light = m_sphere;
 
   auto s_unlit = std::make_shared<xac::Shader>(
-      "../21-bling-phong-and-gamma/shader/common.vert.glsl", "../21-bling-phong-and-gamma/shader/unlit.frag.glsl"
+      "../21-blinn-phong/shader/common.vert.glsl", "../21-blinn-phong/shader/unlit.frag.glsl"
   );
   auto s_lit = std::make_shared<xac::Shader>(
-      "../21-bling-phong-and-gamma/shader/common.vert.glsl", "../21-bling-phong-and-gamma/shader/lit.frag.glsl"
+      "../21-blinn-phong/shader/common.vert.glsl", "../21-blinn-phong/shader/lit.frag.glsl"
   );
   auto s_skybox = std::make_shared<xac::Shader>(
-      "../21-bling-phong-and-gamma/shader/skybox.vert.glsl", "../21-bling-phong-and-gamma/shader/skybox.frag.glsl"
+      "../21-blinn-phong/shader/skybox.vert.glsl", "../21-blinn-phong/shader/skybox.frag.glsl"
   );
   auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
@@ -303,7 +303,7 @@ auto main() -> int {
   };
 
   glm::vec4 background_color{};
-  PointLight p_lights[2];
+  PointLight p_lights[3];
   DirectLight d_lights[1];
   glm::vec3 rotation_axis{1, 1, 1};
   float rotation_degree{60};
@@ -347,9 +347,9 @@ auto main() -> int {
                                                   s_lit->ClearDefine();
                                                   s_lit->CompileShaders();
                                                   break;
-                                                case 1:  // BLING_PHONG
+                                                case 1:  // BLINN_PHONG
                                                   s_lit->ClearDefine();
-                                                  s_lit->AddDefine("BLING_PHONG");
+                                                  s_lit->AddDefine("BLINN_PHONG");
                                                   s_lit->CompileShaders();
                                                   break;
                                               }
@@ -369,19 +369,19 @@ auto main() -> int {
     glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
 
 #pragma region render light
-    glm::mat4 light_model(1.0f);
+    glm::mat4 light0_model(1.0f);
     float rotate_speed = 0.5;
     // make light rotate
     static float decimal = 0;
     decimal += rotate_speed * delta_time - std::floor(rotate_speed * delta_time);
     float phi = glm::radians(360 * decimal);
-    glm::vec3 light_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
-    light_pos = glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(light_pos, 1);
+    glm::vec3 light0_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
+    light0_pos = glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(light0_pos, 1);
     // Because you do the transformation by the order scale->rotate->translate,
     // glm functions are doing right multiply, so
     // the model matrix should reverse it, that is translate->rotate->scale
-    light_model = glm::translate(light_model, light_pos);
-    light_model = glm::scale(light_model, glm::vec3(0.2f));
+    light0_model = glm::translate(light0_model, light0_pos);
+    light0_model = glm::scale(light0_model, glm::vec3(0.2f));
 
     s_unlit->Use();
     glActiveTexture(GL_TEXTURE0);
@@ -389,15 +389,22 @@ auto main() -> int {
     s_unlit->SetInt("tex", 0);
 
     s_unlit->Use();
-    s_unlit->SetMat4("Model", light_model);
+    s_unlit->SetMat4("Model", light0_model);
     s_unlit->SetVec4("color", p_lights[0].color);
     m_light.Draw();
 
     s_unlit->Use();
-    glm::vec3 light2_pos{3, 2, 0};
-    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{0.2});
-    s_unlit->SetMat4("Model", light2_model);
+    glm::vec3 light1_pos{3, 2, 0};
+    auto light1_model = glm::scale(glm::translate(glm::mat4{1}, light1_pos), glm::vec3{0.2});
+    s_unlit->SetMat4("Model", light1_model);
     s_unlit->SetVec4("color", p_lights[1].color);
+    m_light.Draw();
+
+    s_unlit->Use();
+    glm::vec3 light2_pos{-30, 20, 0};
+    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, light2_pos), glm::vec3{2});
+    s_unlit->SetMat4("Model", light2_model);
+    s_unlit->SetVec4("color", p_lights[2].color);
     m_light.Draw();
 
     s_unlit->Use();
@@ -410,16 +417,19 @@ auto main() -> int {
 
 #pragma region common settings for obj shader
     s_lit->Use();
-    s_lit->SetVec3("p_lights[0].ws_position", light_pos);
-    s_lit->SetVec3("p_lights[1].ws_position", light2_pos);
+    s_lit->SetVec3("p_lights[0].ws_position", light0_pos);
     s_lit->SetVec3("p_lights[0].color", p_lights[0].color);
     s_lit->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
+    s_lit->SetVec3("p_lights[1].ws_position", light1_pos);
     s_lit->SetVec3("p_lights[1].color", p_lights[1].color);
     s_lit->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
+    s_lit->SetVec3("p_lights[2].ws_position", light2_pos);
+    s_lit->SetVec3("p_lights[2].color", p_lights[2].color);
+    s_lit->SetFloat("p_lights[2].intensity", p_lights[2].intensity * 300);
 
-    s_lit->SetVec3("d_lights[0].direction", d_lights[0].direction);
-    s_lit->SetVec3("d_lights[0].color", d_lights[0].color);
-    s_lit->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
+    // s_lit->SetVec3("d_lights[0].direction", d_lights[0].direction);
+    // s_lit->SetVec3("d_lights[0].color", d_lights[0].color);
+    // s_lit->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
     s_lit->SetVec3("ws_cam_pos", camera.GetPosition());
 #pragma endregion
 
@@ -562,7 +572,7 @@ auto main() -> int {
       ImGui::SetWindowFontScale(1.2);
 
       ImGui::ColorEdit4("BG_color", reinterpret_cast<float *>(&background_color), ImGuiColorEditFlags_AlphaPreview);
-      ImGui::Combo("Lighting Modle", &lighting_model, "Phong\0Bling Phong\0");
+      ImGui::Combo("Lighting Modle", &lighting_model, "Phong\0Blinn Phong\0");
 
       if (ImGui::TreeNodeEx("Rotating light", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::ColorEdit3("p_light1", reinterpret_cast<float *>(&p_lights[0].color));

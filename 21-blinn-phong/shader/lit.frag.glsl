@@ -16,13 +16,14 @@ in VS_OUT {
   vec3 P;
   vec3 N;
   vec2 uv;
-} fs_in;
+}
+fs_in;
 
 uniform vec4 base_color = vec4(1, 1, 1, 1);
 uniform sampler2D texture_diffuse0;
 uniform sampler2D texture_specular0;
 uniform vec3 ws_cam_pos;
-uniform PointLight p_lights[2];
+uniform PointLight p_lights[5];
 uniform DirectLight d_lights[1];
 uniform vec3 Ka;
 uniform vec3 Kd;
@@ -42,7 +43,7 @@ void main() {
   vec3 diffuse = vec3(0);
   vec3 specular = vec3(0);
   // PointLight
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 5; i++) {
     PointLight p_light = p_lights[i];
     vec3 L = p_light.ws_position - fs_in.P;
     float distance_square = dot(L, L);
@@ -53,7 +54,7 @@ void main() {
     diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) * texture(texture_diffuse0, fs_in.uv).rgb *
                p_light.color / distance_square;
     specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * p_light.intensity * p_light.color *
-#ifdef BLING_PHONG
+#ifdef BLINN_PHONG
                 pow(max(dot(H, fs_in.N), 0), texture(texture_specular0, fs_in.uv).a) *
 #else
                 pow(max(dot(V, R), 0), texture(texture_specular0, fs_in.uv).a) *
@@ -74,7 +75,8 @@ void main() {
                 texture(texture_specular0, fs_in.uv).rgb;
   }
 
-  vec3 ambient = Ka * texture(texture_diffuse0, fs_in.uv).rgb;
+  // vec3 ambient = Ka * texture(texture_diffuse0, fs_in.uv).rgb;
+  vec3 ambient = vec3(0, 0, 0);
 #ifdef DEBUG_DEPTH
   FragColor = vec4(vec3(LinearizeDepth(gl_FragCoord.z)) / far, 1);
 #elif defined(DEBUG_NORMAL)
