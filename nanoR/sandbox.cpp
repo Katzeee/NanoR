@@ -15,8 +15,8 @@ class TestLayer : public nanoR::Layer {
     buffer_create_info.size = sizeof(vertices);
     buffer_create_info.data = vertices;
     buffer_create_info.flags = 0;
-    rhi_.CreateBuffer(buffer_create_info, vbo);
-    rhi_.CreateVertexArray(vao);
+    rhi_.CreateBuffer(buffer_create_info, vbo_);
+    rhi_.CreateVertexArray(vao_);
     auto bind_vertex_buffer_info = nanoR::RHIBindVertexBufferInfoOpenGL{};
     bind_vertex_buffer_info.bind_index = 0;
     bind_vertex_buffer_info.attr_index = 0;
@@ -25,13 +25,13 @@ class TestLayer : public nanoR::Layer {
     bind_vertex_buffer_info.normalized = GL_FALSE;
     bind_vertex_buffer_info.type = GL_FLOAT;
     bind_vertex_buffer_info.attr_size = 2;
-    rhi_.BindVertexBuffer(bind_vertex_buffer_info, vao, vbo);
+    rhi_.BindVertexBuffer(bind_vertex_buffer_info, vao_, vbo_);
     buffer_create_info.size = sizeof(indices);
     buffer_create_info.data = indices;
-    rhi_.CreateBuffer(buffer_create_info, ebo);
+    rhi_.CreateBuffer(buffer_create_info, ebo_);
     auto bind_index_buffer_info = nanoR::RHIBindIndexBufferInfoOpenGL{};
     bind_index_buffer_info.count = 3;
-    rhi_.BindIndexBuffer(bind_index_buffer_info, vao, ebo);
+    rhi_.BindIndexBuffer(bind_index_buffer_info, vao_, ebo_);
 
     const char* vert_shader_src = R"(#version 450
                                      layout(location = 0) in vec2 position;
@@ -44,7 +44,7 @@ class TestLayer : public nanoR::Layer {
                                      void main() {
                                        FragColor = vec4(1, 0, 1, 1);
                                      }
-                                    )" ;
+                                    )";
     std::shared_ptr<nanoR::RHIShaderModule> vert_shader;
     std::shared_ptr<nanoR::RHIShaderModule> frag_shader;
     auto shader_module_create_info = nanoR::RHIShaderModuleCreateInfoOpenGL{};
@@ -57,12 +57,12 @@ class TestLayer : public nanoR::Layer {
     auto shader_program_create_info = nanoR::RHIShaderProgramCreateInfoOpenGL{};
     shader_program_create_info.shaders.push_back(vert_shader);
     shader_program_create_info.shaders.push_back(frag_shader);
-    rhi_.CreateShaderProgram(shader_program_create_info, shader_program);
+    rhi_.CreateShaderProgram(shader_program_create_info, shader_program_);
   }
-  auto Tick() -> void override {
+  auto Tick(uint64_t delta_time) -> void override {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-    rhi_.Draw(vao, shader_program);
+    rhi_.Draw(vao_, shader_program_);
   }
   auto OnDetach() -> void override {}
   auto OnEvent(nanoR::Event& event) -> void override {}
@@ -73,10 +73,10 @@ class TestLayer : public nanoR::Layer {
   }
 
  private:
-  std::shared_ptr<nanoR::RHIVertexArray> vao;
-  std::shared_ptr<nanoR::RHIBuffer> vbo;
-  std::shared_ptr<nanoR::RHIBuffer> ebo;
-  std::shared_ptr<nanoR::RHIShaderProgram> shader_program;
+  std::shared_ptr<nanoR::RHIVertexArray> vao_;
+  std::shared_ptr<nanoR::RHIBuffer> vbo_;
+  std::shared_ptr<nanoR::RHIBuffer> ebo_;
+  std::shared_ptr<nanoR::RHIShaderProgram> shader_program_;
   nanoR::RHIOpenGL rhi_;
 };
 
@@ -85,7 +85,7 @@ class Sandbox : public nanoR::ApplicationOpenGL {
   Sandbox() = default;
 };
 
-int main() {
+auto main() -> int {
   std::unique_ptr<Sandbox> sandbox = std::make_unique<Sandbox>();
   std::shared_ptr<TestLayer> test_layer1 = std::make_shared<TestLayer>("test_layer1");
   sandbox->PushLayer(test_layer1);

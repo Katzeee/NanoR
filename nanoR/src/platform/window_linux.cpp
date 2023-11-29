@@ -29,29 +29,31 @@ auto WindowLinux::Init(WindowProp window_prop) -> void {
     LOG_FATAL("Window initialize failed!\n");
     throw std::runtime_error("Window initialize failed!");
   }
-  LOG_INFO("Window initialize with width {} height {} title \"{}\"\n", window_prop.width, window_prop.height,
-           window_prop.title);
+  LOG_INFO(
+      "Window initialize with width {} height {} title \"{}\"\n", window_prop.width, window_prop.height,
+      window_prop.title
+  );
   glfwMakeContextCurrent(window_);
   glfwSetWindowUserPointer(window_, reinterpret_cast<void *>(&user_data_));
 
   // SECTION: Setup callbacks
   glfwSetWindowSizeCallback(window_, [](GLFWwindow *window, int width, int height) {
-    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     auto window_resize_event = std::make_shared<WindowResizeEvent>(width, height);
     user_data->event_callback(window_resize_event);
   });
   glfwSetWindowCloseCallback(window_, [](GLFWwindow *window) {
-    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     auto window_close_event = std::make_shared<WindowCloseEvent>();
     user_data->event_callback(window_close_event);
   });
   glfwSetCursorPosCallback(window_, [](GLFWwindow *window, double x, double y) {
-    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     auto mouse_cursor_move_event = std::make_shared<MouseCursorMoveEvent>(x, y);
     user_data->event_callback(mouse_cursor_move_event);
   });
   glfwSetMouseButtonCallback(window_, [](GLFWwindow *window, int button, int action, int mods) {
-    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     if (action == GLFW_PRESS) {
       auto mouse_button_down_event = std::make_shared<MouseButtonDownEvent>(button, mods);
       user_data->event_callback(mouse_button_down_event);
@@ -61,12 +63,12 @@ auto WindowLinux::Init(WindowProp window_prop) -> void {
     }
   });
   glfwSetScrollCallback(window_, [](GLFWwindow *window, double xoffset, double yoffset) {
-    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     auto mouse_button_scroll_event = std::make_shared<MouseButtonScrollEvent>(xoffset, yoffset);
     user_data->event_callback(mouse_button_scroll_event);
   });
   glfwSetKeyCallback(window_, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-    UserData *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
+    auto *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     if (action == GLFW_PRESS) {
       auto key_down_event = std::make_shared<KeyDownEvent>(scancode, mods);
       user_data->event_callback(key_down_event);

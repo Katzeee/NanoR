@@ -36,7 +36,7 @@ struct RHIVertexArrayOpenGL : public RHIVertexArray {
 struct RHIBindVertexBufferInfoOpenGL : public RHIBindVertexBufferInfo {
   GLuint bind_index;
   GLuint attr_index;
-  GLuint attr_size;
+  GLint attr_size;
   GLenum type;
   GLboolean normalized;
   GLintptr offset;

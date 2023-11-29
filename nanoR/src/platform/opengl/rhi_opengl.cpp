@@ -5,7 +5,7 @@
 
 namespace nanoR {
 
-bool RHIOpenGL::OpenGLCheckError() {
+auto RHIOpenGL::OpenGLCheckError() -> bool {
   if (auto res = glGetError(); res != GL_NO_ERROR) {
     LOG_FATAL("OpenGL API error {}\n", res);
     throw std::runtime_error("OpenGL API error");
@@ -13,8 +13,9 @@ bool RHIOpenGL::OpenGLCheckError() {
   return true;
 }
 
-bool RHIOpenGL::CreateBuffer(const RHIBufferCreateInfo &buffer_create_info, std::shared_ptr<RHIBuffer> &buffer) {
-  auto buffer_opengl = new RHIBufferOpenGL{};
+auto RHIOpenGL::CreateBuffer(const RHIBufferCreateInfo &buffer_create_info, std::shared_ptr<RHIBuffer> &buffer)
+    -> bool {
+  auto *buffer_opengl = new RHIBufferOpenGL{};
   glCreateBuffers(1, &buffer_opengl->id);
   const auto &[size, data, flags] = dynamic_cast<const RHIBufferCreateInfoOpenGL &>(buffer_create_info);
   glNamedBufferStorage(buffer_opengl->id, size, data, flags);
@@ -22,16 +23,17 @@ bool RHIOpenGL::CreateBuffer(const RHIBufferCreateInfo &buffer_create_info, std:
   return OpenGLCheckError();
 }
 
-bool RHIOpenGL::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) {
-  auto vertex_array_opengl = new RHIVertexArrayOpenGL{};
+auto RHIOpenGL::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) -> bool {
+  auto *vertex_array_opengl = new RHIVertexArrayOpenGL{};
   glCreateVertexArrays(1, &vertex_array_opengl->id);
   vertex_array.reset(vertex_array_opengl);
   return OpenGLCheckError();
 }
 
-bool RHIOpenGL::BindVertexBuffer(const RHIBindVertexBufferInfo &bind_vertex_buffer_info,
-                                 std::shared_ptr<RHIVertexArray> vertex_array,
-                                 std::shared_ptr<RHIBuffer> vertex_buffer) {
+auto RHIOpenGL::BindVertexBuffer(
+    const RHIBindVertexBufferInfo &bind_vertex_buffer_info, std::shared_ptr<RHIVertexArray> vertex_array,
+    std::shared_ptr<RHIBuffer> vertex_buffer
+) -> bool {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(vertex_buffer.get());
   const auto &[bind_index, attr_index, attr_size, type, normalized, offset, stride] =
@@ -46,8 +48,10 @@ bool RHIOpenGL::BindVertexBuffer(const RHIBindVertexBufferInfo &bind_vertex_buff
   glVertexArrayAttribBinding(vertex_array_opengl->id, attr_index, bind_index);
   return OpenGLCheckError();
 }
-bool RHIOpenGL::BindIndexBuffer(const RHIBindIndexBufferInfo &bind_index_buffer_info,
-                                std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIBuffer> index_buffer) {
+auto RHIOpenGL::BindIndexBuffer(
+    const RHIBindIndexBufferInfo &bind_index_buffer_info, std::shared_ptr<RHIVertexArray> vertex_array,
+    std::shared_ptr<RHIBuffer> index_buffer
+) -> bool {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(index_buffer.get());
   const auto &[count] = dynamic_cast<const RHIBindIndexBufferInfoOpenGL &>(bind_index_buffer_info);
@@ -56,9 +60,10 @@ bool RHIOpenGL::BindIndexBuffer(const RHIBindIndexBufferInfo &bind_index_buffer_
   return OpenGLCheckError();
 }
 
-bool RHIOpenGL::CreateShaderModule(const RHIShaderModuleCreateInfo &shader_module_create_info,
-                                   std::shared_ptr<RHIShaderModule> &shader_module) {
-  auto shader_module_opengl = new RHIShaderModuleOpenGL{};
+auto RHIOpenGL::CreateShaderModule(
+    const RHIShaderModuleCreateInfo &shader_module_create_info, std::shared_ptr<RHIShaderModule> &shader_module
+) -> bool {
+  auto *shader_module_opengl = new RHIShaderModuleOpenGL{};
   // const auto &shader_module_create_info_opengl
   const auto &[type, src, count, length] =
       dynamic_cast<const RHIShaderModuleCreateInfoOpenGL &>(shader_module_create_info);
@@ -76,10 +81,11 @@ bool RHIOpenGL::CreateShaderModule(const RHIShaderModuleCreateInfo &shader_modul
   return OpenGLCheckError();
 }
 
-bool RHIOpenGL::CreateShaderProgram(const RHIShaderProgramCreateInfo &shader_program_create_info,
-                                    std::shared_ptr<RHIShaderProgram> &shader_program) {
+auto RHIOpenGL::CreateShaderProgram(
+    const RHIShaderProgramCreateInfo &shader_program_create_info, std::shared_ptr<RHIShaderProgram> &shader_program
+) -> bool {
   const auto &[shaders] = dynamic_cast<const RHIShaderProgramCreateInfoOpenGL &>(shader_program_create_info);
-  auto shader_program_opengl = new RHIShaderProgramOpenGL{};
+  auto *shader_program_opengl = new RHIShaderProgramOpenGL{};
   shader_program_opengl->id = glCreateProgram();
   for (auto &&shader : shaders) {
     glAttachShader(shader_program_opengl->id, dynamic_cast<RHIShaderModuleOpenGL *>(shader.get())->id);
@@ -96,7 +102,8 @@ bool RHIOpenGL::CreateShaderProgram(const RHIShaderProgramCreateInfo &shader_pro
   return OpenGLCheckError();
 }
 
-bool RHIOpenGL::Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIShaderProgram> shader_program) {
+auto RHIOpenGL::Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIShaderProgram> shader_program)
+    -> bool {
   glUseProgram(dynamic_cast<RHIShaderProgramOpenGL *>(shader_program.get())->id);
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   glBindVertexArray(vertex_array_opengl->id);

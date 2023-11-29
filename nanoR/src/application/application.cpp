@@ -10,14 +10,18 @@ Application::Application() {
 
 auto Application::Init() -> void {
   auto window = std::make_shared<Window>();
-  window->user_data_.event_callback = std::bind(&Application::EventCallback, this, std::placeholders::_1);
+  window->user_data_.event_callback = [this](auto&& event) { EventCallback(std::forward<decltype(event)>(event)); };
   GlobalContext::Instance().window_ = window;
 }
 
 auto Application::Run() -> void {
   while (is_running_) {
+    auto now = std::chrono::high_resolution_clock::now();
+    static auto last = now;
+    uint64_t delta = std::chrono::duration_cast<std::chrono::microseconds>(now - last).count();
+    last = now;
     for (auto&& it : layer_stack_->GetLayers()) {
-      it->Tick();
+      it->Tick(delta);
     }
 
     ui_layer_->Begin();
