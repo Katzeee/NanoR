@@ -74,7 +74,7 @@ auto main() -> int {
 
   global_context.Init();
   xac::InputSystem::Init(window);
-  float delta_time_per_frame;
+  float delta_time_per_frame = 0;
 
 #pragma region imgui init
   ImGui::CreateContext();
