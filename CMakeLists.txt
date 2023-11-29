@@ -82,6 +82,7 @@ add_subdirectory(17-face-culling)
 add_subdirectory(18-frame-buffer)
 add_subdirectory(19-cube-map)
 add_subdirectory(20-interface-block)
+add_subdirectory(21-bling-phong-and-gamma)
 
 ##################### demo
 # add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
