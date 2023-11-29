@@ -47,7 +47,7 @@ float IsInShadow() {
   lightP = lightP * 0.5 + 0.5;
   float cur_depth = lightP.z;
   float closet_depth = texture(depth_map, lightP.xy).r;
-  return cur_depth > closet_depth ? 0 : 1.0;
+  return cur_depth - 0.000005 > closet_depth ? 0 : 1.0; // make cur_depth closer to light
 }
 
 void main() {
