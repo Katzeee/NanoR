@@ -48,11 +48,16 @@ void main() {
     float distance_square = dot(L, L);
     L = normalize(L);
     vec3 V = normalize(ws_cam_pos - fs_in.P);
+    vec3 H = normalize(L + V);
     vec3 R = reflect(-L, fs_in.N);
     diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) * texture(texture_diffuse0, fs_in.uv).rgb *
                p_light.color / distance_square;
     specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * p_light.intensity * p_light.color *
-                pow(max(dot(R, V), 0), texture(texture_specular0, fs_in.uv).a) *
+#ifdef BLING_PHONG
+                pow(max(dot(H, fs_in.N), 0), texture(texture_specular0, fs_in.uv).a) *
+#else
+                pow(max(dot(V, R), 0), texture(texture_specular0, fs_in.uv).a) *
+#endif
                 texture(texture_specular0, fs_in.uv).rgb / distance_square;
   }
   // DirectLight

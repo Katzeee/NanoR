@@ -246,7 +246,7 @@ auto main() -> int {
   xac::Model m_herta("../resources/models/Herta/heita.obj");
   xac::Model m_sphere("../resources/models/Sphere/sphere.obj");
   xac::Model m_cube("../resources/models/Cube/cube.obj");
-  xac::Mesh m_ground{cage_vertices, ground_indices, {}, "ground"};
+  xac::Mesh m_ground{cage_vertices, ground_indices, {glm::vec3{0}, glm::vec3{0.5}, glm::vec3{0.5}, {}}, "ground"};
   xac::Mesh m_window{cage_vertices, window_indices, {}, "window"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
   xac::Model m_box = m_cube;
@@ -262,8 +262,9 @@ auto main() -> int {
   auto s_skybox = std::make_shared<xac::Shader>(
       "../21-bling-phong-and-gamma/shader/skybox.vert.glsl", "../21-bling-phong-and-gamma/shader/skybox.frag.glsl"
   );
-  auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
-  auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
+  auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
+  auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
+  auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
   auto t_skybox = xac::LoadCubemapFromFile({
       "../resources/textures/skybox/right.jpg",
@@ -312,6 +313,7 @@ auto main() -> int {
   int shader_debug_mode = 0;
   xac::CheckChangeThen check_shader_debug_mode{&shader_debug_mode, [&](int new_val) {
                                                  switch (new_val) {
+                                                     // FIX: Should not Clear Define
                                                    case 0:  // NO_DEBUG
                                                      s_lit->ClearDefine();
                                                      s_lit->CompileShaders();
@@ -338,6 +340,20 @@ auto main() -> int {
                                                  }};
   int culled_face = 5;
   xac::CheckChangeThen check_culled_face{&culled_face, [](int new_val) { glCullFace(GL_FRONT_LEFT + new_val); }};
+  int lighting_model = 0;
+  xac::CheckChangeThen check_lighting_model{&lighting_model, [&](int new_val) {
+                                              switch (new_val) {
+                                                case 0:  // PHONG
+                                                  s_lit->ClearDefine();
+                                                  s_lit->CompileShaders();
+                                                  break;
+                                                case 1:  // BLING_PHONG
+                                                  s_lit->ClearDefine();
+                                                  s_lit->AddDefine("BLING_PHONG");
+                                                  s_lit->CompileShaders();
+                                                  break;
+                                              }
+                                            }};
 
 #pragma endregion
 
@@ -419,7 +435,7 @@ auto main() -> int {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, t_ground_specular);
+    glBindTexture(GL_TEXTURE_2D, t_white);
     s_lit->SetInt("texture_diffuse0", 0);
     s_lit->SetInt("texture_specular0", 1);
     m_ground.Draw();
@@ -473,9 +489,9 @@ auto main() -> int {
     // cube_model = glm::translate(cube_model, {0, 0.5, 0});
     s_lit->SetMat4("Model", cube_model);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
+    glBindTexture(GL_TEXTURE_2D, t_box_diffuse);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, t_ground_specular);
+    glBindTexture(GL_TEXTURE_2D, t_box_specular);
     s_lit->SetInt("texture_diffuse0", 0);
     s_lit->SetInt("texture_specular0", 1);
     m_box.Draw();
@@ -521,6 +537,7 @@ auto main() -> int {
     check_face_culling_enable();
     check_culled_face();
     check_shader_debug_mode();
+    check_lighting_model();
 
     static float last_frame_time = 0.0f;
     auto cur_frame_time = static_cast<float>(glfwGetTime());
@@ -545,6 +562,7 @@ auto main() -> int {
       ImGui::SetWindowFontScale(1.2);
 
       ImGui::ColorEdit4("BG_color", reinterpret_cast<float *>(&background_color), ImGuiColorEditFlags_AlphaPreview);
+      ImGui::Combo("Lighting Modle", &lighting_model, "Phong\0Bling Phong\0");
 
       if (ImGui::TreeNodeEx("Rotating light", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::ColorEdit3("p_light1", reinterpret_cast<float *>(&p_lights[0].color));
