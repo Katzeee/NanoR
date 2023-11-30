@@ -42,7 +42,7 @@ float LinearizeDepth(float depth) {
 }
 
 float PCF(int size) {
-  float kernel_size = (2 * size + 1) * (2 * size + 1);
+  float kernel_area = (2 * size + 1) * (2 * size + 1);
   vec4 ls_P = world_to_light_space_matrix * vec4(fs_in.P, 1);
   ls_P = vec4(ls_P.xyz / ls_P.w, 1);
   ls_P = ls_P * 0.5 + 0.5;
@@ -60,16 +60,28 @@ float PCF(int size) {
     }
   }
   if (ls_P.z > 1) {  // exceed light's far plain
-    shadow = kernel_size;
+    shadow = kernel_area;
   }
-  return shadow / kernel_size;  // make cur_depth closer to light
+  return shadow / kernel_area;  // make cur_depth closer to light
 }
 
-float PCSS() {
+float PCSS(int size) {
+  float kernel_area = (2 * size + 1) * (2 * size + 1);
   vec4 ls_P = world_to_light_space_matrix * vec4(fs_in.P, 1);
   ls_P = vec4(ls_P.xyz / ls_P.w, 1);
   ls_P = ls_P * 0.5 + 0.5;
-
+  float cur_depth = ls_P.z;
+  vec2 texel_size = 1.0 / textureSize(depth_map, 0);
+  float mean_blocker_depth = 0.0;
+  for (int i = -size; i <= size; i++) {
+    for (int j = -size; j <= size; j++) {
+      mean_blocker_depth += texture(depth_map, ls_P.xy + vec2(i, j) * texel_size).r;
+    }
+  }
+  mean_blocker_depth /= kernel_area;
+  float light_size = 20000.0;
+  float pcf_size = (cur_depth - mean_blocker_depth) / mean_blocker_depth * light_size;
+  return PCF(int(pcf_size));
 }
 
 void main() {
@@ -113,6 +125,15 @@ void main() {
 #elif defined(DEBUG_NORMAL)
   FragColor = vec4(fs_in.N, 1);
 #else
-  FragColor = base_color * vec4(((diffuse + specular) * PCF(1) + ambient), texture(texture_diffuse0, fs_in.uv).a);
+  FragColor = base_color * vec4(((diffuse + specular) *
+#ifdef PCF_SHADOW
+                                     PCF(2)
+#elif defined(PCSS_SHADOW)
+                                     PCSS(3)
+#else
+                                     1.0
+#endif
+                                 + ambient),
+                                texture(texture_diffuse0, fs_in.uv).a);
 #endif
 }

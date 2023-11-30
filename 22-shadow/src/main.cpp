@@ -379,6 +379,25 @@ auto main() -> int {
                                                   break;
                                               }
                                             }};
+  int shadow_model = 0;
+  xac::CheckChangeThen check_shadow_model{&shadow_model, [&](int new_val) {
+                                            switch (new_val) {
+                                              case 0:  // no shadow
+                                                s_lit->ClearDefineGroup("SHADOW_MODEL");
+                                                s_lit->CompileShaders();
+                                                break;
+                                              case 1:  // PCF
+                                                s_lit->ClearDefineGroup("SHADOW_MODEL");
+                                                s_lit->AddDefine("SHADOW_MODEL", "PCF_SHADOW");
+                                                s_lit->CompileShaders();
+                                                break;
+                                              case 2:  // PCSS
+                                                s_lit->ClearDefineGroup("SHADOW_MODEL");
+                                                s_lit->AddDefine("SHADOW_MODEL", "PCSS_SHADOW");
+                                                s_lit->CompileShaders();
+                                                break;
+                                            }
+                                          }};
 
 #pragma endregion
 
@@ -571,6 +590,7 @@ auto main() -> int {
     check_culled_face();
     check_shader_debug_mode();
     check_lighting_model();
+    check_shadow_model();
 
     static float last_frame_time = 0.0f;
     auto cur_frame_time = static_cast<float>(glfwGetTime());
@@ -631,7 +651,6 @@ auto main() -> int {
       ImGui::SetWindowFontScale(1.2);
 
       ImGui::ColorEdit4("BG_color", reinterpret_cast<float *>(&background_color), ImGuiColorEditFlags_AlphaPreview);
-      ImGui::Combo("Lighting Modle", &lighting_model, "Phong\0Blinn Phong\0");
 
       if (ImGui::TreeNodeEx("Rotating light", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::ColorEdit3("p_light1", reinterpret_cast<float *>(&p_lights[0].color));
@@ -669,6 +688,12 @@ auto main() -> int {
             "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
             "RIGHT\0GL_FRONT_AND_BACK\0"
         );
+        ImGui::TreePop();
+      }
+
+      if (ImGui::TreeNodeEx("Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Combo("Lighting Model", &lighting_model, "Phong\0Blinn Phong\0");
+        ImGui::Combo("Shadow Model", &shadow_model, "None\0PCF\0PCSS\0");
         ImGui::TreePop();
       }
 
