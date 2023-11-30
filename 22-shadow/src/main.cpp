@@ -337,17 +337,17 @@ auto main() -> int {
                                                  switch (new_val) {
                                                      // FIX: Should not Clear Define
                                                    case 0:  // NO_DEBUG
-                                                     s_lit->ClearDefine();
+                                                     s_lit->ClearDefineGroup("DEBUG");
                                                      s_lit->CompileShaders();
                                                      break;
                                                    case 1:  // DEBUG_NORMAL
-                                                     s_lit->ClearDefine();
-                                                     s_lit->AddDefine("DEBUG_NORMAL");
+                                                     s_lit->ClearDefineGroup("DEBUG");
+                                                     s_lit->AddDefine("DEBUG", "DEBUG_NORMAL");
                                                      s_lit->CompileShaders();
                                                      break;
                                                    case 2:  // DEBUG_DEPTH
-                                                     s_lit->ClearDefine();
-                                                     s_lit->AddDefine("DEBUG_DEPTH");
+                                                     s_lit->ClearDefineGroup("DEBUG");
+                                                     s_lit->AddDefine("DEBUG", "DEBUG_DEPTH");
                                                      s_lit->CompileShaders();
                                                      break;
                                                  }
@@ -366,12 +366,12 @@ auto main() -> int {
   xac::CheckChangeThen check_lighting_model{&lighting_model, [&](int new_val) {
                                               switch (new_val) {
                                                 case 0:  // PHONG
-                                                  s_lit->ClearDefine();
+                                                  s_lit->ClearDefineGroup("LIGHTING_MODEL");
                                                   s_lit->CompileShaders();
                                                   break;
                                                 case 1:  // BLINN_PHONG
-                                                  s_lit->ClearDefine();
-                                                  s_lit->AddDefine("BLINN_PHONG");
+                                                  s_lit->ClearDefineGroup("LIGHTING_MODEL");
+                                                  s_lit->AddDefine("LIGHTING_MODEL", "BLINN_PHONG");
                                                   s_lit->CompileShaders();
                                                   break;
                                               }

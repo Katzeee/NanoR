@@ -18,8 +18,10 @@ auto Shader::ReadFromFile(const char *file_path) -> std::string {
 
 template <int type>
 auto Shader::CompileShader(std::string shader_str) -> unsigned int {
-  for (auto &&dc : define_consts_) {
-    shader_str.insert(shader_str.find_first_of('\n'), "\n#define " + dc);
+  for (auto &&group : define_consts_) {
+    for (auto &&dc : group.second) {
+      shader_str.insert(shader_str.find_first_of('\n'), "\n#define " + dc);
+    }
   }
   char const *shader_src = shader_str.c_str();
   unsigned int shader_id = glCreateShader(type);
@@ -65,7 +67,9 @@ Shader::Shader(const char *vs_path, const char *fs_path) {
   CompileShaders();
 }
 
-void Shader::Use() const { glUseProgram(id_); }
+void Shader::Use() const {
+  glUseProgram(id_);
+}
 
 void Shader::SetBool(std::string_view name, bool value) const {
   glUniform1i(glGetUniformLocation(id_, name.data()), static_cast<int>(value));
@@ -90,10 +94,24 @@ void Shader::SetVec4(std::string_view name, const glm::vec4 &vec) const {
   glUniform4fv(glGetUniformLocation(id_, name.data()), 1, &vec[0]);
 }
 
-void Shader::AddDefine(const std::string &name) { define_consts_.insert(name); }
+void Shader::AddDefine(const std::string &group, const std::string &name) {
+  if (define_consts_.contains(group)) {
+    define_consts_[group].insert(name);
+  } else {
+    define_consts_[group] = std::set{name};
+  }
+}
 
-void Shader::DeleteDefine(const std::string &name) { define_consts_.erase(name); }
-void Shader::ClearDefine() { define_consts_.clear(); }
+void Shader::DeleteDefine(const std::string &group, const std::string &name) {
+  if (define_consts_.contains(group)) {
+    define_consts_[group].erase(name);
+  }
+}
+void Shader::ClearDefineGroup(const std::string &group) {
+  if (define_consts_.contains(group)) {
+    define_consts_.erase(group);
+  }
+}
 
 Shader::~Shader() = default;
 
