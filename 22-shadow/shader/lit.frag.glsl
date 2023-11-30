@@ -34,7 +34,7 @@ uniform vec3 Ks;
 out vec4 FragColor;
 
 float near = 0.1;
-float far = 200;
+float far = 150;
 
 float LinearizeDepth(float depth) {
   float z = depth * 2 - 1;  // to NDC
@@ -42,7 +42,7 @@ float LinearizeDepth(float depth) {
 }
 
 // direction light shadow calculate
-float IsInShadow() {
+float Shadow() {
   vec4 lightP = world_to_light_space_matrix * vec4(fs_in.P, 1);
   lightP = vec4(lightP.xyz / lightP.w, 1);
   lightP = lightP * 0.5 + 0.5;
@@ -58,6 +58,9 @@ float IsInShadow() {
       float closet_depth = texture(depth_map, lightP.xy + vec2(texel_size.x * i, texel_size.y * j)).r;
       shadow += cur_depth - bias > closet_depth ? 0 : 1.0;
     }
+  }
+  if (lightP.z > 1) { // exceed light's far plain
+    shadow = 9.0;
   }
   return shadow / 9;  // make cur_depth closer to light
 }
@@ -103,6 +106,6 @@ void main() {
 #elif defined(DEBUG_NORMAL)
   FragColor = vec4(fs_in.N, 1);
 #else
-  FragColor = base_color * vec4(((diffuse + specular) * IsInShadow() + ambient), texture(texture_diffuse0, fs_in.uv).a);
+  FragColor = base_color * vec4(((diffuse + specular) * Shadow() + ambient), texture(texture_diffuse0, fs_in.uv).a);
 #endif
 }

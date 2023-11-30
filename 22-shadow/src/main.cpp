@@ -287,20 +287,23 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region depth framebuffer
-  float depth_map_h_w = 1024;
+  float depth_map_h_w = 4096;
   unsigned int fbo_depth_map;
   glGenFramebuffers(1, &fbo_depth_map);
   unsigned int t_depth_map;
   glGenTextures(1, &t_depth_map);
   glBindTexture(GL_TEXTURE_2D, t_depth_map);
   glTexImage2D(
-      GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
+      GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
   );
   // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  // for uv out of texture(not exceeding far plane)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  glm::vec4 border_color{1.0, 1.0, 1.0, 1.0};
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(border_color));
   glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t_depth_map, 0);
   // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t_depth_map, 0);
@@ -385,9 +388,9 @@ auto main() -> int {
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 proj = camera.GetProjectionMatrix();
-
     glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&view));
     glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
 
@@ -463,7 +466,7 @@ auto main() -> int {
     // you should do scale and rotation at origin!
     // ground_model = glm::translate(ground_model, {0, 0, 0});
     // ground_model = glm::rotate(ground_model, glm::radians(30.0f), {0, 1, 0});
-    ground_model = glm::scale(ground_model, {250, 1, 250});
+    ground_model = glm::scale(ground_model, {150, 1, 150});
     ground_model = glm::translate(ground_model, {0, -0.5, 0});  // move to origin then scale
     s_lit->SetMat4("Model", ground_model);
     glActiveTexture(GL_TEXTURE0);
@@ -583,8 +586,6 @@ auto main() -> int {
     glViewport(0, 0, depth_map_h_w, depth_map_h_w);
     DrawScene(delta_time_per_frame, light_cam);
 #pragma endregion
-
-#pragma region render to quad
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(
         global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
@@ -596,6 +597,25 @@ auto main() -> int {
     glBindTexture(GL_TEXTURE_2D, t_depth_map);
     s_lit->SetInt("depth_map", 12);
     DrawScene(delta_time_per_frame, *global_context.camera_);
+#pragma region render to quad
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    // glViewport(
+    //     global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+    //     global_context.window_height_
+    // );
+    // glDisable(GL_DEPTH_TEST);
+    // s_unlit->Use();
+    // auto identity = glm::mat4{1.0};
+    // s_unlit->SetMat4("Model", identity);
+    // glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&identity));
+    // glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&identity));
+    // s_unlit->SetVec4("color", glm::vec4{1.0f});
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
+    // s_unlit->SetInt("tex", 0);
+    // m_quad.Draw();
 #pragma endregion
 
 #pragma region render imgui

@@ -96,7 +96,7 @@ class Camera {
   float fov_ = 45.0f;
   float aspect_ = 1.5f;
   float near_ = 0.1f;
-  float far_ = 200.0f;
+  float far_ = 150.0f;
 
   void PositionForward(glm::vec3 forward) { position_ += forward; }
 
