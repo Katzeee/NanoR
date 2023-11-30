@@ -4,7 +4,7 @@
 
 namespace xac {
 glm::vec3 Camera::world_up_{0, 1, 0};
-float Camera::sensitivity_ = 0.002;
+float Camera::sensitivity_ = 0.02;
 
 void Camera::UpdateFreeCamera(float delta_time) {
   float distance = delta_time * speed_;
@@ -28,7 +28,7 @@ void Camera::UpdateFreeCamera(float delta_time) {
   }
 }
 void Camera::Tick(float delta_time) {
-  UpdateCursorMove(InputSystem::cursor_x_offset_, InputSystem::cursor_y_offset_);
+  UpdateCursorMove(InputSystem::cursor_x_offset_, InputSystem::cursor_y_offset_, delta_time);
   UpdateScroll(InputSystem::scroll_y_offset_);
   UpdateFreeCamera(delta_time);
 }

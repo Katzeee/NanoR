@@ -62,9 +62,10 @@ class Camera {
       SetFov(45.0f);
     }
   }
-  void UpdateCursorMove(float x_offset, float y_offset) {
-    yaw_ += x_offset * Camera::sensitivity_;
-    pitch_ -= y_offset * Camera::sensitivity_;
+  void UpdateCursorMove(float x_offset, float y_offset, float delta_time) {
+    // FIX: offset is not linear related to fov_
+    yaw_ += x_offset * Camera::sensitivity_ * delta_time * fov_;
+    pitch_ -= y_offset * Camera::sensitivity_ * delta_time * fov_;
     CheckPitchSafety();
     UpdateVectors();
   }

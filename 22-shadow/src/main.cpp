@@ -355,12 +355,12 @@ auto main() -> int {
     s_unlit->SetVec4("color", p_lights[1].color);
     m_light.Draw();
 
-    s_unlit->Use();
-    glm::vec3 p_light2_pos{-30, 20, 0};
-    auto light2_model = glm::scale(glm::translate(glm::mat4{1}, p_light2_pos), glm::vec3{2});
-    s_unlit->SetMat4("Model", light2_model);
-    s_unlit->SetVec4("color", p_lights[2].color);
-    m_light.Draw();
+    // s_unlit->Use();
+    // glm::vec3 p_light2_pos{-30, 20, 0};
+    // auto light2_model = glm::scale(glm::translate(glm::mat4{1}, p_light2_pos), glm::vec3{2});
+    // s_unlit->SetMat4("Model", light2_model);
+    // s_unlit->SetVec4("color", p_lights[2].color);
+    // m_light.Draw();
 
     s_unlit->Use();
     d_light0_pos = d_lights[0].direction * 60.0f;
@@ -452,10 +452,22 @@ auto main() -> int {
     check_lighting_model();
     check_shadow_model();
 
+#pragma region Time and Frame
     static float last_frame_time = 0.0f;
     auto cur_frame_time = static_cast<float>(glfwGetTime());
     delta_time_per_frame = cur_frame_time - last_frame_time;
+    static float time_counter = 0;
+    static int frame_count;
+    static int count = 0;
+    count += 1;
+    time_counter += delta_time_per_frame;
+    if (time_counter > 1) { // every 1s
+      frame_count = count;
+      count = 0;
+      time_counter = 0;
+    }
     last_frame_time = cur_frame_time;
+#pragma endregion
 
     global_context.camera_->Tick(delta_time_per_frame);
     xac::InputSystem::Tick();
@@ -585,7 +597,7 @@ auto main() -> int {
           );
           ImGui::TreePop();
         }
-        ImGui::Text("Frame rate: %f", 1.0 / delta_time_per_frame);
+        ImGui::Text("Frame rate: %d", frame_count);
       }
       ImGui::End();
       ImGui::Begin("Debug image");
