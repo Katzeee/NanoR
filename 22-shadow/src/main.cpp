@@ -463,7 +463,7 @@ auto main() -> int {
     // you should do scale and rotation at origin!
     // ground_model = glm::translate(ground_model, {0, 0, 0});
     // ground_model = glm::rotate(ground_model, glm::radians(30.0f), {0, 1, 0});
-    ground_model = glm::scale(ground_model, {150, 1, 150});
+    ground_model = glm::scale(ground_model, {250, 1, 250});
     ground_model = glm::translate(ground_model, {0, -0.5, 0});  // move to origin then scale
     s_lit->SetMat4("Model", ground_model);
     glActiveTexture(GL_TEXTURE0);
@@ -515,7 +515,7 @@ auto main() -> int {
     s_lit->SetVec4("base_color", glm::vec4{1});
     // you should do scale and rotation at origin!
     auto cube_model = glm::mat4(1);
-    cube_model = glm::translate(cube_model, {-8.0, 0, -10.0});
+    cube_model = glm::translate(cube_model, {20.0, 0, -30.0});
     cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
     s_lit->SetMat4("Model", cube_model);

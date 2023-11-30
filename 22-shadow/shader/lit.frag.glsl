@@ -47,11 +47,19 @@ float IsInShadow() {
   lightP = vec4(lightP.xyz / lightP.w, 1);
   lightP = lightP * 0.5 + 0.5;
   float cur_depth = lightP.z;
-  float closet_depth = texture(depth_map, lightP.xy).r;
+  // NOTICE: must use 1.0 rather than 1
+  vec2 texel_size = 1.0 / textureSize(depth_map, 0);
   vec3 L = normalize(d_lights[0].direction);
   vec3 N = normalize(fs_in.N);
   float bias = mix(0.000005, 0.00001, dot(L, N));
-  return cur_depth - bias > closet_depth ? 0 : 1.0;  // make cur_depth closer to light
+  float shadow = 0;
+  for (int i = -1; i <= 1; i++) {
+    for (int j = -1; j <= 1; j++) {
+      float closet_depth = texture(depth_map, lightP.xy + vec2(texel_size.x * i, texel_size.y * j)).r;
+      shadow += cur_depth - bias > closet_depth ? 0 : 1.0;
+    }
+  }
+  return shadow / 9;  // make cur_depth closer to light
 }
 
 void main() {
@@ -89,9 +97,7 @@ void main() {
                 pow(max(dot(R, V), 0), texture(texture_specular0, fs_in.uv).a) *
                 texture(texture_specular0, fs_in.uv).rgb;
   }
-
-  // vec3 ambient = Ka * texture(texture_diffuse0, fs_in.uv).rgb;
-  vec3 ambient = vec3(0, 0, 0);
+  vec3 ambient = Ka * texture(texture_diffuse0, fs_in.uv).rgb;
 #ifdef DEBUG_DEPTH
   FragColor = vec4(vec3(LinearizeDepth(gl_FragCoord.z)) / far, 1);
 #elif defined(DEBUG_NORMAL)
