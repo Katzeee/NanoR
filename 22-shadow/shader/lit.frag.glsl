@@ -41,28 +41,35 @@ float LinearizeDepth(float depth) {
   return (2 * near * far) / (far + near - z * (far - near));
 }
 
-// direction light shadow calculate
-float Shadow() {
-  vec4 lightP = world_to_light_space_matrix * vec4(fs_in.P, 1);
-  lightP = vec4(lightP.xyz / lightP.w, 1);
-  lightP = lightP * 0.5 + 0.5;
-  float cur_depth = lightP.z;
+float PCF(int size) {
+  float kernel_size = (2 * size + 1) * (2 * size + 1);
+  vec4 ls_P = world_to_light_space_matrix * vec4(fs_in.P, 1);
+  ls_P = vec4(ls_P.xyz / ls_P.w, 1);
+  ls_P = ls_P * 0.5 + 0.5;
+  float cur_depth = ls_P.z;
   // NOTICE: must use 1.0 rather than 1
   vec2 texel_size = 1.0 / textureSize(depth_map, 0);
   vec3 L = normalize(d_lights[0].direction);
   vec3 N = normalize(fs_in.N);
   float bias = mix(0.000005, 0.00001, dot(L, N));
   float shadow = 0;
-  for (int i = -1; i <= 1; i++) {
-    for (int j = -1; j <= 1; j++) {
-      float closet_depth = texture(depth_map, lightP.xy + vec2(texel_size.x * i, texel_size.y * j)).r;
+  for (int i = -size; i <= size; i++) {
+    for (int j = -size; j <= size; j++) {
+      float closet_depth = texture(depth_map, ls_P.xy + vec2(texel_size.x * i, texel_size.y * j)).r;
       shadow += cur_depth - bias > closet_depth ? 0 : 1.0;
     }
   }
-  if (lightP.z > 1) { // exceed light's far plain
-    shadow = 9.0;
+  if (ls_P.z > 1) {  // exceed light's far plain
+    shadow = kernel_size;
   }
-  return shadow / 9;  // make cur_depth closer to light
+  return shadow / kernel_size;  // make cur_depth closer to light
+}
+
+float PCSS() {
+  vec4 ls_P = world_to_light_space_matrix * vec4(fs_in.P, 1);
+  ls_P = vec4(ls_P.xyz / ls_P.w, 1);
+  ls_P = ls_P * 0.5 + 0.5;
+
 }
 
 void main() {
@@ -106,6 +113,6 @@ void main() {
 #elif defined(DEBUG_NORMAL)
   FragColor = vec4(fs_in.N, 1);
 #else
-  FragColor = base_color * vec4(((diffuse + specular) * Shadow() + ambient), texture(texture_diffuse0, fs_in.uv).a);
+  FragColor = base_color * vec4(((diffuse + specular) * PCF(1) + ambient), texture(texture_diffuse0, fs_in.uv).a);
 #endif
 }

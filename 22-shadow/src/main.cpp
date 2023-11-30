@@ -287,7 +287,7 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region depth framebuffer
-  float depth_map_h_w = 4096;
+  float depth_map_h_w = 2048;
   unsigned int fbo_depth_map;
   glGenFramebuffers(1, &fbo_depth_map);
   unsigned int t_depth_map;
