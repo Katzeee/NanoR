@@ -113,7 +113,7 @@ auto main() -> int {
   };
 
   std::vector<unsigned int> ground_indices {
-    20, 21, 22, 22, 23, 20,
+    0, 1, 2, 2, 3, 0,
   };
 
   std::vector<unsigned int> window_indices {
@@ -145,93 +145,14 @@ auto main() -> int {
     {{-1.0f, -1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}}, 
   };
 
-  std::vector<xac::Mesh::Vertex> cage_vertices {
+  std::vector<xac::Mesh::Vertex> ground_vertices {
     // positions              normals        texture coords
-    {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}}, 
-    {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f}}, 
-    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}}, 
-    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 1.0f}}, 
-                                               
-    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 0.0f}}, 
-    {{ 0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 0.0f}}, 
-    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 1.0f}}, 
-    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 1.0f}}, 
-                                               
-    {{-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 0.0f}}, 
-    {{-0.5f,  0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 1.0f}}, 
-    {{-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 1.0f}}, 
-    {{-0.5f, -0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 0.0f}}, 
-                                               
-    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}, {0.0f, 1.0f}}, 
-    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}, {1.0f, 1.0f}}, 
-    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}, {1.0f, 0.0f}}, 
-    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}, {0.0f, 0.0f}}, 
-                                               
-    {{-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 1.0f}}, 
-    {{ 0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 1.0f}}, 
-    {{ 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 0.0f}}, 
-    {{-0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 0.0f}}, 
-                                               
     {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 0.0f}}, 
     {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 1.0f}}, 
     {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 1.0f}}, 
     {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f}}, 
   };
-
-    float skyboxVertices[] = {
-        // positions          
-        -1.0f,  1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-
-        -1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
-
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-
-        -1.0f, -1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
-
-        -1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f,
-
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f
-    };
   // clang-format on
-
-  unsigned int skyboxVAO, skyboxVBO;
-  glGenVertexArrays(1, &skyboxVAO);
-  glGenBuffers(1, &skyboxVBO);
-  glBindVertexArray(skyboxVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 #pragma endregion
 
 #pragma region uniform buffer object
@@ -245,8 +166,7 @@ auto main() -> int {
   xac::Model m_herta("../resources/models/Herta/heita.obj");
   xac::Model m_sphere("../resources/models/Sphere/sphere.obj");
   xac::Model m_cube("../resources/models/Cube/cube.obj");
-  xac::Mesh m_ground{cage_vertices, ground_indices, {glm::vec3{0}, glm::vec3{0.5}, glm::vec3{0.5}, {}}, "ground"};
-  xac::Mesh m_window{cage_vertices, window_indices, {}, "window"};
+  xac::Mesh m_ground{ground_vertices, ground_indices, {glm::vec3{0}, glm::vec3{0.5}, glm::vec3{0.5}, {}}, "ground"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
   xac::Model m_box = m_cube;
   // xac::Model m_skybox = m_cube;
@@ -275,15 +195,7 @@ auto main() -> int {
   m_herta.SetShader(s_lit);
   m_ground.SetShader(s_lit);
   m_box.SetShader(s_lit);
-  m_window.SetShader(s_lit);
   m_quad.SetShader(s_unlit);
-  // m_cube.SetShader(s_reflect);
-
-  std::array<std::shared_ptr<xac::Mesh>, 6> m_cage_faces;
-  for (int i = 0; i < 6; i++) {
-    m_cage_faces[i] = std::make_shared<xac::Mesh>(cage_vertices, cage_face_indices[i], xac::Material{});
-    m_cage_faces[i]->SetShader(s_lit);
-  }
 #pragma endregion
 
 #pragma region depth framebuffer
@@ -296,7 +208,6 @@ auto main() -> int {
   glTexImage2D(
       GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
   );
-  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   // for uv out of texture(not exceeding far plane)
@@ -306,10 +217,8 @@ auto main() -> int {
   glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(border_color));
   glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t_depth_map, 0);
-  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t_depth_map, 0);
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
-  // glBindTexture(GL_TEXTURE_2D, 0);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
   }
@@ -379,7 +288,7 @@ auto main() -> int {
                                                   break;
                                               }
                                             }};
-  int shadow_model = 0;
+  int shadow_model = 1;
   xac::CheckChangeThen check_shadow_model{&shadow_model, [&](int new_val) {
                                             switch (new_val) {
                                               case 0:  // no shadow
@@ -497,41 +406,6 @@ auto main() -> int {
     m_ground.Draw();
 #pragma endregion
 
-#pragma region render cage
-    // glStencilMask(0xFF);
-    // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-    // s_lit->Use();
-    // auto cage_model = glm::mat4{1};
-    // cage_model = glm::translate(cage_model, {10, 0, 15});
-    // cage_model = glm::scale(cage_model, glm::vec3{15});
-    // cage_model = glm::translate(cage_model, {0, 0.5, 0});
-    // s_lit->SetMat4("Model", cage_model);
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, t_white);
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, 0);
-    // s_lit->SetInt("texture_diffuse0", 0);
-    // s_lit->SetInt("texture_specular0", 1);
-
-    // glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    // s_lit->SetVec4("base_color", {0.5, 0.5, 0.9, 1.0});
-    // m_cage_faces[3]->Draw();
-    // glStencilFunc(GL_ALWAYS, 2, 0xFF);
-    // s_lit->SetVec4("base_color", {0.5, 0.9, 0.5, 1.0});
-    // m_cage_faces[1]->Draw();
-    // glStencilFunc(GL_ALWAYS, 3, 0xFF);
-    // s_lit->SetVec4("base_color", {0.9, 0.9, 0.5, 1.0});
-    // m_cage_faces[0]->Draw();
-    // s_lit->SetVec4("base_color", {0.3, 0.3, 0.8, 1.0});
-    // m_cage_faces[2]->Draw();
-    // m_cage_faces[4]->Draw();
-    // m_cage_faces[5]->Draw();
-    // // HINT: only write stencil buffer when draw cage
-    // glad_glStencilMask(0x00);
-    // glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-#pragma endregion
-
 #pragma region render cubes
     s_lit->Use();
     s_lit->SetVec4("base_color", glm::vec4{1});
@@ -567,20 +441,6 @@ auto main() -> int {
     // HINT: or else can't clear stencil buffer bit
     glad_glStencilMask(0xFF);
 #pragma endregion
-
-    // #pragma region render skybox
-    //     glDepthMask(GL_FALSE);
-    //     glBindVertexArray(skyboxVAO);
-    //     glm::mat4 skybox_view = glm::mat4(glm::mat3(camera.GetViewMatrix()));  // HINT: remove translate trasition
-    //     s_skybox->Use();
-    //     s_skybox->SetMat4("View", skybox_view);
-    //     s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
-    //     glActiveTexture(GL_TEXTURE0);
-    //     glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
-    //     s_skybox->SetInt("skybox", 0);
-    //     glDrawArrays(GL_TRIANGLES, 0, 36);
-    //     glDepthMask(GL_TRUE);
-    // #pragma endregion
   };
 
   // HINT: Render loop start
