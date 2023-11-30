@@ -3,12 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // clang-format on
-#include <cmath>
-#include <exception>
+#include <array>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <stdexcept>
 
 namespace xac {
 class InputSystem;
@@ -22,53 +20,27 @@ class Camera {
     UNKONWN,
   };
 
-  Camera() : Camera(glm::vec3{0, 0, 5}, glm::vec3{0}) {}
-
-  Camera(glm::vec3 position, glm::vec3 target, ProjectionMethod projection_method = ProjectionMethod::PERSP) : position_(position) {
-    front_ = glm::normalize(target - position);
-    pitch_ = std::asin(front_.y);
-    yaw_ = (front_.z < 0 ? -1 : 1) * glm::acos(front_.x / std::cos(pitch_));
-    UpdateVectors();
-  }
+  Camera();
+  Camera(glm::vec3 position, glm::vec3 target, ProjectionMethod projection_method = ProjectionMethod::PERSP);
 
   auto GetViewMatrix() -> glm::mat4 { return glm::lookAt(position_, position_ + front_, up_); }
+  auto GetProjectionMatrix() -> glm::mat4;
+  auto GetFrustumInWorld() -> std::array<glm::vec3, 8>;
 
-  auto GetProjectionMatrix() -> glm::mat4 {
-    if (projection_method_ == ProjectionMethod::PERSP) {
-      return glm::perspective(fov_, aspect_, near_, far_);
-    } else if (projection_method_ == ProjectionMethod::ORTHO) {
-      return glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_, far_);
-    }
-    throw std::logic_error("not implemented");
-  }
-
-  auto SetPosition(glm::vec3 position) { position_ = position; }
   auto GetFornt() -> glm::vec3 { return front_; }
   auto GetUp() -> glm::vec3 { return up_; }
   auto GetPosition() -> glm::vec3 { return position_; }
+  auto SetPosition(glm::vec3 position) { position_ = position; }
   auto SetAspect(float aspect) -> void { aspect_ = aspect; }
   auto SetFov(float fov) { fov_ = fov; }
+  void SetOrtho(float left, float right, float bottom, float top);
+  void SetNear(float near) { near_ = near; }
+  void SetFar(float far) { far_ = far; }
   void UpdateFreeCamera(float delta_time);
   void Tick(float delta_time);
-  void UpdateScroll(double y_offset) {
-    if (fov_ >= 1.0f && fov_ <= 45.0f) {
-      auto fov = fov_ - static_cast<float>(y_offset) * 0.05;
-      SetFov(fov);
-    }
-    if (fov_ <= 1.0f) {
-      SetFov(1.0f);
-    }
-    if (fov_ >= 45.0f) {
-      SetFov(45.0f);
-    }
-  }
-  void UpdateCursorMove(float x_offset, float y_offset, float delta_time) {
-    // FIX: offset is not linear related to fov_
-    yaw_ += x_offset * Camera::sensitivity_ * delta_time * fov_;
-    pitch_ -= y_offset * Camera::sensitivity_ * delta_time * fov_;
-    CheckPitchSafety();
-    UpdateVectors();
-  }
+  void UpdateScroll(double y_offset);
+  void UpdateCursorMove(float x_offset, float y_offset, float delta_time);
+  
   auto GetYaw() -> float { return glm::degrees(yaw_); }
   auto GetPitch() -> float { return glm::degrees(pitch_); }
   void SetYaw(float yaw) {
@@ -94,36 +66,20 @@ class Camera {
 
   ProjectionMethod projection_method_ = ProjectionMethod::PERSP;
 
+  // for perspective
   float fov_ = 45.0f;
   float aspect_ = 1.5f;
   float near_ = 0.1f;
   float far_ = 150.0f;
+  // for ortho
+  float left_ = -10.0f;
+  float right_ = 10.0f;
+  float bottom_ = -10.0f;
+  float top_ = 10.0f;
 
   void PositionForward(glm::vec3 forward) { position_ += forward; }
-
-  void CheckPitchSafety() {
-    if (pitch_ > 1.5533f) {
-      pitch_ = 1.5533f;
-    } else if (pitch_ < -1.5533f) {
-      pitch_ = -1.5533f;
-    }
-  }
-
-  void UpdateVectors() {
-    front_.y = std::sin(pitch_);
-    front_.x = std::cos(pitch_) * std::cos(yaw_);
-    front_.z = std::cos(pitch_) * std::sin(yaw_);
-    front_ = glm::normalize(front_);
-    if (glm::distance(front_, glm::vec3{0, -1, 0}) < 0.01) {
-      up_ = glm::vec3{0, 0, 1};
-      return;
-    } else if (glm::distance(front_, glm::vec3{0, 1, 0}) < 0.01) {
-      up_ = glm::vec3{0, 0, -1};
-      return;
-    }
-    glm::vec3 right = glm::normalize(glm::cross(front_, Camera::world_up_));
-    up_ = glm::normalize(glm::cross(right, front_));
-  };
+  void CheckPitchSafety();
+  void UpdateVectors();
 };
 
 }  // end namespace xac

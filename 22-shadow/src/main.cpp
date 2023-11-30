@@ -10,9 +10,9 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <assimp/Importer.hpp>
 #include <cmath>
-#include <filesystem>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
@@ -199,14 +199,17 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region depth framebuffer
-  float depth_map_h_w = 2048;
+  float depth_map_h_w = 1024;
   unsigned int fbo_depth_map;
   glGenFramebuffers(1, &fbo_depth_map);
   unsigned int t_depth_map;
   glGenTextures(1, &t_depth_map);
   glBindTexture(GL_TEXTURE_2D, t_depth_map);
+  // glTexImage2D(
+  //     GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+  // );
   glTexImage2D(
-      GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+      GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr
   );
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -216,9 +219,10 @@ auto main() -> int {
   glm::vec4 border_color{1.0, 1.0, 1.0, 1.0};
   glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(border_color));
   glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t_depth_map, 0);
-  glDrawBuffer(GL_NONE);
-  glReadBuffer(GL_NONE);
+  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t_depth_map, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t_depth_map, 0);
+  // glDrawBuffer(GL_NONE);
+  // glReadBuffer(GL_NONE);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
   }
@@ -288,7 +292,7 @@ auto main() -> int {
                                                   break;
                                               }
                                             }};
-  int shadow_model = 1;
+  int shadow_model = 0;
   xac::CheckChangeThen check_shadow_model{&shadow_model, [&](int new_val) {
                                             switch (new_val) {
                                               case 0:  // no shadow
@@ -311,7 +315,7 @@ auto main() -> int {
 #pragma endregion
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glm::vec3 d_light0_pos;
+  glm::vec3 d_light0_pos = d_lights[0].direction * 60.0f;;
 
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
@@ -363,7 +367,6 @@ auto main() -> int {
     // m_light.Draw();
 
     s_unlit->Use();
-    d_light0_pos = d_lights[0].direction * 60.0f;
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light0_pos), glm::vec3{3.0f});
     s_unlit->SetMat4("Model", d_light_model);
     s_unlit->SetVec4("color", d_lights[0].color);
@@ -443,7 +446,7 @@ auto main() -> int {
 #pragma endregion
   };
 
-  // HINT: Render loop start
+  // SECTION: Render loop start
   while (!glfwWindowShouldClose(window)) {
     check_gl_depth_func();
     check_face_culling_enable();
@@ -474,6 +477,25 @@ auto main() -> int {
 
 #pragma region Render Depth Map
     auto light_cam = xac::Camera(d_light0_pos, glm::vec3{0}, xac::Camera::ProjectionMethod::ORTHO);
+    auto frustum = global_context.camera_->GetFrustumInWorld();
+    auto light_cam_view = light_cam.GetViewMatrix();
+    std::ranges::for_each(frustum, [&light_cam_view](auto &&p){
+      p = glm::vec3{light_cam_view * glm::vec4{p, 1.0}};
+    });
+    // HINT: light space
+    auto min_max_x = std::ranges::minmax(frustum, {}, &glm::vec3::x);
+    auto min_max_y = std::ranges::minmax(frustum, {}, &glm::vec3::y);
+    auto min_max_z = std::ranges::minmax(frustum, {}, &glm::vec3::z);
+    auto left = min_max_x.min.x;
+    auto right = min_max_x.max.x;
+    auto bottom = min_max_y.min.y;
+    auto top = min_max_y.max.y;
+    auto near = min_max_z.min.z;
+    auto far = min_max_z.max.z;
+    std::cout << left << " " << right << " " << bottom << " " << top << std::endl;
+    light_cam.SetOrtho(left, right, bottom, top);
+    light_cam.SetNear(0);
+    light_cam.SetFar(far - near);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
     glViewport(0, 0, depth_map_h_w, depth_map_h_w);
     DrawScene(delta_time_per_frame, light_cam);
