@@ -41,13 +41,17 @@ float LinearizeDepth(float depth) {
   return (2 * near * far) / (far + near - z * (far - near));
 }
 
+// direction light shadow calculate
 float IsInShadow() {
   vec4 lightP = world_to_light_space_matrix * vec4(fs_in.P, 1);
   lightP = vec4(lightP.xyz / lightP.w, 1);
   lightP = lightP * 0.5 + 0.5;
   float cur_depth = lightP.z;
   float closet_depth = texture(depth_map, lightP.xy).r;
-  return cur_depth - 0.000005 > closet_depth ? 0 : 1.0; // make cur_depth closer to light
+  vec3 L = normalize(d_lights[0].direction);
+  vec3 N = normalize(fs_in.N);
+  float bias = mix(0.000005, 0.00001, dot(L, N));
+  return cur_depth - bias > closet_depth ? 0 : 1.0;  // make cur_depth closer to light
 }
 
 void main() {

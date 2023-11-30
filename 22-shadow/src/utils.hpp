@@ -5,13 +5,19 @@ namespace xac {
 template <typename T, typename F>
 class CheckChangeThen {
  public:
-  CheckChangeThen(T *val_addr, F &&f) : val_addr_(val_addr), old_val_(*val_addr), f_(f) { std::invoke(f_, old_val_); }
+  CheckChangeThen(T *val_addr, F &&f) : val_addr_(val_addr), old_val_(*val_addr), f_(f) {
+    std::invoke(f_, old_val_);
+  }
 
   void operator()() {
     if (old_val_ != *val_addr_) {
       std::invoke(f_, *val_addr_);
     }
     old_val_ = *val_addr_;
+  }
+
+  auto Data() -> T * {
+    return val_addr_;
   }
 
  private:

@@ -252,15 +252,12 @@ auto main() -> int {
   // xac::Model m_skybox = m_cube;
   xac::Model m_light = m_sphere;
 
-  auto s_unlit = std::make_shared<xac::Shader>(
-      "../22-shadow/shader/common.vert.glsl", "../22-shadow/shader/unlit.frag.glsl"
-  );
-  auto s_lit = std::make_shared<xac::Shader>(
-      "../22-shadow/shader/common.vert.glsl", "../22-shadow/shader/lit.frag.glsl"
-  );
-  auto s_skybox = std::make_shared<xac::Shader>(
-      "../22-shadow/shader/skybox.vert.glsl", "../22-shadow/shader/skybox.frag.glsl"
-  );
+  auto s_unlit =
+      std::make_shared<xac::Shader>("../22-shadow/shader/common.vert.glsl", "../22-shadow/shader/unlit.frag.glsl");
+  auto s_lit =
+      std::make_shared<xac::Shader>("../22-shadow/shader/common.vert.glsl", "../22-shadow/shader/lit.frag.glsl");
+  auto s_skybox =
+      std::make_shared<xac::Shader>("../22-shadow/shader/skybox.vert.glsl", "../22-shadow/shader/skybox.frag.glsl");
   auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
@@ -291,12 +288,14 @@ auto main() -> int {
 
 #pragma region depth framebuffer
   float depth_map_h_w = 1024;
-  unsigned int fbo_depth_map; 
+  unsigned int fbo_depth_map;
   glGenFramebuffers(1, &fbo_depth_map);
   unsigned int t_depth_map;
   glGenTextures(1, &t_depth_map);
   glBindTexture(GL_TEXTURE_2D, t_depth_map);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexImage2D(
+      GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
+  );
   // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -400,7 +399,8 @@ auto main() -> int {
     decimal += rotate_speed * delta_time - std::floor(rotate_speed * delta_time);
     float phi = glm::radians(360 * decimal);
     glm::vec3 p_light0_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
-    p_light0_pos = glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(p_light0_pos, 1);
+    p_light0_pos =
+        glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(p_light0_pos, 1);
     // Because you do the transformation by the order scale->rotate->translate,
     // glm functions are doing right multiply, so
     // the model matrix should reverse it, that is translate->rotate->scale
@@ -432,7 +432,7 @@ auto main() -> int {
     m_light.Draw();
 
     s_unlit->Use();
-    d_light0_pos = d_lights[0].direction * 40.0f;
+    d_light0_pos = d_lights[0].direction * 60.0f;
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light0_pos), glm::vec3{3.0f});
     s_unlit->SetMat4("Model", d_light_model);
     s_unlit->SetVec4("color", d_lights[0].color);
@@ -476,38 +476,38 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region render cage
-//     glStencilMask(0xFF);
-//     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    // glStencilMask(0xFF);
+    // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-//     s_lit->Use();
-//     auto cage_model = glm::mat4{1};
-//     cage_model = glm::translate(cage_model, {10, 0, 15});
-//     cage_model = glm::scale(cage_model, glm::vec3{15});
-//     cage_model = glm::translate(cage_model, {0, 0.5, 0});
-//     s_lit->SetMat4("Model", cage_model);
-//     glActiveTexture(GL_TEXTURE0);
-//     glBindTexture(GL_TEXTURE_2D, t_white);
-//     glActiveTexture(GL_TEXTURE1);
-//     glBindTexture(GL_TEXTURE_2D, 0);
-//     s_lit->SetInt("texture_diffuse0", 0);
-//     s_lit->SetInt("texture_specular0", 1);
+    // s_lit->Use();
+    // auto cage_model = glm::mat4{1};
+    // cage_model = glm::translate(cage_model, {10, 0, 15});
+    // cage_model = glm::scale(cage_model, glm::vec3{15});
+    // cage_model = glm::translate(cage_model, {0, 0.5, 0});
+    // s_lit->SetMat4("Model", cage_model);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, t_white);
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, 0);
+    // s_lit->SetInt("texture_diffuse0", 0);
+    // s_lit->SetInt("texture_specular0", 1);
 
-//     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-//     s_lit->SetVec4("base_color", {0.5, 0.5, 0.9, 1.0});
-//     m_cage_faces[3]->Draw();
-//     glStencilFunc(GL_ALWAYS, 2, 0xFF);
-//     s_lit->SetVec4("base_color", {0.5, 0.9, 0.5, 1.0});
-//     m_cage_faces[1]->Draw();
-//     glStencilFunc(GL_ALWAYS, 3, 0xFF);
-//     s_lit->SetVec4("base_color", {0.9, 0.9, 0.5, 1.0});
-//     m_cage_faces[0]->Draw();
-//     s_lit->SetVec4("base_color", {0.3, 0.3, 0.8, 1.0});
-//     m_cage_faces[2]->Draw();
-//     m_cage_faces[4]->Draw();
-//     m_cage_faces[5]->Draw();
-//     // HINT: only write stencil buffer when draw cage
-//     glad_glStencilMask(0x00);
-//     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    // glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    // s_lit->SetVec4("base_color", {0.5, 0.5, 0.9, 1.0});
+    // m_cage_faces[3]->Draw();
+    // glStencilFunc(GL_ALWAYS, 2, 0xFF);
+    // s_lit->SetVec4("base_color", {0.5, 0.9, 0.5, 1.0});
+    // m_cage_faces[1]->Draw();
+    // glStencilFunc(GL_ALWAYS, 3, 0xFF);
+    // s_lit->SetVec4("base_color", {0.9, 0.9, 0.5, 1.0});
+    // m_cage_faces[0]->Draw();
+    // s_lit->SetVec4("base_color", {0.3, 0.3, 0.8, 1.0});
+    // m_cage_faces[2]->Draw();
+    // m_cage_faces[4]->Draw();
+    // m_cage_faces[5]->Draw();
+    // // HINT: only write stencil buffer when draw cage
+    // glad_glStencilMask(0x00);
+    // glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 #pragma endregion
 
 #pragma region render cubes
@@ -528,8 +528,8 @@ auto main() -> int {
     m_box.Draw();
 
     cube_model = glm::mat4(1);
-    cube_model = glm::translate(cube_model, {0, 45.0, 0});
-    cube_model = glm::rotate(cube_model, glm::radians(45.0f), {0, 1, 0});
+    cube_model = glm::translate(cube_model, {0, 25.0, 10});
+    cube_model = glm::rotate(cube_model, glm::radians(20.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, glm::vec3{2});
     s_lit->SetMat4("Model", cube_model);
 
@@ -546,19 +546,19 @@ auto main() -> int {
     glad_glStencilMask(0xFF);
 #pragma endregion
 
-// #pragma region render skybox
-//     glDepthMask(GL_FALSE);
-//     glBindVertexArray(skyboxVAO);
-//     glm::mat4 skybox_view = glm::mat4(glm::mat3(camera.GetViewMatrix()));  // HINT: remove translate trasition
-//     s_skybox->Use();
-//     s_skybox->SetMat4("View", skybox_view);
-//     s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
-//     glActiveTexture(GL_TEXTURE0);
-//     glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
-//     s_skybox->SetInt("skybox", 0);
-//     glDrawArrays(GL_TRIANGLES, 0, 36);
-//     glDepthMask(GL_TRUE);
-// #pragma endregion
+    // #pragma region render skybox
+    //     glDepthMask(GL_FALSE);
+    //     glBindVertexArray(skyboxVAO);
+    //     glm::mat4 skybox_view = glm::mat4(glm::mat3(camera.GetViewMatrix()));  // HINT: remove translate trasition
+    //     s_skybox->Use();
+    //     s_skybox->SetMat4("View", skybox_view);
+    //     s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
+    //     glActiveTexture(GL_TEXTURE0);
+    //     glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
+    //     s_skybox->SetInt("skybox", 0);
+    //     glDrawArrays(GL_TRIANGLES, 0, 36);
+    //     glDepthMask(GL_TRUE);
+    // #pragma endregion
   };
 
   // HINT: Render loop start
@@ -586,10 +586,12 @@ auto main() -> int {
 
 #pragma region render to quad
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
-               global_context.window_height_);
+    glViewport(
+        global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+        global_context.window_height_
+    );
     s_lit->Use();
-    s_lit->SetMat4("world_to_light_space_matrix",light_cam.GetProjectionMatrix() * light_cam.GetViewMatrix());
+    s_lit->SetMat4("world_to_light_space_matrix", light_cam.GetProjectionMatrix() * light_cam.GetViewMatrix());
     glActiveTexture(GL_TEXTURE12);
     glBindTexture(GL_TEXTURE_2D, t_depth_map);
     s_lit->SetInt("depth_map", 12);
