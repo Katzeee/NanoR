@@ -10,7 +10,6 @@
 
 #include <algorithm>
 #include <array>
-#include <ranges>
 #include <assimp/Importer.hpp>
 #include <cmath>
 #include <glm/ext/matrix_transform.hpp>
@@ -19,6 +18,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <ranges>
 
 #include "camera/camera.hpp"
 #include "context/context.hpp"
@@ -27,62 +27,20 @@
 #include "model.hpp"
 #include "shader/shader.hpp"
 #include "utils.hpp"
+#include "window/window.hpp"
 
 // HINT: variable prefix for specified kind of objects
 // Mesh, model: m
 // Shader: s
 // Texture: t
 
-void FrameBufferSizeCB(GLFWwindow *window, int width, int height) {
-  glViewport(global_context.imgui_width_, 0, width - global_context.imgui_width_, height);
-  global_context.window_width_ = width;
-  global_context.window_height_ = height;
-  global_context.camera_->SetAspect(static_cast<float>(width - global_context.imgui_width_) / height);
-}
-
 static auto InCommand(xac::ControlCommand command) -> bool {
   return static_cast<uint32_t>(command) & global_context.control_commad_;
 }
 
 auto main() -> int {
-#pragma region window init
-  if (!glfwInit()) {
-    return -1;
-  }
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __linux__
-  glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
-  glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "opengl test");
-#endif
-
-  GLFWwindow *window =
-      glfwCreateWindow(global_context.window_width_, global_context.window_height_, "Hello OpenGL", nullptr, nullptr);
-  if (!window) {
-    glfwTerminate();
-    return -1;
-  }
-  glfwMakeContextCurrent(window);
-  glfwSwapInterval(0);  // disable vsync
-
-  glfwSetFramebufferSizeCallback(window, FrameBufferSizeCB);
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-#pragma endregion
-
   global_context.Init();
-  xac::InputSystem::Init(window);
   float delta_time_per_frame;
-
-#pragma region imgui init
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init("#version 450 core");
-  ImGui::StyleColorsDark();
-#pragma endregion
 
   if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
     std::cout << "Failed to initialize GALD!" << std::endl;
@@ -208,9 +166,7 @@ auto main() -> int {
   // glTexImage2D(
   //     GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
   // );
-  glTexImage2D(
-      GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr
-  );
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   // for uv out of texture(not exceeding far plane)
@@ -227,6 +183,42 @@ auto main() -> int {
     std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
   }
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#pragma endregion
+
+#pragma region Draw Box Helper
+  auto DrawBox = [](std::array<glm::vec3, 8> vertex) {
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(glm::vec3), vertex.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    std::array<GLuint, 24> indices = {// 底面边
+                                      0, 1, 1, 2, 2, 3, 3, 0,
+                                      // 顶面边
+                                      4, 5, 5, 6, 6, 7, 7, 4,
+                                      // 立方体的四个“侧面”边
+                                      0, 4, 1, 5, 2, 6, 3, 7};
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // 绘制线条
+    glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+
+    // 解绑VAO
+    glBindVertexArray(0);
+
+    // 删除资源
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO);
+  };
 #pragma endregion
 
 #pragma region imgui variables
@@ -315,7 +307,8 @@ auto main() -> int {
 #pragma endregion
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glm::vec3 d_light0_pos = d_lights[0].direction * 60.0f;;
+  glm::vec3 d_light0_pos = d_lights[0].direction * 60.0f;
+  ;
 
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
@@ -447,7 +440,7 @@ auto main() -> int {
   };
 
   // SECTION: Render loop start
-  while (!glfwWindowShouldClose(window)) {
+  while (!global_context.window_->ShouldClose()) {
     check_gl_depth_func();
     check_face_culling_enable();
     check_culled_face();
@@ -464,7 +457,7 @@ auto main() -> int {
     static int count = 0;
     count += 1;
     time_counter += delta_time_per_frame;
-    if (time_counter > 1) { // every 1s
+    if (time_counter > 1) {  // every 1s
       frame_count = count;
       count = 0;
       time_counter = 0;
@@ -479,8 +472,9 @@ auto main() -> int {
     auto light_cam = xac::Camera(d_light0_pos, glm::vec3{0}, xac::Camera::ProjectionMethod::ORTHO);
     auto frustum = global_context.camera_->GetFrustumInWorld();
     auto light_cam_view = light_cam.GetViewMatrix();
-    std::ranges::for_each(frustum, [&light_cam_view](auto &&p){
-      p = glm::vec3{light_cam_view * glm::vec4{p, 1.0}};
+    std::ranges::for_each(frustum, [&light_cam_view](auto &&p) {
+      auto p_ls = light_cam_view * glm::vec4{p, 1.0};
+      p = glm::vec3{p_ls / p_ls.w};
     });
     // HINT: light space
     auto min_max_x = std::ranges::minmax(frustum, {}, &glm::vec3::x);
@@ -492,10 +486,10 @@ auto main() -> int {
     auto top = min_max_y.max.y;
     auto near = min_max_z.min.z;
     auto far = min_max_z.max.z;
-    std::cout << left << " " << right << " " << bottom << " " << top << std::endl;
+    std::cout << left << " " << right << " " << bottom << " " << top << " " << near << " " << far << std::endl;
     light_cam.SetOrtho(left, right, bottom, top);
-    light_cam.SetNear(0);
-    light_cam.SetFar(far - near);
+    light_cam.SetNear(near);
+    light_cam.SetFar(far);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
     glViewport(0, 0, depth_map_h_w, depth_map_h_w);
     DrawScene(delta_time_per_frame, light_cam);
@@ -511,6 +505,27 @@ auto main() -> int {
     glBindTexture(GL_TEXTURE_2D, t_depth_map);
     s_lit->SetInt("depth_map", 12);
     DrawScene(delta_time_per_frame, *global_context.camera_);
+
+    // s_unlit->Use();
+    // auto identity = glm::mat4{1};
+    // s_unlit->SetMat4("Model", identity);
+    // glm::mat4 view = global_context.camera_->GetViewMatrix();
+    // glm::mat4 proj = global_context.camera_->GetProjectionMatrix();
+    // glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&view));
+    // glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, t_white);
+    // s_unlit->SetInt("tex", 0);
+    // DrawBox({
+    //     glm::vec3{-0.8f, -0.8f, -0.8f},
+    //     glm::vec3{-0.8f, -0.8f, 0.8f},
+    //     glm::vec3{-0.8f, 0.8f, -0.8f},
+    //     glm::vec3{-0.8f, 0.8f, 0.8f},
+    //     glm::vec3{0.8f, 0.8f, -0.8f},
+    //     glm::vec3{0.8f, 0.8f, 0.8f},
+    //     glm::vec3{0.8f, -0.8f, -0.8f},
+    //     glm::vec3{0.8f, -0.8f, 0.8f},
+    // });
 #pragma region render to quad
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
@@ -631,15 +646,12 @@ auto main() -> int {
     }
 #pragma endregion
 
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+    global_context.window_->SwapBuffers();
   }
 
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 
-  glfwDestroyWindow(window);
-  glfwTerminate();
   return 0;
 }
