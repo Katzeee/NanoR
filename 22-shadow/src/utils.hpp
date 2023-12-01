@@ -27,8 +27,8 @@ class WatchVar : public WatchVarBase {
   void operator()() override {
     if (old_val_ != val_) {
       std::invoke(f_, val_);
-      old_val_ = val_;
     }
+    old_val_ = val_;
   }
 
   auto Data() -> T * {

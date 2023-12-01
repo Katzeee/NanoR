@@ -239,71 +239,74 @@ auto main() -> int {
   glm::vec3 rotation_axis{1, 1, 1};
   float rotation_degree{60};
 
-  auto check_gl_depth_func =
-      xac::WatchVar<int>{GL_LEQUAL - GL_NEVER, [](int new_val) { glDepthFunc(GL_NEVER + new_val); }};
-  auto check_shader_debug_mode = xac::WatchVar<int>{0, [&](int new_val) {
-                                                      switch (new_val) {
-                                                        case 0:  // NO_DEBUG
-                                                          s_lit->ClearDefineGroup("DEBUG");
-                                                          s_lit->CompileShaders();
-                                                          break;
-                                                        case 1:  // DEBUG_NORMAL
-                                                          s_lit->ClearDefineGroup("DEBUG");
-                                                          s_lit->AddDefine("DEBUG", "DEBUG_NORMAL");
-                                                          s_lit->CompileShaders();
-                                                          break;
-                                                        case 2:  // DEBUG_DEPTH
-                                                          s_lit->ClearDefineGroup("DEBUG");
-                                                          s_lit->AddDefine("DEBUG", "DEBUG_DEPTH");
-                                                          s_lit->CompileShaders();
-                                                          break;
-                                                      }
-                                                    }};
-  auto check_face_culling_enable = xac::WatchVar<bool>{true, [](bool new_val) {
-                                                         if (new_val) {
-                                                           glEnable(GL_CULL_FACE);
-                                                         } else {
-                                                           glDisable(GL_CULL_FACE);
-                                                         }
-                                                       }};
-  auto check_culled_face = xac::WatchVar<int>{5, [](int new_val) { glCullFace(GL_FRONT_LEFT + new_val); }};
-  auto check_lighting_model = xac::WatchVar<int>{0, [&](int new_val) {
-                                                   switch (new_val) {
-                                                     case 0:  // PHONG
-                                                       s_lit->ClearDefineGroup("LIGHTING_MODEL");
-                                                       s_lit->CompileShaders();
-                                                       break;
-                                                     case 1:  // BLINN_PHONG
-                                                       s_lit->ClearDefineGroup("LIGHTING_MODEL");
-                                                       s_lit->AddDefine("LIGHTING_MODEL", "BLINN_PHONG");
-                                                       s_lit->CompileShaders();
-                                                       break;
-                                                   }
-                                                 }};
-  auto check_shadow_model = xac::WatchVar<int>{0, [&](int new_val) {
-                                                 switch (new_val) {
-                                                   case 0:  // no shadow
-                                                     s_lit->ClearDefineGroup("SHADOW_MODEL");
-                                                     s_lit->CompileShaders();
-                                                     break;
-                                                   case 1:  // PCF
-                                                     s_lit->ClearDefineGroup("SHADOW_MODEL");
-                                                     s_lit->AddDefine("SHADOW_MODEL", "PCF_SHADOW");
-                                                     s_lit->CompileShaders();
-                                                     break;
-                                                   case 2:  // PCSS
-                                                     s_lit->ClearDefineGroup("SHADOW_MODEL");
-                                                     s_lit->AddDefine("SHADOW_MODEL", "PCSS_SHADOW");
-                                                     s_lit->CompileShaders();
-                                                     break;
-                                                 }
-                                               }};
+  global_context.imgui_layer_->RegisterWatchVar<int>("gl_depth_func", GL_LEQUAL - GL_NEVER, [](int new_val) {
+    std::cout << "init depth func" << std::endl;
+    glDepthFunc(GL_NEVER + new_val);
+  });
+  global_context.imgui_layer_->RegisterWatchVar<int>("shader_debug_mode", 0, [&](int new_val) {
+    switch (new_val) {
+      case 0:  // NO_DEBUG
+        s_lit->ClearDefineGroup("DEBUG");
+        s_lit->CompileShaders();
+        break;
+      case 1:  // DEBUG_NORMAL
+        s_lit->ClearDefineGroup("DEBUG");
+        s_lit->AddDefine("DEBUG", "DEBUG_NORMAL");
+        s_lit->CompileShaders();
+        break;
+      case 2:  // DEBUG_DEPTH
+        s_lit->ClearDefineGroup("DEBUG");
+        s_lit->AddDefine("DEBUG", "DEBUG_DEPTH");
+        s_lit->CompileShaders();
+        break;
+    }
+  });
+  global_context.imgui_layer_->RegisterWatchVar<bool>("cull_face_enable", true, [](bool new_val) {
+    if (new_val) {
+      glEnable(GL_CULL_FACE);
+    } else {
+      glDisable(GL_CULL_FACE);
+    }
+  });
+  global_context.imgui_layer_->RegisterWatchVar<int>("cull_face_mode", 5, [](int new_val) {
+    glCullFace(GL_FRONT_LEFT + new_val);
+  });
+  global_context.imgui_layer_->RegisterWatchVar<int>("lighting_mode", 0, [&](int new_val) {
+    switch (new_val) {
+      case 0:  // PHONG
+        s_lit->ClearDefineGroup("LIGHTING_MODEL");
+        s_lit->CompileShaders();
+        break;
+      case 1:  // BLINN_PHONG
+        s_lit->ClearDefineGroup("LIGHTING_MODEL");
+        s_lit->AddDefine("LIGHTING_MODEL", "BLINN_PHONG");
+        s_lit->CompileShaders();
+        break;
+    }
+  });
+  global_context.imgui_layer_->RegisterWatchVar<int>("shadow_mode", 0, [&](int new_val) {
+    switch (new_val) {
+      case 0:  // no shadow
+        s_lit->ClearDefineGroup("SHADOW_MODEL");
+        s_lit->CompileShaders();
+        break;
+      case 1:  // PCF
+        s_lit->ClearDefineGroup("SHADOW_MODEL");
+        s_lit->AddDefine("SHADOW_MODEL", "PCF_SHADOW");
+        s_lit->CompileShaders();
+        break;
+      case 2:  // PCSS
+        s_lit->ClearDefineGroup("SHADOW_MODEL");
+        s_lit->AddDefine("SHADOW_MODEL", "PCSS_SHADOW");
+        s_lit->CompileShaders();
+        break;
+    }
+  });
 
 #pragma endregion
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glm::vec3 d_light0_pos = d_lights[0].direction * 60.0f;
-  ;
 
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
@@ -428,7 +431,7 @@ auto main() -> int {
     s_lit->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
     m_herta.Draw();
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glDepthFunc(GL_NEVER + check_gl_depth_func.Value());
+    glDepthFunc(GL_NEVER + global_context.imgui_layer_->GetWatchVar<int>("gl_depth_func").Value());
     // HINT: or else can't clear stencil buffer bit
     glad_glStencilMask(0xFF);
 #pragma endregion
@@ -436,13 +439,6 @@ auto main() -> int {
 
   // SECTION: Render loop start
   while (!global_context.window_->ShouldClose()) {
-    check_gl_depth_func();
-    check_face_culling_enable();
-    check_culled_face();
-    check_shader_debug_mode();
-    check_lighting_model();
-    check_shadow_model();
-
 #pragma region Time and Frame
     static float last_frame_time = 0.0f;
     auto cur_frame_time = static_cast<float>(glfwGetTime());
@@ -481,7 +477,7 @@ auto main() -> int {
     auto top = min_max_y.max.y;
     auto near = min_max_z.min.z;
     auto far = min_max_z.max.z;
-    std::cout << left << " " << right << " " << bottom << " " << top << " " << near << " " << far << std::endl;
+    // std::cout << left << " " << right << " " << bottom << " " << top << " " << near << " " << far << std::endl;
     light_cam.SetOrtho(left, right, bottom, top);
     light_cam.SetNear(near);
     light_cam.SetFar(far);
@@ -544,102 +540,7 @@ auto main() -> int {
     global_context.imgui_layer_->Render();
 
 #pragma region render imgui
-    {
-      ImGui_ImplOpenGL3_NewFrame();
-      ImGui_ImplGlfw_NewFrame();
-      ImGui::NewFrame();
-      ImGui::SetNextWindowPos({0, 0});
-      ImGui::SetNextWindowSize(
-          {static_cast<float>(global_context.imgui_width_), static_cast<float>(global_context.window_height_)}
-      );
-      ImGui::Begin("Hello, World!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-      ImGui::SetWindowFontScale(1.2);
-
-      ImGui::ColorEdit4("BG_color", reinterpret_cast<float *>(&background_color), ImGuiColorEditFlags_AlphaPreview);
-
-      if (ImGui::TreeNodeEx("Rotating light", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::ColorEdit3("p_light1", reinterpret_cast<float *>(&p_lights[0].color));
-        ImGui::Separator();
-        ImGui::ColorEdit3("p_light2", reinterpret_cast<float *>(&p_lights[1].color));
-        ImGui::DragFloat3("rotation_axis", reinterpret_cast<float *>(&rotation_axis), 0.005f, -1.0f, 1.0f);
-        ImGui::Separator();
-        ImGui::ColorEdit3("d_light1", reinterpret_cast<float *>(&d_lights[0].color));
-        ImGui::PushItemWidth(80);
-        ImGui::SliderFloat("X", &d_lights[0].direction.x, -1.0f, 1.0f);
-        ImGui::SameLine();
-        ImGui::SliderFloat("Y", &d_lights[0].direction.y, -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_None);
-        ImGui::SameLine();
-        ImGui::SliderFloat("Z", &d_lights[0].direction.z, -1.0f, 1.0f);
-        ImGui::PopItemWidth();
-        ImGui::TreePop();
-      }
-      ImGui::SliderFloat("Camera speed", &global_context.camera_->speed_, 5.0f, 30.0f);
-      ImGui::SliderFloat("rotation_degree", &rotation_degree, 0, 360);
-
-      if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Combo("Debug Mode", check_shader_debug_mode.Data(), "NODEBUG\0NORMAL\0DEPTH\0");
-        ImGui::Combo(
-            "Depth test", check_gl_depth_func.Data(),
-            "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0"
-        );
-        ImGui::TreePop();
-      }
-
-      if (ImGui::TreeNodeEx("Face culling", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Checkbox("Face culling enable", check_face_culling_enable.Data());
-        ImGui::SameLine();
-        ImGui::Combo(
-            "Face culling", check_culled_face.Data(),
-            "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
-            "RIGHT\0GL_FRONT_AND_BACK\0"
-        );
-        ImGui::TreePop();
-      }
-
-      if (ImGui::TreeNodeEx("Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Combo("Lighting Model", check_lighting_model.Data(), "Phong\0Blinn Phong\0");
-        ImGui::Combo("Shadow Model", check_shadow_model.Data(), "None\0PCF\0PCSS\0");
-        ImGui::TreePop();
-      }
-
-      if (ImGui::CollapsingHeader("Section 2", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("yaw: %f\npitch: %f", global_context.camera_->GetYaw(), global_context.camera_->GetPitch());
-          ImGui::TreePop();
-        }
-
-        if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text(
-              "xoffset: %f\nyoffset: %f", xac::InputSystem::cursor_x_offset_, xac::InputSystem::cursor_y_offset_
-          );
-          ImVec2 mouse_position_absolute = ImGui::GetMousePos();
-          ImGui::Text("Position: %f, %f", mouse_position_absolute.x, mouse_position_absolute.y);
-          ImGui::TreePop();
-        }
-        if (ImGui::TreeNodeEx("Command", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text(
-              "FORWARD: %d, BACKWARD: %d", xac::InCommand(xac::ControlCommand::FORWARD),
-              xac::InCommand(xac::ControlCommand::BACKWARD)
-          );
-          ImGui::Text(
-              "LEFT: %4d, RIGHT: %4d", xac::InCommand(xac::ControlCommand::LEFT),
-              xac::InCommand(xac::ControlCommand::RIGHT)
-          );
-          ImGui::Text(
-              "DOWN: %4d, UP: %7d", xac::InCommand(xac::ControlCommand::DOWN), xac::InCommand(xac::ControlCommand::UP)
-          );
-          ImGui::TreePop();
-        }
-        ImGui::Text("Frame rate: %d", frame_count);
-      }
-      ImGui::End();
-      ImGui::Begin("Debug image");
-      // FIX: Can't see anything without doing LinearizeDepth
-      ImGui::Image(reinterpret_cast<void *>(t_depth_map), ImVec2{256, 256});
-      ImGui::End();
-      ImGui::Render();
-      ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    }
+    {}
 #pragma endregion
 
     global_context.window_->SwapBuffers();
