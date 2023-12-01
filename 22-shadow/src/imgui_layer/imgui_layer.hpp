@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
+#include <stdexcept>
 
 #include "utils.hpp"
 
@@ -19,7 +19,7 @@ class ImguiLayer {
   template <typename T>
   auto RegisterWatchVar(const std::string &name, T &&init_val, typename WatchVar<T>::WatchFunc &&f) -> void;
   template <typename T>
-  auto GetWatchVar(const std::string &name) -> WatchVar<T>;
+  auto GetWatchVar(const std::string &name) -> WatchVar<T> &;
 
  private:
   std::unordered_map<std::string, std::unique_ptr<WatchVarBase>> watch_vars_;
@@ -34,7 +34,7 @@ auto ImguiLayer::RegisterWatchVar(const std::string &name, T &&init_val, typenam
 }
 
 template <typename T>
-auto ImguiLayer::GetWatchVar(const std::string &name) -> WatchVar<T> {
+auto ImguiLayer::GetWatchVar(const std::string &name) -> WatchVar<T> & {
   if (!watch_vars_.contains(name)) {
     throw std::runtime_error("No watch var named " + name);
   }

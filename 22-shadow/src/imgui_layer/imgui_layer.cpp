@@ -26,7 +26,7 @@ auto ImguiLayer::Init(GLFWwindow *window) -> void {
 }
 
 auto ImguiLayer::Render() -> void {
-  // std::ranges::for_each(watch_vars_, [](auto &&var) { (*var.second)(); });
+  std::ranges::for_each(watch_vars_, [](auto &&var) { (*var.second)(); });
 
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();

@@ -35,7 +35,7 @@ class WatchVar : public WatchVarBase {
     return &val_;
   }
 
-  auto Value() -> T {
+  auto Value() -> T & {
     return val_;
   }
 

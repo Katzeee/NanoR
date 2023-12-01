@@ -240,7 +240,6 @@ auto main() -> int {
   float rotation_degree{60};
 
   global_context.imgui_layer_->RegisterWatchVar<int>("gl_depth_func", GL_LEQUAL - GL_NEVER, [](int new_val) {
-    std::cout << "init depth func" << std::endl;
     glDepthFunc(GL_NEVER + new_val);
   });
   global_context.imgui_layer_->RegisterWatchVar<int>("shader_debug_mode", 0, [&](int new_val) {
