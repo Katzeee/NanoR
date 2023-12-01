@@ -2,23 +2,30 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // clang-format on
+#include <array>
 #include <iostream>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "stb_image.h"
+
 #include "camera.h"
 #include "shader.h"
+#include "stb_image.h"
 
 glm::vec3 positon(0.0f, 0.0f, 5.0f);
 glm::vec3 target(0.0f, 0.0f, -2.0f);
 xac::Camera main_cam(positon, target);
 float delta_time_per_frame;
 
-void FrameBufferSizeCB(GLFWwindow *window, int width, int height) { glViewport(0, 0, width, height); }
+void FrameBufferSizeCB(GLFWwindow *window, int width, int height) {
+  glViewport(0, 0, width, height);
+}
 
-void ScrollCB(GLFWwindow *window, double x_offset, double y_offset) { main_cam.UpdateScroll(y_offset); }
+void ScrollCB(GLFWwindow *window, double x_offset, double y_offset) {
+  main_cam.UpdateScroll(y_offset);
+}
 
 void CursorCB(GLFWwindow *window, double x_pos, double y_pos) {
   static float last_x_pos = static_cast<float>(x_pos);
@@ -169,6 +176,42 @@ auto main() -> int {
   glfwSetCursorPosCallback(window, CursorCB);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+#pragma region Draw Box Helper
+  auto DrawBox = [](std::array<glm::vec3, 8> vertex) {
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(glm::vec3), vertex.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    std::array<GLuint, 24> indices = {// 底面边
+                                      0, 1, 1, 2, 2, 3, 3, 0,
+                                      // 顶面边
+                                      4, 5, 5, 6, 6, 7, 7, 4,
+                                      // 立方体的四个“侧面”边
+                                      0, 4, 1, 5, 2, 6, 3, 7};
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // 绘制线条
+    glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+
+    // 解绑VAO
+    glBindVertexArray(0);
+
+    // 删除资源
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO);
+  };
+#pragma endregion
+
   while (!glfwWindowShouldClose(window)) {
     ProcessInput(window);
     static float last_frame_time = 0.0f;
@@ -196,8 +239,21 @@ auto main() -> int {
     obj_shader.SetVec3("obj_color", glm::vec3(1.0f, 0.5f, 0.31f));
     obj_shader.SetVec3("light_pos", glm::vec3(light_model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
     obj_shader.SetVec3("view_pos", main_cam.GetPosition());
-
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    light_shader.Use();
+    auto id = glm::mat4{1.0};
+    light_shader.SetMat4("model", id);
+    DrawBox({
+        glm::vec3{-0.8f, -0.8f, -0.8f},
+        glm::vec3{-0.8f, -0.8f, 0.8f},
+        glm::vec3{-0.8f, 0.8f, -0.8f},
+        glm::vec3{-0.8f, 0.8f, 0.8f},
+        glm::vec3{0.8f, 0.8f, -0.8f},
+        glm::vec3{0.8f, 0.8f, 0.8f},
+        glm::vec3{0.8f, -0.8f, -0.8f},
+        glm::vec3{0.8f, -0.8f, 0.8f},
+    });
 
     glfwSwapBuffers(window);
     glfwPollEvents();
