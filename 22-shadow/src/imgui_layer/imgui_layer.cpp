@@ -114,10 +114,12 @@ auto ImguiLayer::Render() -> void {
   //   ImGui::Text("Frame rate: %d", frame_count);
   // }
   ImGui::End();
-  // ImGui::Begin("Debug image");
+
+  ImGui::Begin("Debug image");
   // FIX: Can't see anything without doing LinearizeDepth
-  // ImGui::Image(reinterpret_cast<void *>(t_depth_map), ImVec2{256, 256});
-  // ImGui::End();
+  ImGui::Image(reinterpret_cast<void *>(13), ImVec2{256, 256});
+  ImGui::End();
+
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
