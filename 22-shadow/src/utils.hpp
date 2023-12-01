@@ -2,27 +2,46 @@
 #include <functional>
 
 namespace xac {
-template <typename T, typename F>
-class CheckChangeThen {
+
+class WatchVarBase {
  public:
-  CheckChangeThen(T *val_addr, F &&f) : val_addr_(val_addr), old_val_(*val_addr), f_(f) {
-    std::invoke(f_, old_val_);
+  virtual void operator()() = 0;
+  virtual ~WatchVarBase() = default;
+};
+
+template <typename T>
+class WatchVar : public WatchVarBase {
+ public:
+  using WatchFunc = std::function<void(T)>;
+  explicit WatchVar(T &&init_val) : val_(init_val), old_val_(val_) {}
+
+  WatchVar(T &&init_val, WatchFunc &&f) : val_(init_val), old_val_(val_), f_(f) {
+    std::invoke(f_, val_);
   }
 
-  void operator()() {
-    if (old_val_ != *val_addr_) {
-      std::invoke(f_, *val_addr_);
+  void SetWatchFunc(WatchFunc &&f) {
+    f_ = std::move(f);
+    std::invoke(f_, val_);
+  }
+
+  void operator()() override {
+    if (old_val_ != val_) {
+      std::invoke(f_, val_);
+      old_val_ = val_;
     }
-    old_val_ = *val_addr_;
   }
 
   auto Data() -> T * {
-    return val_addr_;
+    return &val_;
+  }
+
+  auto Value() -> T {
+    return val_;
   }
 
  private:
-  T *val_addr_;
+  T val_;
   T old_val_;
-  F f_;
+  WatchFunc f_;
 };
 }  // namespace xac

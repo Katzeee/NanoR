@@ -22,6 +22,7 @@
 
 #include "camera/camera.hpp"
 #include "context/context.hpp"
+#include "imgui_layer/imgui_layer.hpp"
 #include "input/input_system.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
@@ -238,71 +239,65 @@ auto main() -> int {
   glm::vec3 rotation_axis{1, 1, 1};
   float rotation_degree{60};
 
-  int gl_depth_func = GL_LEQUAL - GL_NEVER;
-  xac::CheckChangeThen check_gl_depth_func{&gl_depth_func, [](int new_val) { glDepthFunc(GL_NEVER + new_val); }};
-  int shader_debug_mode = 0;
-  xac::CheckChangeThen check_shader_debug_mode{&shader_debug_mode, [&](int new_val) {
+  auto check_gl_depth_func =
+      xac::WatchVar<int>{GL_LEQUAL - GL_NEVER, [](int new_val) { glDepthFunc(GL_NEVER + new_val); }};
+  auto check_shader_debug_mode = xac::WatchVar<int>{0, [&](int new_val) {
+                                                      switch (new_val) {
+                                                        case 0:  // NO_DEBUG
+                                                          s_lit->ClearDefineGroup("DEBUG");
+                                                          s_lit->CompileShaders();
+                                                          break;
+                                                        case 1:  // DEBUG_NORMAL
+                                                          s_lit->ClearDefineGroup("DEBUG");
+                                                          s_lit->AddDefine("DEBUG", "DEBUG_NORMAL");
+                                                          s_lit->CompileShaders();
+                                                          break;
+                                                        case 2:  // DEBUG_DEPTH
+                                                          s_lit->ClearDefineGroup("DEBUG");
+                                                          s_lit->AddDefine("DEBUG", "DEBUG_DEPTH");
+                                                          s_lit->CompileShaders();
+                                                          break;
+                                                      }
+                                                    }};
+  auto check_face_culling_enable = xac::WatchVar<bool>{true, [](bool new_val) {
+                                                         if (new_val) {
+                                                           glEnable(GL_CULL_FACE);
+                                                         } else {
+                                                           glDisable(GL_CULL_FACE);
+                                                         }
+                                                       }};
+  auto check_culled_face = xac::WatchVar<int>{5, [](int new_val) { glCullFace(GL_FRONT_LEFT + new_val); }};
+  auto check_lighting_model = xac::WatchVar<int>{0, [&](int new_val) {
+                                                   switch (new_val) {
+                                                     case 0:  // PHONG
+                                                       s_lit->ClearDefineGroup("LIGHTING_MODEL");
+                                                       s_lit->CompileShaders();
+                                                       break;
+                                                     case 1:  // BLINN_PHONG
+                                                       s_lit->ClearDefineGroup("LIGHTING_MODEL");
+                                                       s_lit->AddDefine("LIGHTING_MODEL", "BLINN_PHONG");
+                                                       s_lit->CompileShaders();
+                                                       break;
+                                                   }
+                                                 }};
+  auto check_shadow_model = xac::WatchVar<int>{0, [&](int new_val) {
                                                  switch (new_val) {
-                                                     // FIX: Should not Clear Define
-                                                   case 0:  // NO_DEBUG
-                                                     s_lit->ClearDefineGroup("DEBUG");
+                                                   case 0:  // no shadow
+                                                     s_lit->ClearDefineGroup("SHADOW_MODEL");
                                                      s_lit->CompileShaders();
                                                      break;
-                                                   case 1:  // DEBUG_NORMAL
-                                                     s_lit->ClearDefineGroup("DEBUG");
-                                                     s_lit->AddDefine("DEBUG", "DEBUG_NORMAL");
+                                                   case 1:  // PCF
+                                                     s_lit->ClearDefineGroup("SHADOW_MODEL");
+                                                     s_lit->AddDefine("SHADOW_MODEL", "PCF_SHADOW");
                                                      s_lit->CompileShaders();
                                                      break;
-                                                   case 2:  // DEBUG_DEPTH
-                                                     s_lit->ClearDefineGroup("DEBUG");
-                                                     s_lit->AddDefine("DEBUG", "DEBUG_DEPTH");
+                                                   case 2:  // PCSS
+                                                     s_lit->ClearDefineGroup("SHADOW_MODEL");
+                                                     s_lit->AddDefine("SHADOW_MODEL", "PCSS_SHADOW");
                                                      s_lit->CompileShaders();
                                                      break;
                                                  }
                                                }};
-  bool face_culling_enable = true;
-  xac::CheckChangeThen check_face_culling_enable{&face_culling_enable, [](bool new_val) {
-                                                   if (new_val) {
-                                                     glEnable(GL_CULL_FACE);
-                                                   } else {
-                                                     glDisable(GL_CULL_FACE);
-                                                   }
-                                                 }};
-  int culled_face = 5;
-  xac::CheckChangeThen check_culled_face{&culled_face, [](int new_val) { glCullFace(GL_FRONT_LEFT + new_val); }};
-  int lighting_model = 0;
-  xac::CheckChangeThen check_lighting_model{&lighting_model, [&](int new_val) {
-                                              switch (new_val) {
-                                                case 0:  // PHONG
-                                                  s_lit->ClearDefineGroup("LIGHTING_MODEL");
-                                                  s_lit->CompileShaders();
-                                                  break;
-                                                case 1:  // BLINN_PHONG
-                                                  s_lit->ClearDefineGroup("LIGHTING_MODEL");
-                                                  s_lit->AddDefine("LIGHTING_MODEL", "BLINN_PHONG");
-                                                  s_lit->CompileShaders();
-                                                  break;
-                                              }
-                                            }};
-  int shadow_model = 0;
-  xac::CheckChangeThen check_shadow_model{&shadow_model, [&](int new_val) {
-                                            switch (new_val) {
-                                              case 0:  // no shadow
-                                                s_lit->ClearDefineGroup("SHADOW_MODEL");
-                                                s_lit->CompileShaders();
-                                                break;
-                                              case 1:  // PCF
-                                                s_lit->ClearDefineGroup("SHADOW_MODEL");
-                                                s_lit->AddDefine("SHADOW_MODEL", "PCF_SHADOW");
-                                                s_lit->CompileShaders();
-                                                break;
-                                              case 2:  // PCSS
-                                                s_lit->ClearDefineGroup("SHADOW_MODEL");
-                                                s_lit->AddDefine("SHADOW_MODEL", "PCSS_SHADOW");
-                                                s_lit->CompileShaders();
-                                                break;
-                                            }
-                                          }};
 
 #pragma endregion
 
@@ -433,7 +428,7 @@ auto main() -> int {
     s_lit->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
     m_herta.Draw();
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glDepthFunc(GL_NEVER + gl_depth_func);
+    glDepthFunc(GL_NEVER + check_gl_depth_func.Value());
     // HINT: or else can't clear stencil buffer bit
     glad_glStencilMask(0xFF);
 #pragma endregion
@@ -546,6 +541,7 @@ auto main() -> int {
     // s_unlit->SetInt("tex", 0);
     // m_quad.Draw();
 #pragma endregion
+    global_context.imgui_layer_->Render();
 
 #pragma region render imgui
     {
@@ -581,19 +577,19 @@ auto main() -> int {
       ImGui::SliderFloat("rotation_degree", &rotation_degree, 0, 360);
 
       if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Combo("Debug Mode", &shader_debug_mode, "NODEBUG\0NORMAL\0DEPTH\0");
+        ImGui::Combo("Debug Mode", check_shader_debug_mode.Data(), "NODEBUG\0NORMAL\0DEPTH\0");
         ImGui::Combo(
-            "Depth test", &gl_depth_func,
+            "Depth test", check_gl_depth_func.Data(),
             "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0"
         );
         ImGui::TreePop();
       }
 
       if (ImGui::TreeNodeEx("Face culling", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Checkbox("Face culling enable", &face_culling_enable);
+        ImGui::Checkbox("Face culling enable", check_face_culling_enable.Data());
         ImGui::SameLine();
         ImGui::Combo(
-            "Face culling", &culled_face,
+            "Face culling", check_culled_face.Data(),
             "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
             "RIGHT\0GL_FRONT_AND_BACK\0"
         );
@@ -601,8 +597,8 @@ auto main() -> int {
       }
 
       if (ImGui::TreeNodeEx("Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Combo("Lighting Model", &lighting_model, "Phong\0Blinn Phong\0");
-        ImGui::Combo("Shadow Model", &shadow_model, "None\0PCF\0PCSS\0");
+        ImGui::Combo("Lighting Model", check_lighting_model.Data(), "Phong\0Blinn Phong\0");
+        ImGui::Combo("Shadow Model", check_shadow_model.Data(), "None\0PCF\0PCSS\0");
         ImGui::TreePop();
       }
 
