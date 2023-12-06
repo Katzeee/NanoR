@@ -2,7 +2,6 @@
 #include <assert.h>
 
 #include <algorithm>
-#include <bitset>
 #include <memory>
 #include <vector>
 
@@ -29,12 +28,14 @@ class World {
   World();
   auto create() -> EntityId;
   template <typename T, typename... Args>
-  auto assign(EntityId id, Args... args) -> std::shared_ptr<ComponentHandle>;
+  auto assign(EntityId &id, Args... args) -> std::shared_ptr<ComponentHandle>;
   template <typename F>
   auto each(F &&f);
 
  private:
   auto prepare_entity_create() -> void;
+  template <typename T>
+  auto prepare_component_create(uint32_t id) -> void;
   auto invalidate(EntityId id) -> void;
 
  private:
@@ -53,26 +54,29 @@ World<TSettings>::World() {
   entity_version_.resize(kInitSize);
 }
 
+// TODO: reuse id
 template <typename TSettings>
 auto World<TSettings>::create() -> EntityId {
   prepare_entity_create();
-  auto id = EntityId();
+  auto id = EntityId{};
   id.id = entity_count_;
   id.version = ++entity_version_[entity_count_];
-  entities_[entity_count_] = std::move(Entity(id, this));
+  entities_[entity_count_] = std::move(Entity{id, this});
   entity_count_++;
   return id;
 }
 
 template <typename TSettings>
 template <typename T, typename... Args>
-auto World<TSettings>::assign(EntityId id, Args... args) -> std::shared_ptr<ComponentHandle> {
+auto World<TSettings>::assign(EntityId &id, Args... args) -> std::shared_ptr<ComponentHandle> {
   static_assert(TSettings::template has_component<T>(), "type is not in component list");
   invalidate(id);
+  prepare_component_create<T>(id.id);
   auto &entity = entities_[id.id];
-  auto &version = entity_version_[id.id];
-  version++;
-  entity.id_.version = version;
+  auto &real_version = entity_version_[id.id];
+  real_version++;
+  id.version = real_version;
+  entity.id_ = id;
   entity.components_mask_.set(mpu::type_id::value<T>);
   return nullptr;
 }
@@ -80,7 +84,7 @@ auto World<TSettings>::assign(EntityId id, Args... args) -> std::shared_ptr<Comp
 template <typename TSettings>
 template <typename F>
 auto World<TSettings>::each(F &&f) {
-  for (auto i = 0; i < entity_count_; i++) {
+  for (uint32_t i = 0; i < entity_count_; i++) {
     std::invoke(f, entities_[i]);
   }
 }
@@ -91,6 +95,12 @@ auto World<TSettings>::invalidate(EntityId id) -> void {
   auto eversion = id.version;
   assert(entities_[eid].id_.version == eversion && "This id is out of date");
   assert(entity_version_[eid] == eversion && "This id is out of date");
+}
+
+template <typename TSettings>
+template <typename T>
+auto World<TSettings>::prepare_component_create(uint32_t id) -> void {
+  auto a = std::get<mpu::type_id::value<T>>(std::tuple<int, double, int>{});
 }
 
 template <typename TSettings>

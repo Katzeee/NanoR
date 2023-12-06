@@ -19,11 +19,17 @@ using MySettings = ecs::Settings<MyComponents>;
 
 static ecs::World<MySettings> world;
 
+using AA = mpu::type_list<int, double>;
+using BB = mpu::rename<std::tuple, AA>;
+// static_assert(std::is_same<BB, std::tuple<int, double>>::value, "123");
+
 auto main() -> int {
   auto e = world.create();
   auto e1 = world.create();
   world.assign<Position>(e, 1, 2, 3);
+  world.assign<Acc>(e, 1, 2, 3);
   world.assign<Acc>(e1, 1, 2, 3);
+  assert(mpu::type_id::value<Position> == 0);
   world.each([](auto &&e) {
     std::cout << "id: " << e.id_.id;
     std::cout << ", version: " << e.id_.version;

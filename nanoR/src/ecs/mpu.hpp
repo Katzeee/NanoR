@@ -9,6 +9,19 @@ struct type_list {
   constexpr static uint32_t size = sizeof...(Args);
 };
 
+template <typename T, typename TList>
+struct type_index {};
+
+template <typename T, template <typename...> class TList, typename Head>
+struct type_index<T, TList<Head>> {
+  constexpr static uint32_t id = 0;
+};
+
+template <typename T, template <typename...> class TList, typename Head, typename... Rest>
+struct type_index<T, TList<Head, Rest...>> {
+  constexpr static uint32_t id = type_index<T, TList<Rest...>>::id;
+};
+
 template <uint32_t N, typename T>  // T can be any type, include a template type
 struct nth_type;
 
@@ -26,12 +39,17 @@ struct nth_type<N, T<Head, Rest...>> : nth_type<N - 1, T<Rest...>> {
   static_assert(N < sizeof...(Rest) + 1, "123");
 };
 
+namespace __detail {
 template <template <typename...> class U, typename T>
 struct rename {};
 template <template <typename...> class U, template <typename...> class T, typename... Args>
 struct rename<U, T<Args...>> {
   using type = U<Args...>;
 };
+}  // namespace __detail
+
+template <template <typename...> class U, typename T>
+using rename = __detail::rename<U, T>::type;
 
 struct type_id {
   inline static uint32_t counter = 0;
@@ -47,9 +65,5 @@ struct is_in_type_list<T, TList<T, Rest...>> : std::true_type {};
 
 template <typename T, template <typename...> class TList, typename Head, typename... Rest>
 struct is_in_type_list<T, TList<Head, Rest...>> : is_in_type_list<T, TList<Rest...>> {};
-
-const bool v = is_in_type_list<bool, type_list<bool, int>>::value;
-const bool v1 = is_in_type_list<bool, type_list<int>>::value;
-const bool v2 = is_in_type_list<bool, type_list<int, bool>>::value;
 
 }  // namespace xac::mpu
