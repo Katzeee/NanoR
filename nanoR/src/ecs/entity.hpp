@@ -13,16 +13,14 @@ class Entity {
   struct Id {
     uint32_t id;
     uint32_t version;
-    // Id() = default;
-    // Id(uint32_t id, uint32_t version) : id(id), version(version) {}
   };
   Entity() = default;
   Entity(Id id, World<TSettings>* world);
 
- private:
+//  private:
   Id id_;
   World<TSettings>* world_ = nullptr;
-  std::bitset<TSettings::ComponentList::size> components_flag_;
+  std::bitset<TSettings::ComponentList::size> components_mask_;
 };
 
 template <typename TSettings>

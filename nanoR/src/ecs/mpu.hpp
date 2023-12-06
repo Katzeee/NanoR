@@ -33,4 +33,23 @@ struct rename<U, T<Args...>> {
   using type = U<Args...>;
 };
 
+struct type_id {
+  inline static uint32_t counter = 0;
+  template <typename T>
+  inline static uint32_t value = counter++;
+};
+
+template <typename T, typename TList>
+struct is_in_type_list : std::false_type {};
+
+template <typename T, template <typename...> class TList, typename... Rest>
+struct is_in_type_list<T, TList<T, Rest...>> : std::true_type {};
+
+template <typename T, template <typename...> class TList, typename Head, typename... Rest>
+struct is_in_type_list<T, TList<Head, Rest...>> : is_in_type_list<T, TList<Rest...>> {};
+
+const bool v = is_in_type_list<bool, type_list<bool, int>>::value;
+const bool v1 = is_in_type_list<bool, type_list<int>>::value;
+const bool v2 = is_in_type_list<bool, type_list<int, bool>>::value;
+
 }  // namespace xac::mpu
