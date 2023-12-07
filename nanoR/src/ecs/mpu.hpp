@@ -10,20 +10,19 @@ struct type_list {
 };
 
 template <typename T, typename TList>
-struct type_index {};
+struct index_of {};
 
-template <typename T, template <typename...> class TList, typename Head>
-struct type_index<T, TList<Head>> {
-  constexpr static uint32_t id = 0;
-};
+template <typename T, template <typename...> class TList, typename... Tail>
+struct index_of<T, TList<T, Tail...>> : std::integral_constant<uint32_t, 0> {};
 
-template <typename T, template <typename...> class TList, typename Head, typename... Rest>
-struct type_index<T, TList<Head, Rest...>> {
-  constexpr static uint32_t id = type_index<T, TList<Rest...>>::id;
-};
+template <typename T, template <typename...> class TList, typename Head, typename... Tail>
+struct index_of<T, TList<Head, Tail...>> : std::integral_constant<uint32_t, index_of<T, TList<Tail...>>::value + 1> {};
 
-template <uint32_t N, typename T>  // T can be any type, include a template type
-struct nth_type;
+template <typename T, typename TList>
+inline constexpr uint32_t index_of_v = index_of<T, TList>::value;
+
+template <uint32_t N, typename TList>  // T can be any type, include a template type
+struct type_at;
 
 // specialization for template class T
 // here Head and Rest are prepared for T
@@ -31,13 +30,16 @@ struct nth_type;
 // ...Args here are just for deducing the T and what are Args
 // so we must use specialization to implement this
 // without the raw template, we cannot do type deducing
-template <template <typename...> class T, typename Head, typename... Rest>
-struct nth_type<0, T<Head, Rest...>> : std::common_type<Head> {};
+template <template <typename...> class TList, typename Head, typename... Tail>
+struct type_at<0, TList<Head, Tail...>> : std::common_type<Head> {};
 
-template <uint32_t N, template <typename...> class T, typename Head, typename... Rest>
-struct nth_type<N, T<Head, Rest...>> : nth_type<N - 1, T<Rest...>> {
-  static_assert(N < sizeof...(Rest) + 1, "123");
+template <uint32_t N, template <typename...> class TList, typename Head, typename... Tail>
+struct type_at<N, TList<Head, Tail...>> : type_at<N - 1, TList<Tail...>> {
+  static_assert(N < sizeof...(Tail) + 1, "Out of bound");
 };
+
+template <uint32_t N, typename TList>
+using type_at_t = typename type_at<N, TList>::type;
 
 namespace __detail {
 template <template <typename...> class U, typename T>
@@ -49,21 +51,28 @@ struct rename<U, T<Args...>> {
 }  // namespace __detail
 
 template <template <typename...> class U, typename T>
-using rename = __detail::rename<U, T>::type;
-
-struct type_id {
-  inline static uint32_t counter = 0;
-  template <typename T>
-  inline static uint32_t value = counter++;
-};
+using rename = typename __detail::rename<U, T>::type;
 
 template <typename T, typename TList>
-struct is_in_type_list : std::false_type {};
+struct contains : std::false_type {};
 
 template <typename T, template <typename...> class TList, typename... Rest>
-struct is_in_type_list<T, TList<T, Rest...>> : std::true_type {};
+struct contains<T, TList<T, Rest...>> : std::true_type {};
 
 template <typename T, template <typename...> class TList, typename Head, typename... Rest>
-struct is_in_type_list<T, TList<Head, Rest...>> : is_in_type_list<T, TList<Rest...>> {};
+struct contains<T, TList<Head, Rest...>> : contains<T, TList<Rest...>> {};
+
+namespace test {
+
+using TestTypeList = type_list<int, bool, double>;
+static_assert(index_of_v<int, TestTypeList> == 0);
+static_assert(index_of_v<bool, TestTypeList> == 1);
+static_assert(index_of_v<double, TestTypeList> == 2);
+using t = type_at<0, TestTypeList>;
+static_assert(std::is_same_v<type_at_t<0, TestTypeList>, int>);
+static_assert(std::is_same_v<type_at_t<1, TestTypeList>, bool>);
+static_assert(std::is_same_v<type_at_t<2, TestTypeList>, double>);
+
+}  // namespace test
 
 }  // namespace xac::mpu

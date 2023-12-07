@@ -77,7 +77,7 @@ auto World<TSettings>::assign(EntityId &id, Args... args) -> std::shared_ptr<Com
   real_version++;
   id.version = real_version;
   entity.id_ = id;
-  entity.components_mask_.set(mpu::type_id::value<T>);
+  entity.components_mask_.set(mpu::index_of_v<T, ComponentList>);
   return nullptr;
 }
 
@@ -100,7 +100,7 @@ auto World<TSettings>::invalidate(EntityId id) -> void {
 template <typename TSettings>
 template <typename T>
 auto World<TSettings>::prepare_component_create(uint32_t id) -> void {
-  auto a = std::get<mpu::type_id::value<T>>(std::tuple<int, double, int>{});
+  auto a = std::get<mpu::index_of_v<T, ComponentList>>(components_pool_);
 }
 
 template <typename TSettings>

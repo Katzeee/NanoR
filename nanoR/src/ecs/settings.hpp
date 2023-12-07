@@ -7,7 +7,7 @@ struct Settings {
   using ComponentList = TComponentList;
   template <typename T>
   constexpr static auto has_component() -> bool {
-    return mpu::is_in_type_list<T, ComponentList>::value;
+    return mpu::contains<T, ComponentList>::value;
   }
 };
 
