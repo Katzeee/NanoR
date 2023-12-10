@@ -22,8 +22,8 @@ set(EXECUTABLE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 20)
 if (MSVC)
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd /fsanitize=address")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd /fsanitize=address")
+  # set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd /fsanitize=address")
+  # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd /fsanitize=address")
 else()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
@@ -62,7 +62,12 @@ FetchContent_Declare(imgui
                      GIT_TAG        v1.89.9-docking
 )
 
-FetchContent_MakeAvailable(glfw assimp fmt glad)
+FetchContent_Declare(pico_libs
+                     GIT_REPOSITORY https://github.com/Katzeee/pico_libs
+                     GIT_TAG        v0.0.1
+)
+
+FetchContent_MakeAvailable(glfw assimp fmt glad pico_libs)
 include(3rdparty/imgui.cmake)
 include(3rdparty/glm.cmake)
 

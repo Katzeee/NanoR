@@ -7,3 +7,4 @@
 #include "platform/application_opengl.h"
 #include "platform/opengl/rhi_opengl.h"
 #include "platform/ui_layer_glfw_opengl3.h"
+#include "scene/scene.hpp"

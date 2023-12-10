@@ -4,11 +4,14 @@
 #include "imgui.h"
 #include "nanor.h"
 
-class TestLayer : public nanoR::Layer {
+class EditorLayer : public nanoR::Layer {
  public:
-  TestLayer(std::string name) : Layer(name) {}
+  EditorLayer(std::string name) : Layer(name) {
+    scene_ = std::make_shared<nanoR::Scene>();
+  }
 
   auto OnAttach() -> void override {
+    auto e = scene_->CreateEntity();
     float vertices[] = {0.0, 0.5, -0.5, 0.0, 0.5, 0.0};
     int indices[] = {0, 1, 2};
     auto buffer_create_info = nanoR::RHIBufferCreateInfoOpenGL{};
@@ -77,6 +80,7 @@ class TestLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIBuffer> vbo_;
   std::shared_ptr<nanoR::RHIBuffer> ebo_;
   std::shared_ptr<nanoR::RHIShaderProgram> shader_program_;
+  std::shared_ptr<nanoR::Scene> scene_;
   nanoR::RHIOpenGL rhi_;
 };
 
@@ -87,7 +91,7 @@ class Sandbox : public nanoR::ApplicationOpenGL {
 
 auto main() -> int {
   std::unique_ptr<Sandbox> sandbox = std::make_unique<Sandbox>();
-  std::shared_ptr<TestLayer> test_layer1 = std::make_shared<TestLayer>("test_layer1");
+  std::shared_ptr<EditorLayer> test_layer1 = std::make_shared<EditorLayer>("test_layer1");
   sandbox->PushLayer(test_layer1);
   LOG_TRACE("{}\n", sandbox->GetLayerStack().ToString());
 

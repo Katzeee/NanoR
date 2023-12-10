@@ -11,6 +11,7 @@
 #include <chrono>
 #include <deque>
 #include <functional>
+#include <glm/glm.hpp>
 #include <list>
 #include <map>
 #include <memory>
