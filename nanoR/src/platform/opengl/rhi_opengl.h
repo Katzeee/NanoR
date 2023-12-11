@@ -32,8 +32,10 @@ class RHIOpenGL final : public RHI {
       const RHIAttachColorAttachmentInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
       RHITexture const *texture
   ) -> bool override;
-  auto Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIShaderProgram> shader_program)
-      -> bool override;
+  auto Draw(
+      RHIVertexArray const *vertex_array, RHIShaderProgram const *shader_program,
+      std::optional<RHIFramebuffer const *> framebuffer
+  ) -> bool override;
 };
 
 }  // namespace nanoR

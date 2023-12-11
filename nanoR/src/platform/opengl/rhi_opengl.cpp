@@ -151,16 +151,23 @@ auto RHIOpenGL::AttachColorAttachment(
 // auto RHIOpenGL::AttachStencilAttachment();
 // auto RHIOpenGL::AttachDepthStencilAttachment();
 
-auto RHIOpenGL::Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIShaderProgram> shader_program)
-    -> bool {
-  glUseProgram(dynamic_cast<RHIShaderProgramOpenGL *>(shader_program.get())->id);
-  auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
+auto RHIOpenGL::Draw(
+    RHIVertexArray const *vertex_array, RHIShaderProgram const *shader_program,
+    std::optional<RHIFramebuffer const *> framebuffer
+) -> bool {
+  OpenGLCheckError();
+  if (framebuffer.has_value()) {
+    auto fbo = dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer.value())->id;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    OpenGLCheckError();
+  }
+  glUseProgram(dynamic_cast<RHIShaderProgramOpenGL const *>(shader_program)->id);
+  auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL const *>(vertex_array);
   glBindVertexArray(vertex_array_opengl->id);
-  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 2);
   glDrawElements(GL_TRIANGLES, vertex_array_opengl->count, GL_UNSIGNED_INT, nullptr);
-  // glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindVertexArray(0);
   glUseProgram(0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   return OpenGLCheckError();
 }
 

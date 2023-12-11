@@ -23,11 +23,16 @@ class EditorLayer : public nanoR::Layer {
     auto texture_create_info = nanoR::RHITextureCreateInfoOpenGL{};
     texture_create_info.width = 1024;
     texture_create_info.height = 1024;
-    texture_create_info.internal_format = GL_RGBA8;
+    texture_create_info.internal_format = GL_RGB8;
     texture_create_info.format = GL_RGB;
     texture_create_info.levels = 1;
     texture_create_info.target = GL_TEXTURE_2D;
     texture_create_info.type = GL_UNSIGNED_BYTE;
+    texture_create_info.data = nullptr;
+    texture_create_info.parameteri.push_back({GL_TEXTURE_MIN_FILTER, GL_LINEAR});
+    texture_create_info.parameteri.push_back({GL_TEXTURE_MAG_FILTER, GL_LINEAR});
+    texture_create_info.parameteri.push_back({GL_TEXTURE_WRAP_S, GL_REPEAT});
+    texture_create_info.parameteri.push_back({GL_TEXTURE_WRAP_T, GL_REPEAT});
     rhi_.CreateTexture(texture_create_info, t_a_);
     auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
     attach_color_attachment_info.level = 0;
@@ -63,15 +68,17 @@ class EditorLayer : public nanoR::Layer {
   auto Tick(uint64_t delta_time) -> void override {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    rhi_.Draw(mesh_.vao, shader_program_);
+    rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
+    rhi_.Draw(mesh_.vao.get(), shader_program_.get(), std::nullopt);
   }
   auto OnDetach() -> void override {}
   auto OnEvent(nanoR::Event& event) -> void override {}
   auto TickUI() -> void override {
-    // ImGui::Begin("Demo");
     ImGui::ShowDemoWindow();
-    // ImGui::End();
+    ImGui::Begin("Demo");
+    ImGui::Image(reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_a_.get())->id)), {256, 256});
+    ImGui::Text("123");
+    ImGui::End();
   }
 
  private:

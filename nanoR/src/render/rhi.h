@@ -32,7 +32,10 @@ class RHI {
       const RHIAttachColorAttachmentInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
       RHITexture const *texture
   ) -> bool = 0;
-  virtual bool Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIShaderProgram> shader_program) = 0;
+  virtual bool Draw(
+      RHIVertexArray const *vertex_array, RHIShaderProgram const *shader_program,
+      std::optional<RHIFramebuffer const *> framebuffer
+  ) = 0;
 };
 
 }  // namespace nanoR
