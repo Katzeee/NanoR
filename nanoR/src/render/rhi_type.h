@@ -37,4 +37,36 @@ struct RHIShaderProgram {
   virtual ~RHIShaderProgram() = default;
 };
 
+struct RHIFramebufferCreateInfo {
+  virtual ~RHIFramebufferCreateInfo() = default;
+};
+
+struct RHITextureCreateInfo {
+  virtual ~RHITextureCreateInfo() = default;
+};
+
+struct RHITexture {
+  virtual ~RHITexture() = default;
+};
+
+struct RHIFramebuffer {
+  virtual ~RHIFramebuffer() = default;
+};
+
+struct RHIAttachColorAttachmentInfo {
+  virtual ~RHIAttachColorAttachmentInfo() = default;
+};
+
+struct RHIAttachDepthAttachmentInfo {
+  virtual ~RHIAttachDepthAttachmentInfo() = default;
+};
+
+struct RHIAttachStencilAttachmentInfo {
+  virtual ~RHIAttachStencilAttachmentInfo() = default;
+};
+
+struct RHIAttachDepthStencilAttachmentInfo {
+  virtual ~RHIAttachDepthStencilAttachmentInfo() = default;
+};
+
 }  // namespace nanoR

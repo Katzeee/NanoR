@@ -78,4 +78,44 @@ struct RHIShaderProgramOpenGL : public RHIShaderProgram {
   GLuint id;
 };
 
+struct RHIFramebufferCreateInfoOpenGL : public RHIFramebufferCreateInfo {};
+
+struct RHITextureCreateInfoOpenGL : public RHITextureCreateInfo {
+  struct Parameteri {
+    GLenum pname;
+    GLint param;
+  };
+  GLenum target;
+  GLsizei levels;
+  GLenum internal_format;
+  GLsizei width;
+  GLsizei height;
+  GLenum format;
+  GLenum type;
+  void *data;
+  std::vector<Parameteri> parameteri;
+};
+
+struct RHITextureOpenGL : public RHITexture {
+  ~RHITextureOpenGL() {
+    glDeleteTextures(1, &id);
+  }
+  GLuint id;
+};
+
+struct RHIAttachColorAttachmentInfoOpenGL : public RHIAttachColorAttachmentInfo {
+  GLint level;
+};
+
+struct RHIAttachDepthAttachmentInfoOpenGL : public RHIAttachDepthAttachmentInfo {};
+struct RHIAttachStencilAttachmentInfoOpenGL : public RHIAttachStencilAttachmentInfo {};
+struct RHIAttachDepthStencilAttachmentInfoOpenGL : public RHIAttachDepthStencilAttachmentInfo {};
+
+struct RHIFramebufferOpenGL : public RHIFramebuffer {
+  ~RHIFramebufferOpenGL() override {
+    glDeleteFramebuffers(1, &id);
+  }
+  GLuint id;
+};
+
 }  // namespace nanoR

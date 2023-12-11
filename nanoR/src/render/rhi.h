@@ -23,6 +23,15 @@ class RHI {
   virtual bool CreateShaderProgram(
       const RHIShaderProgramCreateInfo &shader_program_create_info, std::shared_ptr<RHIShaderProgram> &shader_program
   ) = 0;
+  virtual auto CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)
+      -> bool = 0;
+  virtual auto CreateFramebuffer(
+      const RHIFramebufferCreateInfo &framebuffer_create_info, std::shared_ptr<RHIFramebuffer> &framebuffer
+  ) -> bool = 0;
+  virtual auto AttachColorAttachment(
+      const RHIAttachColorAttachmentInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
+      RHITexture const *texture
+  ) -> bool = 0;
   virtual bool Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIShaderProgram> shader_program) = 0;
 };
 

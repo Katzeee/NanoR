@@ -19,6 +19,19 @@ class EditorLayer : public nanoR::Layer {
     mesh_data.vertices[2].position = {0.5, -0.5, 1.0};
     mesh_data.indices = {0, 1, 2};
     mesh_ = nanoR::CreateMesh(&rhi_, mesh_data);
+    rhi_.CreateFramebuffer({}, fbo_);
+    auto texture_create_info = nanoR::RHITextureCreateInfoOpenGL{};
+    texture_create_info.width = 1024;
+    texture_create_info.height = 1024;
+    texture_create_info.internal_format = GL_RGBA8;
+    texture_create_info.format = GL_RGB;
+    texture_create_info.levels = 1;
+    texture_create_info.target = GL_TEXTURE_2D;
+    texture_create_info.type = GL_UNSIGNED_BYTE;
+    rhi_.CreateTexture(texture_create_info, t_a_);
+    auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
+    attach_color_attachment_info.level = 0;
+    rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_a_.get());
 
     const char* vert_shader_src = R"(#version 450
                                      layout(location = 0) in vec3 position;
@@ -50,6 +63,7 @@ class EditorLayer : public nanoR::Layer {
   auto Tick(uint64_t delta_time) -> void override {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
+
     rhi_.Draw(mesh_.vao, shader_program_);
   }
   auto OnDetach() -> void override {}
@@ -64,6 +78,9 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIShaderProgram> shader_program_;
   std::shared_ptr<nanoR::Scene> scene_;
   nanoR::OpenGLMesh mesh_;
+
+  std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
+  std::shared_ptr<nanoR::RHITexture> t_a_;
   nanoR::RHIOpenGL rhi_;
 };
 

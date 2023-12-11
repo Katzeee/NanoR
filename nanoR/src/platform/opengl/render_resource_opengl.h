@@ -11,6 +11,10 @@ struct OpenGLMesh {
   std::shared_ptr<RHIVertexArray> vao;
 };
 
+struct OpenGLMaterial {
+
+};
+
 static auto CreateMesh(RHI* rhi, const MeshData& mesh_data) -> OpenGLMesh {
   OpenGLMesh mesh;
   // Create vertex array

@@ -104,6 +104,53 @@ auto RHIOpenGL::CreateShaderProgram(
   return OpenGLCheckError();
 }
 
+auto RHIOpenGL::CreateFramebuffer(
+    const RHIFramebufferCreateInfo &framebuffer_create_info, std::shared_ptr<RHIFramebuffer> &framebuffer
+) -> bool {
+  auto *framebuffer_opengl = new RHIFramebufferOpenGL{};
+  glCreateFramebuffers(1, &framebuffer_opengl->id);
+  framebuffer.reset(framebuffer_opengl);
+  return OpenGLCheckError();
+}
+
+auto RHIOpenGL::CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)
+    -> bool {
+  auto *texture_opengl = new RHITextureOpenGL();
+  const auto &[target, levels, internal_format, width, height, format, type, data, parameteri] =
+      dynamic_cast<const RHITextureCreateInfoOpenGL &>(texture_create_info);
+  glCreateTextures(target, 1, &texture_opengl->id);
+
+  if (target == GL_TEXTURE_2D) {
+    glTextureStorage2D(texture_opengl->id, levels, internal_format, width, height);
+    glTextureSubImage2D(texture_opengl->id, 0, 0, 0, width, height, format, type, data);
+    glGenerateTextureMipmap(texture_opengl->id);
+  } else {
+    throw std::runtime_error("not implement");
+  }
+  for (auto &&[pname, param] : parameteri) {
+    glTextureParameteri(texture_opengl->id, pname, param);
+  }
+  texture.reset(texture_opengl);
+  return OpenGLCheckError();
+}
+
+auto RHIOpenGL::AttachColorAttachment(
+    const RHIAttachColorAttachmentInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
+    RHITexture const *texture
+) -> bool {
+  const auto &[fbo] = *dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer);
+  const auto &[level] = dynamic_cast<const RHIAttachColorAttachmentInfoOpenGL &>(attach_color_attachment_info);
+  glNamedFramebufferTexture(fbo, GL_COLOR_ATTACHMENT0, dynamic_cast<RHITextureOpenGL const *>(texture)->id, level);
+  if (glCheckNamedFramebufferStatus(fbo, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    throw std::runtime_error("frame buffer not complete");
+  }
+  // glNamedFramebufferRenderbuffer(
+  return OpenGLCheckError();
+}
+// auto RHIOpenGL::AttachDepthAttachment();
+// auto RHIOpenGL::AttachStencilAttachment();
+// auto RHIOpenGL::AttachDepthStencilAttachment();
+
 auto RHIOpenGL::Draw(std::shared_ptr<RHIVertexArray> vertex_array, std::shared_ptr<RHIShaderProgram> shader_program)
     -> bool {
   glUseProgram(dynamic_cast<RHIShaderProgramOpenGL *>(shader_program.get())->id);
