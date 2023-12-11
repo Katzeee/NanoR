@@ -43,7 +43,7 @@ auto RHIOpenGL::BindVertexBuffer(
   // Tell OpenGL what the format of the attribute is.
   glVertexArrayAttribFormat(vertex_array_opengl->id, attr_index, attr_size, type, normalized, offset);
   // Bind it to the vertex array - offset , stride
-  glVertexArrayVertexBuffer(vertex_array_opengl->id, bind_index, buffer_opengl->id, offset, stride);
+  // glVertexArrayVertexBuffer(vertex_array_opengl->id, bind_index, buffer_opengl->id, offset, stride);
   // Tell OpenGL which vertex buffer binding to use for this attribute.
   glVertexArrayAttribBinding(vertex_array_opengl->id, attr_index, bind_index);
   return OpenGLCheckError();

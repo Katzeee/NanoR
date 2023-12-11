@@ -2,7 +2,6 @@
 #include <pico_libs/ecs/world.hpp>
 
 #include "component.hpp"
-#include "entity.hpp"
 
 namespace nanoR {
 class Entity;

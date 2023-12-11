@@ -29,8 +29,9 @@ auto LayerStack::GetLayers() -> std::deque<std::shared_ptr<Layer>>& {
 }
 
 auto LayerStack::ToString() -> std::string {
-  return fmt::format("LayerStack: [{}]",
-                     fmt::join(std::views::transform(layers_, [](auto&& layer) { return layer->GetName(); }), ", "));
+  return fmt::format(
+      "LayerStack: [{}]", fmt::join(std::views::transform(layers_, [](auto&& layer) { return layer->GetName(); }), ", ")
+  );
   // return fmt::format("{}", fmt::join(, ", "));
 }
 

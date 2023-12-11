@@ -1,5 +1,7 @@
 #include "scene.hpp"
 
+#include "entity.hpp"
+
 namespace nanoR {
 
 auto Scene::CreateEntity() -> Entity {
