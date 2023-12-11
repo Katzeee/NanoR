@@ -8,8 +8,8 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <assimp/Importer.hpp>
 #include <cmath>
 #include <filesystem>
@@ -27,7 +27,6 @@
 #include "model.hpp"
 #include "shader/shader.hpp"
 #include "utils.hpp"
-
 
 // HINT: variable prefix for specified kind of objects
 // Mesh, model: m
@@ -90,10 +89,13 @@ auto main() -> int {
     return -1;
   }
 
-  glViewport(global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
-             global_context.window_height_);
-  global_context.camera_->SetAspect(static_cast<float>(global_context.window_width_ - global_context.imgui_width_) /
-                                    global_context.window_height_);
+  glViewport(
+      global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+      global_context.window_height_
+  );
+  global_context.camera_->SetAspect(
+      static_cast<float>(global_context.window_width_ - global_context.imgui_width_) / global_context.window_height_
+  );
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_STENCIL_TEST);
   glEnable(GL_BLEND);
@@ -186,10 +188,12 @@ auto main() -> int {
   xac::Mesh m_window{cage_vertices, window_indices, {}, "window"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
 
-  auto s_unlit = std::make_shared<xac::Shader>("../18-frame-buffer/shader/common.vert.glsl",
-                                               "../18-frame-buffer/shader/unlit.frag.glsl");
-  auto s_lit = std::make_shared<xac::Shader>("../18-frame-buffer/shader/common.vert.glsl",
-                                             "../18-frame-buffer/shader/lit.frag.glsl");
+  auto s_unlit = std::make_shared<xac::Shader>(
+      "../18-frame-buffer/shader/common.vert.glsl", "../18-frame-buffer/shader/unlit.frag.glsl"
+  );
+  auto s_lit = std::make_shared<xac::Shader>(
+      "../18-frame-buffer/shader/common.vert.glsl", "../18-frame-buffer/shader/lit.frag.glsl"
+  );
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_transparent_window = xac::LoadTextureFromFile("../resources/textures/blending_transparent_window.png");
@@ -217,8 +221,10 @@ auto main() -> int {
   unsigned int t_framebuffer_color;
   glGenTextures(1, &t_framebuffer_color);
   glBindTexture(GL_TEXTURE_2D, t_framebuffer_color);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, global_context.window_width_ - global_context.imgui_width_,
-               global_context.window_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  glTexImage2D(
+      GL_TEXTURE_2D, 0, GL_RGB, global_context.window_width_ - global_context.imgui_width_,
+      global_context.window_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr
+  );
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // HINT: bind color buffer
@@ -226,8 +232,10 @@ auto main() -> int {
   unsigned int rbo;
   glGenRenderbuffers(1, &rbo);
   glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-                        global_context.window_width_ - global_context.imgui_width_, global_context.window_height_);
+  glRenderbufferStorage(
+      GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, global_context.window_width_ - global_context.imgui_width_,
+      global_context.window_height_
+  );
   // HINT: bind depth buffer
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -302,7 +310,8 @@ auto main() -> int {
       ImGui::NewFrame();
       ImGui::SetNextWindowPos({0, 0});
       ImGui::SetNextWindowSize(
-          {static_cast<float>(global_context.imgui_width_), static_cast<float>(global_context.window_height_)});
+          {static_cast<float>(global_context.imgui_width_), static_cast<float>(global_context.window_height_)}
+      );
       ImGui::Begin("Hello, World!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
       ImGui::SetWindowFontScale(1.2);
 
@@ -329,38 +338,51 @@ auto main() -> int {
 
       if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Combo("Debug Mode", &shader_debug_mode, "NODEBUG\0NORMAL\0DEPTH\0");
-        ImGui::Combo("Depth test", &gl_depth_func,
-                     "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0");
+        ImGui::Combo(
+            "Depth test", &gl_depth_func,
+            "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0"
+        );
         ImGui::TreePop();
       }
 
       if (ImGui::TreeNodeEx("Face culling", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Checkbox("Face culling enable", &face_culling_enable);
-        ImGui::Combo("Face culling", &culled_face,
-                     "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
-                     "RIGHT\0GL_FRONT_AND_BACK\0");
+        ImGui::Combo(
+            "Face culling", &culled_face,
+            "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
+            "RIGHT\0GL_FRONT_AND_BACK\0"
+        );
         ImGui::TreePop();
       }
 
       if (ImGui::CollapsingHeader("Section 2", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("xoffset: %f\nyoffset: %f", xac::InputSystem::cursor_x_offset_,
-                      xac::InputSystem::cursor_y_offset_);
+          ImGui::Text(
+              "xoffset: %f\nyoffset: %f", xac::InputSystem::cursor_x_offset_, xac::InputSystem::cursor_y_offset_
+          );
           ImVec2 mouse_position_absolute = ImGui::GetMousePos();
           ImGui::Text("Position: %f, %f", mouse_position_absolute.x, mouse_position_absolute.y);
           ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("Command", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("FORWARD: %d, BACKWARD: %d", xac::InCommand(xac::ControlCommand::FORWARD),
-                      xac::InCommand(xac::ControlCommand::BACKWARD));
-          ImGui::Text("LEFT: %4d, RIGHT: %4d", xac::InCommand(xac::ControlCommand::LEFT),
-                      xac::InCommand(xac::ControlCommand::RIGHT));
-          ImGui::Text("DOWN: %4d, UP: %7d", xac::InCommand(xac::ControlCommand::DOWN),
-                      xac::InCommand(xac::ControlCommand::UP));
+          ImGui::Text(
+              "FORWARD: %d, BACKWARD: %d", xac::InCommand(xac::ControlCommand::FORWARD),
+              xac::InCommand(xac::ControlCommand::BACKWARD)
+          );
+          ImGui::Text(
+              "LEFT: %4d, RIGHT: %4d", xac::InCommand(xac::ControlCommand::LEFT),
+              xac::InCommand(xac::ControlCommand::RIGHT)
+          );
+          ImGui::Text(
+              "DOWN: %4d, UP: %7d", xac::InCommand(xac::ControlCommand::DOWN), xac::InCommand(xac::ControlCommand::UP)
+          );
           ImGui::TreePop();
         }
         ImGui::Text("Frame rate: %f", 1.0 / delta_time_per_frame);
       }
+      ImGui::End();
+      ImGui::Begin("fbo");
+      ImGui::Image(reinterpret_cast<void *>(t_framebuffer_color), {256, 256});
       ImGui::End();
       ImGui::Render();
     }
@@ -573,8 +595,10 @@ auto main() -> int {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glViewport(global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
-               global_context.window_height_);
+    glViewport(
+        global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+        global_context.window_height_
+    );
 
     glDisable(GL_DEPTH_TEST);
     s_unlit->Use();
