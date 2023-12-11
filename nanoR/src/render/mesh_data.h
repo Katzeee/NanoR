@@ -5,9 +5,9 @@ namespace nanoR {
 struct MeshData {
   struct Vertex {
     glm::vec3 position;
-    glm::vec3 normal = {0, 0, 0};
-    glm::vec2 texcoord = {0, 0};
-    glm::vec3 tangent = {0, 0, 0};
+    glm::vec3 normal;
+    glm::vec2 texcoord;
+    glm::vec3 tangent;
   };
 
   std::vector<Vertex> vertices;

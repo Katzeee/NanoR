@@ -36,16 +36,18 @@ auto RHIOpenGL::BindVertexBuffer(
 ) -> bool {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(vertex_buffer.get());
-  const auto &[bind_index, attr_index, attr_size, type, normalized, offset, stride] =
+  const auto &[bind_index, type, normalized, offset, stride, vertex_format] =
       dynamic_cast<const RHIBindVertexBufferInfoOpenGL &>(bind_vertex_buffer_info);
-  // Enable the attribute.
-  glEnableVertexArrayAttrib(vertex_array_opengl->id, attr_index);
-  // Tell OpenGL what the format of the attribute is.
-  glVertexArrayAttribFormat(vertex_array_opengl->id, attr_index, attr_size, type, normalized, offset);
-  // Bind it to the vertex array - offset , stride
-  // glVertexArrayVertexBuffer(vertex_array_opengl->id, bind_index, buffer_opengl->id, offset, stride);
-  // Tell OpenGL which vertex buffer binding to use for this attribute.
-  glVertexArrayAttribBinding(vertex_array_opengl->id, attr_index, bind_index);
+  // Bind vbo to vao via binding index
+  glVertexArrayVertexBuffer(vertex_array_opengl->id, bind_index, buffer_opengl->id, offset, stride);
+  for (auto &&[attr_index, attr_size, reletive_offset] : vertex_format) {
+    // Enable the attribute.
+    glEnableVertexArrayAttrib(vertex_array_opengl->id, attr_index);
+    // Tell OpenGL what the format of the attribute is.
+    glVertexArrayAttribFormat(vertex_array_opengl->id, attr_index, attr_size, type, normalized, reletive_offset);
+    // Tell OpenGL which vertex buffer binding to use for this attribute.
+    glVertexArrayAttribBinding(vertex_array_opengl->id, attr_index, bind_index);
+  }
   return OpenGLCheckError();
 }
 auto RHIOpenGL::BindIndexBuffer(

@@ -31,23 +31,12 @@ static auto CreateMesh(RHI* rhi, const MeshData& mesh_data) -> OpenGLMesh {
   bind_vertex_buffer_info.stride = sizeof(MeshData::Vertex);
   bind_vertex_buffer_info.normalized = GL_FALSE;
   bind_vertex_buffer_info.type = GL_FLOAT;
-  bind_vertex_buffer_info.attr_index = 0;
-  bind_vertex_buffer_info.offset = offsetof(MeshData::Vertex, position);
-  bind_vertex_buffer_info.attr_size = 3;
-  glVertexArrayVertexBuffer(1, 0, 1, 0, bind_vertex_buffer_info.stride);
+  bind_vertex_buffer_info.offset = 0;
+  bind_vertex_buffer_info.vertex_format.push_back({0, 3, offsetof(MeshData::Vertex, position)});
+  bind_vertex_buffer_info.vertex_format.push_back({1, 3, offsetof(MeshData::Vertex, normal)});
+  bind_vertex_buffer_info.vertex_format.push_back({2, 2, offsetof(MeshData::Vertex, texcoord)});
+  bind_vertex_buffer_info.vertex_format.push_back({3, 3, offsetof(MeshData::Vertex, tangent)});
   rhi->BindVertexBuffer(bind_vertex_buffer_info, mesh.vao, mesh.vbo);
-  bind_vertex_buffer_info.attr_index = 1;
-  bind_vertex_buffer_info.offset = offsetof(MeshData::Vertex, normal);
-  bind_vertex_buffer_info.attr_size = 3;
-  rhi->BindVertexBuffer(bind_vertex_buffer_info, mesh.vao, mesh.vbo);
-  bind_vertex_buffer_info.attr_index = 2;
-  bind_vertex_buffer_info.offset = offsetof(MeshData::Vertex, texcoord);
-  bind_vertex_buffer_info.attr_size = 2;
-  rhi->BindVertexBuffer(bind_vertex_buffer_info, mesh.vao, mesh.vbo);
-  // bind_vertex_buffer_info.attr_index = 3;
-  // bind_vertex_buffer_info.offset = offsetof(MeshData::Vertex, tangent);
-  // bind_vertex_buffer_info.attr_size = 3;
-  // rhi->BindVertexBuffer(bind_vertex_buffer_info, mesh.vao, mesh.vbo);
   // Bind index buffer
   auto bind_index_buffer_info = nanoR::RHIBindIndexBufferInfoOpenGL{};
   bind_index_buffer_info.count = mesh_data.indices.size();

@@ -34,13 +34,17 @@ struct RHIVertexArrayOpenGL : public RHIVertexArray {
 };
 
 struct RHIBindVertexBufferInfoOpenGL : public RHIBindVertexBufferInfo {
+  struct VertexFormat {
+    GLuint attr_index;
+    GLint attr_size;
+    GLuint reletive_offset;  // where to start interpereting the attr
+  };
   GLuint bind_index;
-  GLuint attr_index;
-  GLint attr_size;
   GLenum type;
   GLboolean normalized;
-  GLintptr offset;
+  GLintptr offset;  // where to start interpereting vbo
   GLsizei stride;
+  std::vector<VertexFormat> vertex_format;
 };
 
 struct RHIBindIndexBufferInfoOpenGL : public RHIBindIndexBufferInfo {

@@ -17,12 +17,6 @@ class EditorLayer : public nanoR::Layer {
     mesh_data.vertices[0].position = {0.0, 0.5, 1.0};
     mesh_data.vertices[1].position = {-0.5, -0.5, 1.0};
     mesh_data.vertices[2].position = {0.5, -0.5, 1.0};
-    // mesh_data.vertices[0].normal = {0.0, 0.5, 1.0};
-    // mesh_data.vertices[1].normal = {-0.5, -0.5, 1.0};
-    // mesh_data.vertices[2].normal = {0.5, -0.5, 1.0};
-    mesh_data.vertices[0].texcoord = {0, 1};
-    mesh_data.vertices[1].texcoord = {1, 1};
-    mesh_data.vertices[2].texcoord = {1, 0};
     mesh_data.indices = {0, 1, 2};
     mesh_ = nanoR::CreateMesh(&rhi_, mesh_data);
 
