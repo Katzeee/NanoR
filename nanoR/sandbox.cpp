@@ -21,8 +21,8 @@ class EditorLayer : public nanoR::Layer {
     mesh_ = nanoR::CreateMesh(&rhi_, mesh_data);
     rhi_.CreateFramebuffer({}, fbo_);
     auto texture_create_info = nanoR::RHITextureCreateInfoOpenGL{};
-    texture_create_info.width = 1024;
-    texture_create_info.height = 1024;
+    texture_create_info.width = 900;
+    texture_create_info.height = 1600;
     texture_create_info.internal_format = GL_RGB8;
     texture_create_info.format = GL_RGB;
     texture_create_info.levels = 1;
@@ -69,15 +69,52 @@ class EditorLayer : public nanoR::Layer {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
-    rhi_.Draw(mesh_.vao.get(), shader_program_.get(), std::nullopt);
+    // rhi_.Draw(mesh_.vao.get(), shader_program_.get(), std::nullopt);
   }
   auto OnDetach() -> void override {}
   auto OnEvent(nanoR::Event& event) -> void override {}
   auto TickUI() -> void override {
-    ImGui::ShowDemoWindow();
-    ImGui::Begin("Demo");
-    ImGui::Image(reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_a_.get())->id)), {256, 256});
-    ImGui::Text("123");
+    static bool dockspaceOpen = true;
+    static bool opt_fullscreen_persistant = true;
+    bool opt_fullscreen = opt_fullscreen_persistant;
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    if (opt_fullscreen) {
+      ImGuiViewport* viewport = ImGui::GetMainViewport();
+      ImGui::SetNextWindowPos(viewport->Pos);
+      ImGui::SetNextWindowSize(viewport->Size);
+      ImGui::SetNextWindowViewport(viewport->ID);
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+      window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                      ImGuiWindowFlags_NoMove;
+      window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    }
+
+    if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) window_flags |= ImGuiWindowFlags_NoBackground;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
+    ImGui::PopStyleVar();
+
+    if (opt_fullscreen) ImGui::PopStyleVar(2);
+
+    // DockSpace
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+    float minWinSizeX = style.WindowMinSize.x;
+    style.WindowMinSize.x = 370.0f;
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
+      ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+      ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+    }
+    // ImVec2 scene_size = ImGui::GetContentRegionAvail();
+    ImGui::End();
+    ImGui::Begin("Scene");
+    ImGui::Image(
+        reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_a_.get())->id)), {256, 256}, {0, 1}, {1, 0}
+    );
     ImGui::End();
   }
 
