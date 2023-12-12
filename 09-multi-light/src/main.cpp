@@ -64,8 +64,8 @@ auto main() -> int {
   if (!glfwInit()) {
     return -1;
   }
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __linux__
   glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
@@ -176,11 +176,11 @@ auto main() -> int {
   // setup texture
   auto box_tex_diffuse =
       xac::TextureManager::GetInstance().CreateTexture("../resources/textures/container2.png", GL_TEXTURE_2D, GL_REPEAT,
-                                                       GL_REPEAT, GL_NEAREST, GL_LINEAR, GL_RGBA, GL_RGBA);
+                                                       GL_REPEAT, GL_NEAREST, GL_LINEAR, GL_RGBA8, GL_RGBA);
 
   auto box_tex_specular =
       xac::TextureManager::GetInstance().CreateTexture("../resources/textures/container2_specular.png", GL_TEXTURE_2D,
-                                                       GL_REPEAT, GL_REPEAT, GL_NEAREST, GL_LINEAR, GL_RGBA, GL_RGBA);
+                                                       GL_REPEAT, GL_REPEAT, GL_NEAREST, GL_LINEAR, GL_RGBA8, GL_RGBA);
 
   // setup matrices
   glm::mat4 model(1.0f);
