@@ -119,16 +119,18 @@ auto RHIOpenGL::CreateTexture(const RHITextureCreateInfo &texture_create_info, s
   const auto &[target, levels, internal_format, width, height, format, type, data, parameteri] =
       dynamic_cast<const RHITextureCreateInfoOpenGL &>(texture_create_info);
   glCreateTextures(target, 1, &texture_opengl->id);
-
   if (target == GL_TEXTURE_2D) {
     glTextureStorage2D(texture_opengl->id, levels, internal_format, width, height);
-    glTextureSubImage2D(texture_opengl->id, 0, 0, 0, width, height, format, type, data);
+    if (data) {
+      glTextureSubImage2D(texture_opengl->id, 0, 0, 0, width, height, format, type, data);
+    }
     glGenerateTextureMipmap(texture_opengl->id);
   } else {
     throw std::runtime_error("not implement");
   }
   for (auto &&[pname, param] : parameteri) {
     glTextureParameteri(texture_opengl->id, pname, param);
+    OpenGLCheckError();
   }
   texture.reset(texture_opengl);
   return OpenGLCheckError();

@@ -21,9 +21,9 @@ class EditorLayer : public nanoR::Layer {
     mesh_ = nanoR::CreateMesh(&rhi_, mesh_data);
     rhi_.CreateFramebuffer({}, fbo_);
     auto texture_create_info = nanoR::RHITextureCreateInfoOpenGL{};
-    texture_create_info.width = 900;
-    texture_create_info.height = 1600;
-    texture_create_info.internal_format = GL_RGB8;
+    texture_create_info.width = 1600;
+    texture_create_info.height = 900;
+    texture_create_info.internal_format = GL_RGBA8;
     texture_create_info.format = GL_RGB;
     texture_create_info.levels = 1;
     texture_create_info.target = GL_TEXTURE_2D;
@@ -33,10 +33,10 @@ class EditorLayer : public nanoR::Layer {
     texture_create_info.parameteri.push_back({GL_TEXTURE_MAG_FILTER, GL_LINEAR});
     texture_create_info.parameteri.push_back({GL_TEXTURE_WRAP_S, GL_REPEAT});
     texture_create_info.parameteri.push_back({GL_TEXTURE_WRAP_T, GL_REPEAT});
-    rhi_.CreateTexture(texture_create_info, t_a_);
+    rhi_.CreateTexture(texture_create_info, t_fbo_color_attachment_);
     auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
     attach_color_attachment_info.level = 0;
-    rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_a_.get());
+    rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
 
     const char* vert_shader_src = R"(#version 450
                                      layout(location = 0) in vec3 position;
@@ -69,7 +69,6 @@ class EditorLayer : public nanoR::Layer {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
-    // rhi_.Draw(mesh_.vao.get(), shader_program_.get(), std::nullopt);
   }
   auto OnDetach() -> void override {}
   auto OnEvent(nanoR::Event& event) -> void override {}
@@ -109,11 +108,12 @@ class EditorLayer : public nanoR::Layer {
       ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
       ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
     }
-    // ImVec2 scene_size = ImGui::GetContentRegionAvail();
     ImGui::End();
     ImGui::Begin("Scene");
+    ImVec2 scene_size = ImGui::GetContentRegionAvail();
     ImGui::Image(
-        reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_a_.get())->id)), {256, 256}, {0, 1}, {1, 0}
+        reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_fbo_color_attachment_.get())->id)),
+        scene_size, {0, 1}, {1, 0}
     );
     ImGui::End();
   }
@@ -122,9 +122,10 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIShaderProgram> shader_program_;
   std::shared_ptr<nanoR::Scene> scene_;
   nanoR::OpenGLMesh mesh_;
+  nanoR::RHITextureCreateInfoOpenGL fbo_color_attachment_create_info_;
+  std::shared_ptr<nanoR::RHITexture> t_fbo_color_attachment_;
 
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
-  std::shared_ptr<nanoR::RHITexture> t_a_;
   nanoR::RHIOpenGL rhi_;
 };
 

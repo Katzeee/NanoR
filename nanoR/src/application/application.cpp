@@ -34,6 +34,9 @@ auto Application::Run() -> void {
 }
 
 auto Application::EventCallback(std::shared_ptr<Event> event) -> void {
+  if (event->GetType() == EventType::kMouseCursorMove) {
+    return;
+  }
   LOG_TRACE("{}\n", event->ToString());
   if (event->GetType() == EventType::kWindowClose) {
     is_running_ = false;
