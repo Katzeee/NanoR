@@ -2,6 +2,7 @@
 #include "nanorpch.h"
 
 namespace nanoR {
+
 struct MeshData {
   struct Vertex {
     glm::vec3 position;
@@ -13,4 +14,11 @@ struct MeshData {
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
 };
+
+struct ShaderData {
+  std::string vs_src;
+  std::string fs_src;
+  std::map<std::string, std::set<std::string>> defined_symbols_;
+};
+
 }  // namespace nanoR

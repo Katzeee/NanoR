@@ -20,45 +20,32 @@ class EditorLayer : public nanoR::Layer {
     mesh_data.indices = {0, 1, 2};
     mesh_ = nanoR::CreateMesh(&rhi_, mesh_data);
     rhi_.CreateFramebuffer({}, fbo_);
-    auto texture_create_info = nanoR::RHITextureCreateInfoOpenGL{};
-    texture_create_info.width = 1600;
-    texture_create_info.height = 900;
-    texture_create_info.internal_format = GL_RGBA8;
-    texture_create_info.format = GL_RGB;
-    texture_create_info.levels = 1;
-    texture_create_info.target = GL_TEXTURE_2D;
-    texture_create_info.type = GL_UNSIGNED_BYTE;
-    texture_create_info.data = nullptr;
-    texture_create_info.parameteri.push_back({GL_TEXTURE_MIN_FILTER, GL_LINEAR});
-    texture_create_info.parameteri.push_back({GL_TEXTURE_MAG_FILTER, GL_LINEAR});
-    texture_create_info.parameteri.push_back({GL_TEXTURE_WRAP_S, GL_REPEAT});
-    texture_create_info.parameteri.push_back({GL_TEXTURE_WRAP_T, GL_REPEAT});
-    rhi_.CreateTexture(texture_create_info, t_fbo_color_attachment_);
+    fbo_color_attachment_create_info_.internal_format = GL_RGBA8;
+    fbo_color_attachment_create_info_.format = GL_RGB;
+    fbo_color_attachment_create_info_.levels = 1;
+    fbo_color_attachment_create_info_.target = GL_TEXTURE_2D;
+    fbo_color_attachment_create_info_.type = GL_UNSIGNED_BYTE;
+    fbo_color_attachment_create_info_.data = nullptr;
+    fbo_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_MIN_FILTER, GL_LINEAR});
+    fbo_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_MAG_FILTER, GL_LINEAR});
+    fbo_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_WRAP_S, GL_REPEAT});
+    fbo_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_WRAP_T, GL_REPEAT});
+    fbo_color_attachment_create_info_.width = 1600;
+    fbo_color_attachment_create_info_.height = 900;
+    rhi_.CreateTexture(fbo_color_attachment_create_info_, t_fbo_color_attachment_);
     auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
     attach_color_attachment_info.level = 0;
     rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
-
-    const char* vert_shader_src = R"(#version 450
-                                     layout(location = 0) in vec3 position;
-                                     layout(location = 2) in vec2 texcoord;
-                                     void main() {
-                                       gl_Position = vec4(position, 1);
-                                     }
-                                    )";
-    const char* frag_shader_src = R"(#version 450
-                                     out vec4 FragColor;
-                                     void main() {
-                                       FragColor = vec4(1, 0, 1, 1);
-                                     }
-                                    )";
+    nanoR::ShaderData shader_data =
+        nanoR::ResourceManager::LoadShaderData("../nanoR/shader/common.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
     std::shared_ptr<nanoR::RHIShaderModule> vert_shader;
     std::shared_ptr<nanoR::RHIShaderModule> frag_shader;
     auto shader_module_create_info = nanoR::RHIShaderModuleCreateInfoOpenGL{};
     shader_module_create_info.type = GL_VERTEX_SHADER;
-    shader_module_create_info.src = vert_shader_src;
+    shader_module_create_info.src = shader_data.vs_src.c_str();
     rhi_.CreateShaderModule(shader_module_create_info, vert_shader);
     shader_module_create_info.type = GL_FRAGMENT_SHADER;
-    shader_module_create_info.src = frag_shader_src;
+    shader_module_create_info.src = shader_data.fs_src.c_str();
     rhi_.CreateShaderModule(shader_module_create_info, frag_shader);
     auto shader_program_create_info = nanoR::RHIShaderProgramCreateInfoOpenGL{};
     shader_program_create_info.shaders.push_back(vert_shader);
@@ -67,7 +54,7 @@ class EditorLayer : public nanoR::Layer {
   }
   auto Tick(uint64_t delta_time) -> void override {
     glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
   auto OnDetach() -> void override {}
@@ -111,6 +98,16 @@ class EditorLayer : public nanoR::Layer {
     ImGui::End();
     ImGui::Begin("Scene");
     ImVec2 scene_size = ImGui::GetContentRegionAvail();
+    if (scene_size.x != fbo_color_attachment_create_info_.width ||
+        scene_size.y != fbo_color_attachment_create_info_.height) {
+      LOG_DEBUG("recreate\n");
+      fbo_color_attachment_create_info_.width = scene_size.x;
+      fbo_color_attachment_create_info_.height = scene_size.y;
+      rhi_.CreateTexture(fbo_color_attachment_create_info_, t_fbo_color_attachment_);
+      auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
+      attach_color_attachment_info.level = 0;
+      rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
+    }
     ImGui::Image(
         reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_fbo_color_attachment_.get())->id)),
         scene_size, {0, 1}, {1, 0}
