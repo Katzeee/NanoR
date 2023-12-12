@@ -5,16 +5,14 @@
 namespace nanoR {
 class Layer {
  public:
-  Layer(std::string name) : name_(name) {}
-  virtual auto OnAttach() -> void = 0;
+  Layer(std::string name);
+  virtual auto OnAttach() -> void;
   // HINT: the unit of delta_time is microseconds
-  virtual auto Tick(uint64_t delta_time) -> void = 0;
-  virtual auto OnDetach() -> void = 0;
-  virtual auto OnEvent(Event& event) -> void = 0;
-  virtual auto TickUI() -> void = 0;
-  auto GetName() const -> std::string {
-    return name_;
-  }
+  virtual auto Tick(uint64_t delta_time) -> void;
+  virtual auto OnDetach() -> void;
+  virtual auto OnEvent(std::shared_ptr<Event> const& event) -> void;
+  virtual auto TickUI() -> void;
+  auto GetName() const -> std::string;
 
  protected:
   std::string name_;

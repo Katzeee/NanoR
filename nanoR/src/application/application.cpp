@@ -33,13 +33,13 @@ auto Application::Run() -> void {
   }
 }
 
-auto Application::EventCallback(std::shared_ptr<Event> event) -> void {
-  if (event->GetType() == EventType::kMouseCursorMove) {
-    return;
-  }
-  LOG_TRACE("{}\n", event->ToString());
+// HINT: use shared_ptr because the event is created by window
+auto Application::EventCallback(std::shared_ptr<Event> const& event) -> void {
   if (event->GetType() == EventType::kWindowClose) {
     is_running_ = false;
+  }
+  for (auto&& it : layer_stack_->GetLayers()) {
+    it->OnEvent(event);
   }
 }
 

@@ -57,8 +57,6 @@ class EditorLayer : public nanoR::Layer {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
-  auto OnDetach() -> void override {}
-  auto OnEvent(nanoR::Event& event) -> void override {}
   auto TickUI() -> void override {
     static bool dockspaceOpen = true;
     static bool opt_fullscreen_persistant = true;

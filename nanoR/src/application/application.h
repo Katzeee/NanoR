@@ -15,7 +15,7 @@ class Application {
   virtual ~Application() = default;
   virtual auto Init() -> void;
   virtual auto Run() -> void;
-  virtual auto EventCallback(std::shared_ptr<Event> event) -> void;
+  virtual auto EventCallback(std::shared_ptr<Event> const& event) -> void;
   auto PushLayer(std::shared_ptr<Layer> layer) -> void;
   auto PushOverlayLayer(std::shared_ptr<Layer> layer) -> void;
   auto PopLayer(std::shared_ptr<Layer> layer) -> void;
