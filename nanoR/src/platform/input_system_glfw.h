@@ -16,16 +16,16 @@ class InputSystem<Platform::Linux> {
       auto key_event = dynamic_cast<KeyDownEvent*>(event.get());
       switch (key_event->key_code) {
         case GLFW_KEY_W:
-          control_commad |= static_cast<uint32_t>(ControlCommand::FORWARD);
+          control_commad |= static_cast<uint32_t>(ControlCommand::kForward);
           break;
         case GLFW_KEY_A:
-          control_commad |= static_cast<uint32_t>(ControlCommand::LEFT);
+          control_commad |= static_cast<uint32_t>(ControlCommand::kLeft);
           break;
         case GLFW_KEY_S:
-          control_commad |= static_cast<uint32_t>(ControlCommand::BACKWARD);
+          control_commad |= static_cast<uint32_t>(ControlCommand::kBackward);
           break;
         case GLFW_KEY_D:
-          control_commad |= static_cast<uint32_t>(ControlCommand::RIGHT);
+          control_commad |= static_cast<uint32_t>(ControlCommand::kRight);
           break;
         default:
           break;
@@ -34,16 +34,16 @@ class InputSystem<Platform::Linux> {
       auto key_event = dynamic_cast<KeyUpEvent*>(event.get());
       switch (key_event->key_code) {
         case GLFW_KEY_W:
-          control_commad &= ~static_cast<uint32_t>(ControlCommand::FORWARD);
+          control_commad &= ~static_cast<uint32_t>(ControlCommand::kForward);
           break;
         case GLFW_KEY_A:
-          control_commad &= ~static_cast<uint32_t>(ControlCommand::LEFT);
+          control_commad &= ~static_cast<uint32_t>(ControlCommand::kLeft);
           break;
         case GLFW_KEY_S:
-          control_commad &= ~static_cast<uint32_t>(ControlCommand::BACKWARD);
+          control_commad &= ~static_cast<uint32_t>(ControlCommand::kBackward);
           break;
         case GLFW_KEY_D:
-          control_commad &= ~static_cast<uint32_t>(ControlCommand::RIGHT);
+          control_commad &= ~static_cast<uint32_t>(ControlCommand::kRight);
           break;
         default:
           break;

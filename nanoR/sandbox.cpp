@@ -53,11 +53,14 @@ class EditorLayer : public nanoR::Layer {
     shader_program_create_info.shaders.push_back(frag_shader);
     rhi_.CreateShaderProgram(shader_program_create_info, shader_program_);
   }
+
   auto Tick(uint64_t delta_time) -> void override {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View", glm::mat4{1});
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
+
   auto TickUI() -> void override {
     static bool dockspaceOpen = true;
     static bool opt_fullscreen_persistant = true;
@@ -112,7 +115,7 @@ class EditorLayer : public nanoR::Layer {
     );
     ImGui::End();
     ImGui::Begin("Settings");
-    ImGui::Text("%x", nanoR::GlobalContext::Instance().input_system->control_commad);
+    ImGui::Text("%X", nanoR::GlobalContext::Instance().input_system->control_commad);
     ImGui::End();
   }
 
@@ -125,6 +128,8 @@ class EditorLayer : public nanoR::Layer {
 
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
   nanoR::RHIOpenGL rhi_;
+
+  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{0, 0, -5}, {0, 0, 0}};
 };
 
 class InputLayer : public nanoR::Layer {

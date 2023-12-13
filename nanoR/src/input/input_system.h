@@ -4,13 +4,13 @@
 namespace nanoR {
 
 enum class ControlCommand : uint32_t {
-  FORWARD = 1 << 0,
-  BACKWARD = 1 << 1,
-  LEFT = 1 << 2,
-  RIGHT = 1 << 3,
-  UP = 1 << 4,
-  DOWN = 1 << 5,
-  SHOW_CURSOR = 1 << 6,
+  kForward = 1 << 0,
+  kBackward = 1 << 1,
+  kLeft = 1 << 2,
+  kRight = 1 << 3,
+  kUp = 1 << 4,
+  kDown = 1 << 5,
+  kShowCursor = 1 << 6,
 };
 
 enum class Platform {
@@ -22,6 +22,5 @@ template <Platform T>
 class InputSystem {
  private:
 };
-
 
 }  // namespace nanoR

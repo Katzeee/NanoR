@@ -11,9 +11,7 @@ struct OpenGLMesh {
   std::shared_ptr<RHIVertexArray> vao;
 };
 
-struct OpenGLMaterial {
-
-};
+struct OpenGLMaterial {};
 
 static auto CreateMesh(RHI* rhi, const MeshData& mesh_data) -> OpenGLMesh {
   OpenGLMesh mesh;
@@ -48,5 +46,7 @@ static auto CreateMesh(RHI* rhi, const MeshData& mesh_data) -> OpenGLMesh {
 
   return mesh;
 }
+
+// static auto CreateShaderProgram(RHI* rhi, char const* vs_path, char const* fs_path) -> {}
 
 }  // namespace nanoR

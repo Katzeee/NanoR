@@ -3,6 +3,11 @@
 
 namespace nanoR {
 
+enum class RenderApi {
+  kOpenGL,
+  kVulkan,
+};
+
 struct MeshData {
   struct Vertex {
     glm::vec3 position;
