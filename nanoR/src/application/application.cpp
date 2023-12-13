@@ -1,6 +1,7 @@
 #include "application.h"
 
 #include "global/global_context.h"
+#include "platform/input_system_glfw.h"
 
 namespace nanoR {
 
@@ -40,7 +41,7 @@ auto Application::EventCallback(std::shared_ptr<Event> const& event) -> void {
   if (event->GetType() == EventType::kWindowClose) {
     is_running_ = false;
   }
-  GlobalContext::Instance().input_system->OnEvnet(event);
+  GlobalContext::Instance().input_system->OnEvent(event);
   for (auto&& it : layer_stack_->GetLayers()) {
     it->OnEvent(event);
   }

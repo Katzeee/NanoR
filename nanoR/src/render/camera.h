@@ -47,13 +47,7 @@ class Camera<CameraType::kPersp> {
     if (ReceiveCommand(ControlCommand::kLeft)) {
       position_ += glm::cross(front, up) * distance;
     }
-    // UpdateQuat();
-    // if (ReceiveCommand(ControlCommand::UP)) {
-    //   position_ += world_up_ * distance;
-    // }
-    // if (ReceiveCommand(ControlCommand::DOWN)) {
-    //   position_ += world_up_ * -distance;
-    // }
+    UpdateQuat();
   }
 
  private:

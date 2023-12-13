@@ -5,6 +5,7 @@
 
 #include "global/global_context.h"
 #include "nanorpch.h"
+#include "platform/window_linux.h"
 namespace nanoR {
 
 auto UILayerGLFWOpenGL3::OnAttach() -> void {
