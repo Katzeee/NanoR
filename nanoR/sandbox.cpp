@@ -13,19 +13,7 @@ class EditorLayer : public nanoR::Layer {
 
   auto OnAttach() -> void override {
     auto e = scene_->CreateEntity();
-    nanoR::MeshData mesh_data;
-    mesh_data.vertices.resize(8);
-    mesh_data.vertices[0].position = {0.5, 0.5, -0.5};
-    mesh_data.vertices[1].position = {0.5, -0.5, -0.5};
-    mesh_data.vertices[2].position = {-0.5, -0.5, -0.5};
-    mesh_data.vertices[3].position = {-0.5, 0.5, -0.5};
-    mesh_data.vertices[4].position = {0.5, 0.5, 0.5};
-    mesh_data.vertices[5].position = {0.5, -0.5, 0.5};
-    mesh_data.vertices[6].position = {-0.5, -0.5, 0.5};
-    mesh_data.vertices[7].position = {-0.5, 0.5, 0.5};
-    mesh_data.indices = {0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4,
-                         2, 3, 7, 2, 7, 6, 0, 3, 7, 0, 7, 4, 1, 2, 6, 1, 6, 5};
-    mesh_ = nanoR::CreateMesh(&rhi_, mesh_data);
+    mesh_ = nanoR::CreateMesh(&rhi_, nanoR::ResourceManager::GetCubeMeshData());
     rhi_.CreateFramebuffer({}, fbo_);
     fbo_color_attachment_create_info_.internal_format = GL_RGBA8;
     fbo_color_attachment_create_info_.format = GL_RGB;
@@ -43,21 +31,7 @@ class EditorLayer : public nanoR::Layer {
     auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
     attach_color_attachment_info.level = 0;
     rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
-    nanoR::ShaderData shader_data =
-        nanoR::ResourceManager::LoadShaderData("../nanoR/shader/common.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
-    std::shared_ptr<nanoR::RHIShaderModule> vert_shader;
-    std::shared_ptr<nanoR::RHIShaderModule> frag_shader;
-    auto shader_module_create_info = nanoR::RHIShaderModuleCreateInfoOpenGL{};
-    shader_module_create_info.type = GL_VERTEX_SHADER;
-    shader_module_create_info.src = shader_data.vs_src.c_str();
-    rhi_.CreateShaderModule(shader_module_create_info, vert_shader);
-    shader_module_create_info.type = GL_FRAGMENT_SHADER;
-    shader_module_create_info.src = shader_data.fs_src.c_str();
-    rhi_.CreateShaderModule(shader_module_create_info, frag_shader);
-    auto shader_program_create_info = nanoR::RHIShaderProgramCreateInfoOpenGL{};
-    shader_program_create_info.shaders.push_back(vert_shader);
-    shader_program_create_info.shaders.push_back(frag_shader);
-    rhi_.CreateShaderProgram(shader_program_create_info, shader_program_);
+    shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
   }
 
   auto Tick(uint64_t delta_time) -> void override {
@@ -67,13 +41,10 @@ class EditorLayer : public nanoR::Layer {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // auto view = glm::lookAt({-0.5, 0, 0}, glm::vec3{-0.5, 0, 1}, {0, 1, 0});
     auto view = main_camera_.GetViewMatrix();
     auto proj = main_camera_.GetProjectionMatrix();
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View", view);
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("Proj", proj);
-    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View",
-    // main_camera_.GetViewMatrix());
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
 
@@ -149,7 +120,7 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
   nanoR::RHIOpenGL rhi_;
 
-  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{1, 1, 5}, {0, 0, 0}};
+  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{1, 0, 5}, {0, 0, 0}};
 };
 
 class InputLayer : public nanoR::Layer {
