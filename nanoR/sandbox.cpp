@@ -1,5 +1,6 @@
 #include <memory>
 
+#include "event/key_event.h"
 #include "glad/glad.h"
 #include "imgui.h"
 #include "nanor.h"
@@ -98,7 +99,6 @@ class EditorLayer : public nanoR::Layer {
     ImVec2 scene_size = ImGui::GetContentRegionAvail();
     if (scene_size.x != fbo_color_attachment_create_info_.width ||
         scene_size.y != fbo_color_attachment_create_info_.height) {
-      LOG_DEBUG("recreate\n");
       fbo_color_attachment_create_info_.width = scene_size.x;
       fbo_color_attachment_create_info_.height = scene_size.y;
       rhi_.CreateTexture(fbo_color_attachment_create_info_, t_fbo_color_attachment_);
@@ -110,6 +110,9 @@ class EditorLayer : public nanoR::Layer {
         reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_fbo_color_attachment_.get())->id)),
         scene_size, {0, 1}, {1, 0}
     );
+    ImGui::End();
+    ImGui::Begin("Settings");
+    ImGui::Text("%x", nanoR::GlobalContext::Instance().input_system->control_commad);
     ImGui::End();
   }
 
@@ -124,6 +127,17 @@ class EditorLayer : public nanoR::Layer {
   nanoR::RHIOpenGL rhi_;
 };
 
+class InputLayer : public nanoR::Layer {
+ public:
+  InputLayer(std::string const& name) : Layer(name) {}
+  auto OnEvent(std::shared_ptr<nanoR::Event> const& event) -> void override {
+    if (event->GetType() == nanoR::EventType::kKeyDown) {
+      auto key_event = dynamic_cast<nanoR::KeyDownEvent*>(event.get());
+      LOG_TRACE("{}\n", key_event->key_code);
+    }
+  }
+};
+
 class Sandbox : public nanoR::ApplicationOpenGL {
  public:
   Sandbox() = default;
@@ -131,11 +145,12 @@ class Sandbox : public nanoR::ApplicationOpenGL {
 
 auto main() -> int {
   std::unique_ptr<Sandbox> sandbox = std::make_unique<Sandbox>();
-  std::shared_ptr<EditorLayer> test_layer1 = std::make_shared<EditorLayer>("test_layer1");
-  sandbox->PushLayer(test_layer1);
+  auto editor_layer = std::make_shared<EditorLayer>("editor_layer");
+  auto input_layer = std::make_shared<InputLayer>("input layer");
+  sandbox->PushLayer(editor_layer);
+  sandbox->PushLayer(input_layer);
   LOG_TRACE("{}\n", sandbox->GetLayerStack().ToString());
 
   sandbox->Run();
-
   return 0;
 }

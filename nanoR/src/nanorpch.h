@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 
 #include <chrono>
+#include <cstdint>
 #include <deque>
 #include <fstream>
 #include <functional>

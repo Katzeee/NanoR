@@ -11,7 +11,8 @@ Application::Application() {
 auto Application::Init() -> void {
   auto window = std::make_shared<Window>();
   window->user_data_.event_callback = [this](auto&& event) { EventCallback(std::forward<decltype(event)>(event)); };
-  GlobalContext::Instance().window_ = window;
+  GlobalContext::Instance().window = window;
+  GlobalContext::Instance().input_system = std::make_shared<InputSystem<Platform::Linux>>();
 }
 
 auto Application::Run() -> void {
@@ -29,15 +30,17 @@ auto Application::Run() -> void {
       it->TickUI();
     }
     ui_layer_->End();
-    GlobalContext::Instance().window_->Tick();
+    GlobalContext::Instance().window->Tick();
   }
 }
 
 // HINT: use shared_ptr because the event is created by window
 auto Application::EventCallback(std::shared_ptr<Event> const& event) -> void {
+  // LOG_TRACE("{}\n", event->ToString());
   if (event->GetType() == EventType::kWindowClose) {
     is_running_ = false;
   }
+  GlobalContext::Instance().input_system->OnEvnet(event);
   for (auto&& it : layer_stack_->GetLayers()) {
     it->OnEvent(event);
   }

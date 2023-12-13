@@ -5,7 +5,7 @@
 namespace nanoR {
 class Layer {
  public:
-  Layer(std::string name);
+  Layer(std::string const& name);
   virtual auto OnAttach() -> void;
   // HINT: the unit of delta_time is microseconds
   virtual auto Tick(uint64_t delta_time) -> void;

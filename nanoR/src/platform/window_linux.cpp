@@ -70,10 +70,11 @@ auto WindowLinux::Init(WindowProp window_prop) -> void {
   glfwSetKeyCallback(window_, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
     auto *user_data = reinterpret_cast<UserData *>(glfwGetWindowUserPointer(window));
     if (action == GLFW_PRESS) {
-      auto key_down_event = std::make_shared<KeyDownEvent>(scancode, mods);
+      // HINT: scancode is not related to the keyboard layout, like qwerty or colemak, dvorak
+      auto key_down_event = std::make_shared<KeyDownEvent>(key, mods);
       user_data->event_callback(key_down_event);
     } else if (action == GLFW_RELEASE) {
-      auto key_up_event = std::make_shared<KeyUpEvent>(scancode, mods);
+      auto key_up_event = std::make_shared<KeyUpEvent>(key, mods);
       user_data->event_callback(key_up_event);
     }
   });

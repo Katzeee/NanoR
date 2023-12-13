@@ -2,7 +2,7 @@
 
 namespace nanoR {
 
-Layer::Layer(std::string name) : name_(name) {}
+Layer::Layer(std::string const& name) : name_(name) {}
 
 auto Layer::OnAttach() -> void {}
 

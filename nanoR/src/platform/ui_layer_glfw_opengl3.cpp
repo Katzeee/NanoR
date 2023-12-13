@@ -12,7 +12,7 @@ auto UILayerGLFWOpenGL3::OnAttach() -> void {
   ImGuiIO& io = ImGui::GetIO();
   (void)io;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-  auto window = static_cast<GLFWwindow*>(GlobalContext::Instance().window_->GetRawWindow());
+  auto window = static_cast<GLFWwindow*>(GlobalContext::Instance().window->GetRawWindow());
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 450 core");
   ImGui::StyleColorsDark();
