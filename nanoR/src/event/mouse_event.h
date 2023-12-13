@@ -3,50 +3,44 @@
 
 namespace nanoR {
 
-class MouseCursorMoveEvent final : public Event {
- public:
+struct MouseCursorMoveEvent final : public Event {
   DECLARE_EVENT_TYPE(kMouseCursorMove)
   DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
-  MouseCursorMoveEvent(double xpos, double ypos) : xpos_(xpos), ypos_(ypos) {}
+  MouseCursorMoveEvent(double xpos, double ypos) : xpos(xpos), ypos(ypos) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseCursorMoveEvent] xpos: {}, ypos: {}", xpos_, ypos_);
+    return fmt::format("[MouseCursorMoveEvent] xpos: {}, ypos: {}", xpos, ypos);
   }
 
- private:
   // For easy completion and less length, use xpos_ not pos_x_
-  double xpos_;
-  double ypos_;
+  double xpos;
+  double ypos;
 };
 
-class MouseButtonDownEvent final : public Event {
- public:
+struct MouseButtonDownEvent final : public Event {
   DECLARE_EVENT_TYPE(kMouseButtonDown)
   DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
-  MouseButtonDownEvent(int button_code, int mods) : button_code_(button_code), mods_(mods) {}
+  MouseButtonDownEvent(int button_code, int mods) : button_code(button_code), mods(mods) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseButtonDownEvent] button: {}, mods: {}", button_code_, mods_);
+    return fmt::format("[MouseButtonDownEvent] button: {}, mods: {}", button_code, mods);
   }
 
- private:
-  int button_code_;
-  int mods_;
+  int button_code;
+  int mods;
 };
 
-class MouseButtonUpEvent final : public Event {
- public:
+struct MouseButtonUpEvent final : public Event {
   DECLARE_EVENT_TYPE(kMouseButtonUp)
   DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
-  MouseButtonUpEvent(int button_code, int mods) : button_code_(button_code), mods_(mods) {}
+  MouseButtonUpEvent(int button_code, int mods) : button_code(button_code), mods(mods) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseButtonUpEvent] button: {}, mods: {}", button_code_, mods_);
+    return fmt::format("[MouseButtonUpEvent] button: {}, mods: {}", button_code, mods);
   }
 
- private:
-  int button_code_;
-  int mods_;
+  int button_code;
+  int mods;
 };
 
 class MouseButtonScrollEvent final : public Event {

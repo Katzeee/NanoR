@@ -31,6 +31,8 @@ auto Application::Run() -> void {
       it->TickUI();
     }
     ui_layer_->End();
+    // FIX: execute order
+    GlobalContext::Instance().input_system->Tick();
     GlobalContext::Instance().window->Tick();
   }
 }

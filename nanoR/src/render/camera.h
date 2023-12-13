@@ -33,7 +33,7 @@ class Camera<CameraType::kPersp> {
 
   auto Tick(uint64_t delta_time) -> void {
     float distance = delta_time * speed_ / 1000;
-    auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, -1.0f));
+    auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
     auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
     if (ReceiveCommand(ControlCommand::kForward)) {
       position_ += front * distance;
@@ -42,11 +42,13 @@ class Camera<CameraType::kPersp> {
       position_ += front * -distance;
     }
     if (ReceiveCommand(ControlCommand::kRight)) {
-      position_ += glm::cross(front, up) * -distance;
-    }
-    if (ReceiveCommand(ControlCommand::kLeft)) {
       position_ += glm::cross(front, up) * distance;
     }
+    if (ReceiveCommand(ControlCommand::kLeft)) {
+      position_ += glm::cross(front, up) * -distance;
+    }
+    yaw_ += GlobalContext::Instance().input_system->cursor_x_offset * sensitivity_ * delta_time * fov_;
+    pitch_ += GlobalContext::Instance().input_system->cursor_y_offset * sensitivity_ * delta_time * fov_;
     UpdateQuat();
   }
 
@@ -69,7 +71,8 @@ class Camera<CameraType::kPersp> {
   // rotation around x
   float pitch_;
   glm::vec3 position_;
-  float speed_ = 1.5f;
+  inline static float speed_ = 1.5f;
+  inline static float sensitivity_ = 0.00002;
 
   float fov_ = 45.0f;
   float aspect_ = 1.5f;

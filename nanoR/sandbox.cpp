@@ -14,11 +14,17 @@ class EditorLayer : public nanoR::Layer {
   auto OnAttach() -> void override {
     auto e = scene_->CreateEntity();
     nanoR::MeshData mesh_data;
-    mesh_data.vertices.resize(3);
-    mesh_data.vertices[0].position = {0.0, 0.5, 1.0};
-    mesh_data.vertices[1].position = {-0.5, -0.5, 1.0};
-    mesh_data.vertices[2].position = {0.5, -0.5, 1.0};
-    mesh_data.indices = {0, 1, 2};
+    mesh_data.vertices.resize(8);
+    mesh_data.vertices[0].position = {0.5, 0.5, -0.5};
+    mesh_data.vertices[1].position = {0.5, -0.5, -0.5};
+    mesh_data.vertices[2].position = {-0.5, -0.5, -0.5};
+    mesh_data.vertices[3].position = {-0.5, 0.5, -0.5};
+    mesh_data.vertices[4].position = {0.5, 0.5, 0.5};
+    mesh_data.vertices[5].position = {0.5, -0.5, 0.5};
+    mesh_data.vertices[6].position = {-0.5, -0.5, 0.5};
+    mesh_data.vertices[7].position = {-0.5, 0.5, 0.5};
+    mesh_data.indices = {0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4,
+                         2, 3, 7, 2, 7, 6, 0, 3, 7, 0, 7, 4, 1, 2, 6, 1, 6, 5};
     mesh_ = nanoR::CreateMesh(&rhi_, mesh_data);
     rhi_.CreateFramebuffer({}, fbo_);
     fbo_color_attachment_create_info_.internal_format = GL_RGBA8;
@@ -63,7 +69,9 @@ class EditorLayer : public nanoR::Layer {
 
     // auto view = glm::lookAt({-0.5, 0, 0}, glm::vec3{-0.5, 0, 1}, {0, 1, 0});
     auto view = main_camera_.GetViewMatrix();
+    auto proj = main_camera_.GetProjectionMatrix();
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View", view);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("Proj", proj);
     // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View",
     // main_camera_.GetViewMatrix());
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
@@ -122,8 +130,12 @@ class EditorLayer : public nanoR::Layer {
         scene_size, {0, 1}, {1, 0}
     );
     ImGui::End();
-    ImGui::Begin("Settings");
+    ImGui::Begin("Input");
     ImGui::Text("%X", nanoR::GlobalContext::Instance().input_system->control_commad);
+    ImGui::Text(
+        "x_offset: %f, y_offset: %f", nanoR::GlobalContext::Instance().input_system->cursor_x_offset,
+        nanoR::GlobalContext::Instance().input_system->cursor_x_offset
+    );
     ImGui::End();
   }
 
@@ -137,7 +149,7 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
   nanoR::RHIOpenGL rhi_;
 
-  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{0, 0, 0}, {0, 0, 1}};
+  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{1, 1, 5}, {0, 0, 0}};
 };
 
 class InputLayer : public nanoR::Layer {
@@ -146,7 +158,6 @@ class InputLayer : public nanoR::Layer {
   auto OnEvent(std::shared_ptr<nanoR::Event> const& event) -> void override {
     if (event->GetType() == nanoR::EventType::kKeyDown) {
       auto key_event = dynamic_cast<nanoR::KeyDownEvent*>(event.get());
-      LOG_TRACE("{}\n", key_event->key_code);
     }
   }
 };

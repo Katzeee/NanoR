@@ -1,16 +1,25 @@
 #pragma once
 #include "event/event.h"
 #include "event/key_event.h"
+#include "event/mouse_event.h"
 #include "global/global_context.h"
 #include "input/input_system.h"
+#include "window/window_base.h"
 
 namespace nanoR {
+
+auto ReceiveCommand(ControlCommand command) -> bool;
 
 template <>
 class InputSystem<Platform::Linux> {
  public:
+  auto Tick() -> void {
+    cursor_x_offset = 0;
+    cursor_y_offset = 0;
+  }
+
   auto OnEvent(std::shared_ptr<Event> const& event) {
-    if ((event->GetCategory() & EventCategory::kKey) != EventCategory::kKey) {
+    if ((event->GetCategory() & EventCategory::kInput) != EventCategory::kInput) {
       return;
     }
     if (event->GetType() == EventType::kKeyDown) {
@@ -50,12 +59,48 @@ class InputSystem<Platform::Linux> {
           break;
       }
     }
+    if (event->GetType() == EventType::kMouseButtonDown) {
+      auto button_event = dynamic_cast<MouseButtonDownEvent*>(event.get());
+      switch (button_event->button_code) {
+        case GLFW_MOUSE_BUTTON_1:
+          control_commad |= static_cast<uint32_t>(ControlCommand::kLeftButtonDown);
+          glfwGetCursorPos(
+              reinterpret_cast<GLFWwindow*>(GlobalContext::Instance().window->GetRawWindow()), &last_cursor_x_pos,
+              &last_cursor_y_pos
+          );
+          break;
+        default:
+          break;
+      }
+    } else if (event->GetType() == EventType::kMouseButtonUp) {
+      auto button_event = dynamic_cast<MouseButtonUpEvent*>(event.get());
+      switch (button_event->button_code) {
+        case GLFW_MOUSE_BUTTON_1:
+          control_commad &= ~static_cast<uint32_t>(ControlCommand::kLeftButtonDown);
+          break;
+        default:
+          break;
+      }
+    }
+    if (ReceiveCommand(ControlCommand::kLeftButtonDown)) {
+      if (event->GetType() == EventType::kMouseCursorMove) {
+        auto cursor_event = dynamic_cast<MouseCursorMoveEvent*>(event.get());
+        cursor_x_offset = cursor_event->xpos - last_cursor_x_pos;
+        cursor_y_offset = cursor_event->ypos - last_cursor_y_pos;
+        last_cursor_x_pos = cursor_event->xpos;
+        last_cursor_y_pos = cursor_event->ypos;
+      }
+    }
   }
 
   uint32_t control_commad = 0;
+  double cursor_x_offset = 0;
+  double cursor_y_offset = 0;
+  double last_cursor_x_pos = 0;
+  double last_cursor_y_pos = 0;
 };
 
-static auto ReceiveCommand(ControlCommand command) -> bool {
+inline static auto ReceiveCommand(ControlCommand command) -> bool {
   return static_cast<uint32_t>(command) & GlobalContext::Instance().input_system->control_commad;
 }
 
