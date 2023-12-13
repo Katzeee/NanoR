@@ -8,6 +8,9 @@ struct RHIBuffer {
 struct RHIBufferCreateInfo {
   virtual ~RHIBufferCreateInfo() = default;
 };
+struct RHISetBufferDataInfo {
+  virtual ~RHISetBufferDataInfo() = default;
+};
 
 struct RHIVertexArray {
   virtual ~RHIVertexArray() = default;
@@ -35,6 +38,10 @@ struct RHIShaderProgramCreateInfo {
 
 struct RHIShaderProgram {
   virtual ~RHIShaderProgram() = default;
+};
+
+struct RHIBindUniformBufferInfo {
+  virtual ~RHIBindUniformBufferInfo() = default;
 };
 
 struct RHIFramebufferCreateInfo {

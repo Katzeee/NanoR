@@ -32,6 +32,12 @@ class EditorLayer : public nanoR::Layer {
     attach_color_attachment_info.level = 0;
     rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
     shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
+
+    nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
+    buffer_create_info.data = nullptr;
+    buffer_create_info.size = 2 * sizeof(glm::mat4);
+    buffer_create_info.flags = GL_DYNAMIC_STORAGE_BIT;
+    rhi_.CreateBuffer(buffer_create_info, ubo_);
   }
 
   auto Tick(uint64_t delta_time) -> void override {
@@ -43,6 +49,17 @@ class EditorLayer : public nanoR::Layer {
 
     auto view = main_camera_.GetViewMatrix();
     auto proj = main_camera_.GetProjectionMatrix();
+    glm::mat4 matrices[2]{view, proj};
+    nanoR::RHISetBufferDataInfoOpenGL set_buffer_data_info;
+    set_buffer_data_info.offset = 0;
+    set_buffer_data_info.size = 2 * sizeof(glm::mat4);
+    set_buffer_data_info.data = &matrices;
+    rhi_.SetBufferData(set_buffer_data_info, ubo_.get());
+    nanoR::RHIBindUniformBufferInfoOpenGL bind_uniform_buffer_info;
+    bind_uniform_buffer_info.index = 0;
+    bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
+    rhi_.BindUniformBuffer(bind_uniform_buffer_info, shader_program_.get(), ubo_.get());
+
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View", view);
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("Proj", proj);
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
@@ -117,6 +134,7 @@ class EditorLayer : public nanoR::Layer {
   nanoR::RHITextureCreateInfoOpenGL fbo_color_attachment_create_info_;
   std::shared_ptr<nanoR::RHITexture> t_fbo_color_attachment_;
 
+  std::shared_ptr<nanoR::RHIBuffer> ubo_;
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
   nanoR::RHIOpenGL rhi_;
 

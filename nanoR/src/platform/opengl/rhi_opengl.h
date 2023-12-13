@@ -8,6 +8,7 @@ class RHIOpenGL final : public RHI {
   ~RHIOpenGL() override = default;
   static auto OpenGLCheckError() -> bool;
   auto CreateBuffer(const RHIBufferCreateInfo &buffer_create_info, std::shared_ptr<RHIBuffer> &buffer) -> bool override;
+  auto SetBufferData(const RHISetBufferDataInfo &set_buffer_data_info, RHIBuffer *buffer) -> bool override;
   auto CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) -> bool override;
   auto BindVertexBuffer(
       const RHIBindVertexBufferInfo &bind_vertex_buffer_info, std::shared_ptr<RHIVertexArray> vertex_array,
@@ -23,7 +24,10 @@ class RHIOpenGL final : public RHI {
   auto CreateShaderProgram(
       const RHIShaderProgramCreateInfo &shader_program_create_info, std::shared_ptr<RHIShaderProgram> &shader_program
   ) -> bool override;
-  virtual auto CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)
+  auto BindUniformBuffer(
+      const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIShaderProgram *shader_program, RHIBuffer *buffer
+  ) -> bool override;
+  auto CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)
       -> bool override;
   auto CreateFramebuffer(
       const RHIFramebufferCreateInfo &framebuffer_create_info, std::shared_ptr<RHIFramebuffer> &framebuffer

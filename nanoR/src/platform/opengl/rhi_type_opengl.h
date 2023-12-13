@@ -15,9 +15,15 @@ struct RHIBufferOpenGL : public RHIBuffer {
   GLuint id;
 };
 
-struct RHIBufferCreateInfoOpenGL : public RHIBufferCreateInfo {
+struct RHISetBufferDataInfoOpenGL : public RHISetBufferDataInfo {
+  GLintptr offset;
   GLsizeiptr size;
   const void *data;
+};
+
+struct RHIBufferCreateInfoOpenGL : public RHIBufferCreateInfo {
+  GLsizeiptr size;
+  const void *data;  // initial data, can be nullptr
   GLbitfield flags = 0;
 };
 
@@ -95,6 +101,11 @@ struct RHIShaderProgramOpenGL : public RHIShaderProgram {
   }
 
   GLuint id;
+};
+
+struct RHIBindUniformBufferInfoOpenGL : RHIBindUniformBufferInfo {
+  GLenum target;
+  GLuint index;  // binding index
 };
 
 struct RHIFramebufferCreateInfoOpenGL : public RHIFramebufferCreateInfo {};

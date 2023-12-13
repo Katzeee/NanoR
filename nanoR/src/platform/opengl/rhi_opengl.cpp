@@ -23,6 +23,13 @@ auto RHIOpenGL::CreateBuffer(const RHIBufferCreateInfo &buffer_create_info, std:
   return OpenGLCheckError();
 }
 
+bool RHIOpenGL::SetBufferData(const RHISetBufferDataInfo &set_buffer_data_info, RHIBuffer *buffer) {
+  auto *buffer_opengl = reinterpret_cast<RHIBufferOpenGL *>(buffer);
+  const auto &[offset, size, data] = dynamic_cast<const RHISetBufferDataInfoOpenGL &>(set_buffer_data_info);
+  glNamedBufferSubData(buffer_opengl->id, offset, size, data);
+  return OpenGLCheckError();
+}
+
 auto RHIOpenGL::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) -> bool {
   auto *vertex_array_opengl = new RHIVertexArrayOpenGL{};
   glCreateVertexArrays(1, &vertex_array_opengl->id);
@@ -101,6 +108,18 @@ auto RHIOpenGL::CreateShaderProgram(
     LOG_FATAL("ERROR::SHADER::PROGRAM::LINKING_FAILED: {}", info);
   }
   shader_program.reset(shader_program_opengl);
+  return OpenGLCheckError();
+}
+
+auto RHIOpenGL::BindUniformBuffer(
+    const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIShaderProgram *shader_program, RHIBuffer *buffer
+) -> bool {
+  const auto &[target, index] = dynamic_cast<const RHIBindUniformBufferInfoOpenGL &>(bind_uniform_buffer_info);
+  auto buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(buffer);
+  auto shader_program_opengl = dynamic_cast<RHIShaderProgramOpenGL *>(shader_program);
+  glUseProgram(shader_program_opengl->id);
+  glBindBufferBase(target, index, buffer_opengl->id);
+  glUseProgram(0);
   return OpenGLCheckError();
 }
 
