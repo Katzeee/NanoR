@@ -13,7 +13,8 @@ class EditorLayer : public nanoR::Layer {
 
   auto OnAttach() -> void override {
     auto e = scene_->CreateEntity();
-    mesh_ = nanoR::CreateMesh(&rhi_, nanoR::ResourceManager::GetCubeMeshData());
+    auto cube = nanoR::Model("../resources/models/Cube/cube.obj");
+    mesh_ = nanoR::CreateMesh(&rhi_, cube.meshes_.at(0));
     rhi_.CreateFramebuffer({}, fbo_);
     fbo_color_attachment_create_info_.internal_format = GL_RGBA8;
     fbo_color_attachment_create_info_.format = GL_RGB;
@@ -31,7 +32,9 @@ class EditorLayer : public nanoR::Layer {
     auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
     attach_color_attachment_info.level = 0;
     rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
-    shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
+    shader_program_ = nanoR::ResourceManager::GetLitShader(&rhi_);
+    // shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
+    t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
 
     nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
     buffer_create_info.data = nullptr;
@@ -60,8 +63,10 @@ class EditorLayer : public nanoR::Layer {
     bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
     rhi_.BindUniformBuffer(bind_uniform_buffer_info, shader_program_.get(), ubo_.get());
 
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View", view);
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("Proj", proj);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, t_white_);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue<int>("texture_diffuse0", 0);
+
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
 
@@ -133,12 +138,13 @@ class EditorLayer : public nanoR::Layer {
   nanoR::OpenGLMesh mesh_;
   nanoR::RHITextureCreateInfoOpenGL fbo_color_attachment_create_info_;
   std::shared_ptr<nanoR::RHITexture> t_fbo_color_attachment_;
+  GLuint t_white_ = 0;
 
   std::shared_ptr<nanoR::RHIBuffer> ubo_;
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
   nanoR::RHIOpenGL rhi_;
 
-  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{1, 0, 5}, {0, 0, 0}};
+  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{1, 1, 5}, {0, 0, 0}};
 };
 
 class InputLayer : public nanoR::Layer {

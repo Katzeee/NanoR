@@ -5,9 +5,12 @@
 #include <GLFW/glfw3.h>
 // clang-format on
 
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
 
+#include <assimp/Importer.hpp>
 #include <chrono>
 #include <cstdint>
 #include <deque>
@@ -24,6 +27,8 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
+#include "../3rdparty/stb_image.h"
 #include "logger/logger.h"

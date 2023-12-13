@@ -8,4 +8,15 @@ layout(std140, binding = 0) uniform Matrices {
   mat4 proj;
 };
 
-void main() { gl_Position = proj * view * vec4(position, 1); }
+out VS_OUT {
+  vec3 P;
+  vec3 N;
+  vec2 uv;
+} vs_out;
+
+void main() { 
+  gl_Position = proj * view * vec4(position, 1); 
+  // vs_out.P = (Model * vec4(position, 1)).xyz;
+  vs_out.uv = texcoord;
+  vs_out.N = normal;
+}
