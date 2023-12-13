@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <glm/gtx/quaternion.hpp>
 
 #include "context/context.hpp"
 #include "input/input_system.hpp"
@@ -16,8 +17,10 @@ Camera::Camera(glm::vec3 position, glm::vec3 target, ProjectionMethod projection
     : position_(position), projection_method_(projection_method) {
   front_ = glm::normalize(target - position);
   pitch_ = std::asin(front_.y);
-  yaw_ = (front_.z < 0 ? -1 : 1) * glm::acos(front_.x / std::cos(pitch_));
-  UpdateVectors();
+  // FIX: bug start up yaw
+  yaw_ = atan2(-front_.z, front_.x);
+  // UpdateVectors();
+  UpdateQuat();
 }
 
 auto Camera::GetProjectionMatrix() -> glm::mat4 {
@@ -26,7 +29,7 @@ auto Camera::GetProjectionMatrix() -> glm::mat4 {
   } else if (projection_method_ == ProjectionMethod::ORTHO) {
     // HINT: glm::ortho first suppose camera is face to z positive,
     // then as usual map near plane to 1, far plane to -1,
-    // so it must do a **z axis flip** before translate to origin and scale, 
+    // so it must do a **z axis flip** before translate to origin and scale,
     // which makes its matrix looks very wierd
     assert(far_ > near_ && "glm::ortho suppose far > near");
     return glm::ortho(left_, right_, bottom_, top_, near_, far_);
@@ -82,7 +85,8 @@ void Camera::UpdateCursorMove(float x_offset, float y_offset, float delta_time) 
   yaw_ += x_offset * Camera::sensitivity_ * delta_time * fov_;
   pitch_ -= y_offset * Camera::sensitivity_ * delta_time * fov_;
   CheckPitchSafety();
-  UpdateVectors();
+  // UpdateVectors();
+  UpdateQuat();
 }
 
 void Camera::UpdateFreeCamera(float delta_time) {
@@ -123,9 +127,10 @@ void Camera::CheckPitchSafety() {
 
 void Camera::UpdateVectors() {
   front_.y = std::sin(pitch_);
-  front_.x = std::cos(pitch_) * std::cos(yaw_);
-  front_.z = std::cos(pitch_) * std::sin(yaw_);
+  front_.x = std::cos(pitch_) * std::sin(yaw_);
+  front_.z = -std::cos(pitch_) * std::cos(yaw_);
   front_ = glm::normalize(front_);
+  // TODO: use glm::epsilonNotEqual()
   if (glm::distance(front_, glm::vec3{0, -1, 0}) < 0.01) {
     up_ = glm::vec3{0, 0, 1};
     return;
@@ -136,5 +141,18 @@ void Camera::UpdateVectors() {
   glm::vec3 right = glm::normalize(glm::cross(front_, Camera::world_up_));
   up_ = glm::normalize(glm::cross(right, front_));
 };
+
+void Camera::UpdateQuat() {
+  rotation_ = glm::angleAxis(yaw_, glm::vec3(0.0f, -1.0f, 0.0f));
+  rotation_ = glm::normalize(rotation_);
+  // local right vector
+  glm::vec3 right = glm::rotate(rotation_, glm::vec3(1.0f, 0.0f, 0.0f));
+  // pitch calc is based on local right
+  glm::quat rotQuat = glm::angleAxis(pitch_, right);
+  rotation_ = rotQuat * rotation_;
+  rotation_ = glm::normalize(rotation_);
+  front_ = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, -1.0f));
+  up_ = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
+}
 
 }  // end namespace xac
