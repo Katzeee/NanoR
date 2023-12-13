@@ -54,4 +54,8 @@ class InputSystem<Platform::Linux> {
   inline static uint32_t control_commad = 0;
 };
 
+static auto ReceiveCommand(ControlCommand command) -> bool {
+  return static_cast<uint32_t>(command) & InputSystem<Platform::Linux>::control_commad;
+}
+
 }  // namespace nanoR

@@ -19,8 +19,6 @@ enum class Platform {
 };
 
 template <Platform T>
-class InputSystem {
- private:
-};
+class InputSystem {};
 
 }  // namespace nanoR

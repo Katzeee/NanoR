@@ -1,5 +1,6 @@
 #pragma once
 #include "nanorpch.h"
+#include "platform/input_system_glfw.h"
 
 namespace nanoR {
 
@@ -17,7 +18,7 @@ class Camera<CameraType::kPersp> {
   Camera(glm::vec3 position, glm::vec3 target) : position_(position) {
     auto front = glm::normalize(target - position);
     pitch_ = std::asin(front.y);
-    yaw_ = atan2(-front.z, front.x);
+    yaw_ = atan2(-front.x, front.z);
     UpdateQuat();
   }
   auto GetProjectionMatrix() -> glm::mat4 {
@@ -25,9 +26,34 @@ class Camera<CameraType::kPersp> {
   }
 
   auto GetViewMatrix() -> glm::mat4 {
-    auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, -1.0f));
+    auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
     auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
     return glm::lookAt(position_, position_ + front, up);
+  }
+
+  auto Tick(uint64_t delta_time) -> void {
+    float distance = delta_time * speed_ / 1000;
+    auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, -1.0f));
+    auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
+    if (ReceiveCommand(ControlCommand::kForward)) {
+      position_ += front * distance;
+    }
+    if (ReceiveCommand(ControlCommand::kBackward)) {
+      position_ += front * -distance;
+    }
+    if (ReceiveCommand(ControlCommand::kRight)) {
+      position_ += glm::cross(front, up) * -distance;
+    }
+    if (ReceiveCommand(ControlCommand::kLeft)) {
+      position_ += glm::cross(front, up) * distance;
+    }
+    // UpdateQuat();
+    // if (ReceiveCommand(ControlCommand::UP)) {
+    //   position_ += world_up_ * distance;
+    // }
+    // if (ReceiveCommand(ControlCommand::DOWN)) {
+    //   position_ += world_up_ * -distance;
+    // }
   }
 
  private:
@@ -49,6 +75,7 @@ class Camera<CameraType::kPersp> {
   // rotation around x
   float pitch_;
   glm::vec3 position_;
+  float speed_ = 1.5f;
 
   float fov_ = 45.0f;
   float aspect_ = 1.5f;

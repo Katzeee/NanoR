@@ -19,7 +19,7 @@ auto Application::Run() -> void {
   while (is_running_) {
     auto now = std::chrono::high_resolution_clock::now();
     static auto last = now;
-    uint64_t delta = std::chrono::duration_cast<std::chrono::microseconds>(now - last).count();
+    uint64_t delta = std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count();
     last = now;
     for (auto&& it : layer_stack_->GetLayers()) {
       it->Tick(delta);

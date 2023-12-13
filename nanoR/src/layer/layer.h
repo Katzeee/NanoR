@@ -7,7 +7,7 @@ class Layer {
  public:
   Layer(std::string const& name);
   virtual auto OnAttach() -> void;
-  // HINT: the unit of delta_time is microseconds
+  // HINT: the unit of delta_time is milliseconds
   virtual auto Tick(uint64_t delta_time) -> void;
   virtual auto OnDetach() -> void;
   virtual auto OnEvent(std::shared_ptr<Event> const& event) -> void;

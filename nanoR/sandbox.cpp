@@ -55,9 +55,17 @@ class EditorLayer : public nanoR::Layer {
   }
 
   auto Tick(uint64_t delta_time) -> void override {
+    main_camera_.Tick(delta_time);
+    glBindFramebuffer(GL_FRAMEBUFFER, dynamic_cast<nanoR::RHIFramebufferOpenGL*>(fbo_.get())->id);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View", glm::mat4{1});
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // auto view = glm::lookAt({-0.5, 0, 0}, glm::vec3{-0.5, 0, 1}, {0, 1, 0});
+    auto view = main_camera_.GetViewMatrix();
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View", view);
+    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("View",
+    // main_camera_.GetViewMatrix());
     rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
 
@@ -129,7 +137,7 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
   nanoR::RHIOpenGL rhi_;
 
-  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{0, 0, -5}, {0, 0, 0}};
+  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{0, 0, 0}, {0, 0, 1}};
 };
 
 class InputLayer : public nanoR::Layer {
