@@ -10,7 +10,7 @@ xac::GlobalContext global_context;
 namespace xac {
 
 void GlobalContext::Init() {
-  camera_ = std::make_unique<Camera>(glm::vec3{0, 10, 15}, glm::vec3{0});
+  camera_ = std::make_unique<Camera>(glm::vec3{0, 10, 25}, glm::vec3{0, 0, 0});
   window_ = std::make_unique<Window>();
   input_system_ = std::make_unique<InputSystem>();
   input_system_->Init(window_->GetRawWindow());

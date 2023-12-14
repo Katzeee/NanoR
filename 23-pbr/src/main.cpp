@@ -133,6 +133,7 @@ auto main() -> int {
 
   auto s_unlit = std::make_shared<xac::Shader>("../23-pbr/shader/common.vert.glsl", "../23-pbr/shader/unlit.frag.glsl");
   auto s_lit = std::make_shared<xac::Shader>("../23-pbr/shader/common.vert.glsl", "../23-pbr/shader/lit.frag.glsl");
+  auto s_pbr = std::make_shared<xac::Shader>("../23-pbr/shader/common.vert.glsl", "../23-pbr/shader/pbr.frag.glsl");
   auto s_skybox =
       std::make_shared<xac::Shader>("../23-pbr/shader/skybox.vert.glsl", "../23-pbr/shader/skybox.frag.glsl");
   auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
@@ -299,7 +300,6 @@ auto main() -> int {
         break;
     }
   });
-
 #pragma endregion
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -424,13 +424,13 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region render herta
-    s_lit->Use();
-    s_lit->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
-    m_herta.Draw();
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glDepthFunc(GL_NEVER + global_context.imgui_layer_->GetWatchVar<int>("gl_depth_func").Value());
-    // HINT: or else can't clear stencil buffer bit
-    glad_glStencilMask(0xFF);
+    // s_lit->Use();
+    // s_lit->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
+    // m_herta.Draw();
+    // glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    // glDepthFunc(GL_NEVER + global_context.imgui_layer_->GetWatchVar<int>("gl_depth_func").Value());
+    // // HINT: or else can't clear stencil buffer bit
+    // glad_glStencilMask(0xFF);
 #pragma endregion
   };
 
@@ -460,32 +460,32 @@ auto main() -> int {
     global_context.camera_->Tick(delta_time_per_frame);
     xac::InputSystem::Tick();
 
-#pragma region Render Depth Map
-    auto light_cam = xac::Camera(d_light0_pos, glm::vec3{0}, xac::Camera::ProjectionMethod::ORTHO);
-    auto frustum = global_context.camera_->GetFrustumInWorld();
-    // auto frustum = debug_frustum;
-    auto light_cam_view = light_cam.GetViewMatrix();
-    std::ranges::for_each(frustum, [&light_cam_view](auto &&p) {
-      auto p_ls = light_cam_view * glm::vec4{p, 1.0};
-      p = glm::vec3{p_ls / p_ls.w};
-    });
-    auto min_max_x = std::ranges::minmax(frustum, {}, &glm::vec3::x);
-    auto min_max_y = std::ranges::minmax(frustum, {}, &glm::vec3::y);
-    auto min_max_z = std::ranges::minmax(frustum, {}, &glm::vec3::z);
-    auto left = min_max_x.min.x;
-    auto right = min_max_x.max.x;
-    auto bottom = min_max_y.min.y;
-    auto top = min_max_y.max.y;
-    // look to z negative
-    auto near = min_max_z.max.z;
-    auto far = min_max_z.min.z;
-    light_cam.SetOrtho(left, right, bottom, top);
-    // HINT: Fuck glm::ortho
-    light_cam.SetNear(-near);
-    light_cam.SetFar(-far);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
-    glViewport(0, 0, depth_map_h_w, depth_map_h_w);
-    DrawScene(delta_time_per_frame, light_cam);
+#pragma region Render Shadow Map
+    // auto light_cam = xac::Camera(d_light0_pos, glm::vec3{0}, xac::Camera::ProjectionMethod::ORTHO);
+    // auto frustum = global_context.camera_->GetFrustumInWorld();
+    // // auto frustum = debug_frustum;
+    // auto light_cam_view = light_cam.GetViewMatrix();
+    // std::ranges::for_each(frustum, [&light_cam_view](auto &&p) {
+    //   auto p_ls = light_cam_view * glm::vec4{p, 1.0};
+    //   p = glm::vec3{p_ls / p_ls.w};
+    // });
+    // auto min_max_x = std::ranges::minmax(frustum, {}, &glm::vec3::x);
+    // auto min_max_y = std::ranges::minmax(frustum, {}, &glm::vec3::y);
+    // auto min_max_z = std::ranges::minmax(frustum, {}, &glm::vec3::z);
+    // auto left = min_max_x.min.x;
+    // auto right = min_max_x.max.x;
+    // auto bottom = min_max_y.min.y;
+    // auto top = min_max_y.max.y;
+    // // look to z negative
+    // auto near = min_max_z.max.z;
+    // auto far = min_max_z.min.z;
+    // light_cam.SetOrtho(left, right, bottom, top);
+    // // HINT: Fuck glm::ortho
+    // light_cam.SetNear(-near);
+    // light_cam.SetFar(-far);
+    // glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
+    // glViewport(0, 0, depth_map_h_w, depth_map_h_w);
+    // DrawScene(delta_time_per_frame, light_cam);
 #pragma endregion
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(
@@ -499,29 +499,31 @@ auto main() -> int {
     // s_lit->SetInt("depth_map", 12);
     DrawScene(delta_time_per_frame, *global_context.camera_);
 
-    s_unlit->Use();
-    auto identity = glm::mat4{1};
-    s_unlit->SetMat4("Model", identity);
-    glm::mat4 view = global_context.camera_->GetViewMatrix();
-    glm::mat4 proj = global_context.camera_->GetProjectionMatrix();
-    glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&view));
-    glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_white);
-    s_unlit->SetInt("tex", 0);
-    s_unlit->SetVec4("color", glm::vec4{1, 0, 0, 1});
-    DrawBox(debug_frustum);
-    s_unlit->SetVec4("color", glm::vec4{0, 1, 0, 1});
-    auto light_frustum = std::array<glm::vec3, 8>{
-        glm::vec3{left, bottom, near},  glm::vec3{left, top, near},    glm::vec3{right, top, near},
-        glm::vec3{right, bottom, near}, glm::vec3{left, bottom, far},  glm::vec3{left, top, far},
-        glm::vec3{right, top, far},     glm::vec3{right, bottom, far},
-    };
-    std::ranges::for_each(light_frustum, [&light_cam_view](auto &&p) {
-      auto p_ls = glm::inverse(light_cam_view) * glm::vec4{p, 1.0};
-      p = glm::vec3{p_ls / p_ls.w};
-    });
-    DrawBox(light_frustum);
+#pragma region Debug shadow map
+    // s_unlit->Use();
+    // auto identity = glm::mat4{1};
+    // s_unlit->SetMat4("Model", identity);
+    // glm::mat4 view = global_context.camera_->GetViewMatrix();
+    // glm::mat4 proj = global_context.camera_->GetProjectionMatrix();
+    // glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&view));
+    // glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, t_white);
+    // s_unlit->SetInt("tex", 0);
+    // s_unlit->SetVec4("color", glm::vec4{1, 0, 0, 1});
+    // DrawBox(debug_frustum);
+    // s_unlit->SetVec4("color", glm::vec4{0, 1, 0, 1});
+    // auto light_frustum = std::array<glm::vec3, 8>{
+    //     glm::vec3{left, bottom, near},  glm::vec3{left, top, near},    glm::vec3{right, top, near},
+    //     glm::vec3{right, bottom, near}, glm::vec3{left, bottom, far},  glm::vec3{left, top, far},
+    //     glm::vec3{right, top, far},     glm::vec3{right, bottom, far},
+    // };
+    // std::ranges::for_each(light_frustum, [&light_cam_view](auto &&p) {
+    //   auto p_ls = glm::inverse(light_cam_view) * glm::vec4{p, 1.0};
+    //   p = glm::vec3{p_ls / p_ls.w};
+    // });
+    // DrawBox(light_frustum);
+#pragma endregion
 #pragma region render to quad
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glClearColor(0.5f, 1.0f, 1.0f, 1.0f);

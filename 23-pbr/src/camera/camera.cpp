@@ -11,14 +11,13 @@ namespace xac {
 glm::vec3 Camera::world_up_{0, 1, 0};
 float Camera::sensitivity_ = 0.02;
 
-Camera::Camera() : Camera(glm::vec3{0, 0, 5}, glm::vec3{0}) {}
+Camera::Camera() : Camera(glm::vec3{0, 0, 5}, glm::vec3{0, 0, 0}) {}
 
 Camera::Camera(glm::vec3 position, glm::vec3 target, ProjectionMethod projection_method)
     : position_(position), projection_method_(projection_method) {
-  front_ = glm::normalize(target - position);
+  front_ = glm::normalize(target - position_);
   pitch_ = std::asin(front_.y);
-  // FIX: bug start up yaw
-  yaw_ = atan2(-front_.z, front_.x);
+  yaw_ = atan2(-front_.x, front_.z);
   // UpdateVectors();
   UpdateQuat();
 }
@@ -146,12 +145,12 @@ void Camera::UpdateQuat() {
   rotation_ = glm::angleAxis(yaw_, glm::vec3(0.0f, -1.0f, 0.0f));
   rotation_ = glm::normalize(rotation_);
   // local right vector
-  glm::vec3 right = glm::rotate(rotation_, glm::vec3(1.0f, 0.0f, 0.0f));
+  glm::vec3 right = glm::rotate(rotation_, glm::vec3(-1.0f, 0.0f, 0.0f));
   // pitch calc is based on local right
   glm::quat rotQuat = glm::angleAxis(pitch_, right);
   rotation_ = rotQuat * rotation_;
   rotation_ = glm::normalize(rotation_);
-  front_ = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, -1.0f));
+  front_ = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
   up_ = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 

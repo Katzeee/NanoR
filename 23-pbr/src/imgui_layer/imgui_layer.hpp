@@ -1,13 +1,14 @@
 #pragma once
-#include <GLFW/glfw3.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <stdexcept>
 
 #include "utils.hpp"
+
+class GLFWwindow;
 
 namespace xac {
 class ImguiLayer {

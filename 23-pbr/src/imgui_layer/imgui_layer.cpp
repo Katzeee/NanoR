@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "camera/camera.hpp"
 #include "context/context.hpp"
 
 namespace xac {
@@ -115,10 +116,19 @@ auto ImguiLayer::Render() -> void {
   // }
   ImGui::End();
 
-  ImGui::Begin("Debug image");
-  // FIX: Can't see anything without doing LinearizeDepth
-  ImGui::Image(reinterpret_cast<void *>(13), ImVec2{256, 256});
-  ImGui::End();
+  {
+    ImGui::Begin("Input");
+    auto front = global_context.camera_->GetFornt();
+    auto position = global_context.camera_->GetPosition();
+    ImGui::Text("Position: %f, %f, %f ", position.x, position.y, position.z);
+    ImGui::Text("Front: %f, %f, %f ", front.x, front.y, front.z);
+    ImGui::End();
+  }
+
+  // ImGui::Begin("Debug image");
+  // // FIX: Can't see anything without doing LinearizeDepth
+  // ImGui::Image(reinterpret_cast<void *>(13), ImVec2{256, 256});
+  // ImGui::End();
 
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
