@@ -152,7 +152,7 @@ auto main() -> int {
   m_light.SetShader(s_unlit);
   m_herta.SetShader(s_lit);
   m_ground.SetShader(s_lit);
-  m_box.SetShader(s_lit);
+  m_box.SetShader(s_pbr);
   m_quad.SetShader(s_unlit);
 #pragma endregion
 
@@ -224,7 +224,7 @@ auto main() -> int {
 #pragma region imgui variables
   struct PointLight {
     glm::vec4 color = glm::vec4{1};
-    float intensity = 5;
+    float intensity = 15;
   };
   struct DirectLight {
     glm::vec4 color = glm::vec4{1};
@@ -317,13 +317,7 @@ auto main() -> int {
 #pragma region render light
     glm::mat4 light0_model(1.0f);
     float rotate_speed = 0.5;
-    // make light rotate
-    static float decimal = 0;
-    decimal += rotate_speed * delta_time - std::floor(rotate_speed * delta_time);
-    float phi = glm::radians(360 * decimal);
-    glm::vec3 p_light0_pos(5 * std::cos(phi), 0, 5 * std::sin(phi));
-    p_light0_pos =
-        glm::rotate(glm::mat4(1.0f), glm::radians(rotation_degree), rotation_axis) * glm::vec4(p_light0_pos, 1);
+    glm::vec3 p_light0_pos(8, 9, -4);
     // Because you do the transformation by the order scale->rotate->translate,
     // glm functions are doing right multiply, so
     // the model matrix should reverse it, that is translate->rotate->scale
@@ -341,7 +335,7 @@ auto main() -> int {
     m_light.Draw();
 
     s_unlit->Use();
-    glm::vec3 p_light1_pos{3, 2, 0};
+    glm::vec3 p_light1_pos{3, 7, 0};
     auto light1_model = glm::scale(glm::translate(glm::mat4{1}, p_light1_pos), glm::vec3{0.2});
     s_unlit->SetMat4("Model", light1_model);
     s_unlit->SetVec4("color", p_lights[1].color);
@@ -372,53 +366,61 @@ auto main() -> int {
     // s_lit->SetVec3("p_lights[2].ws_position", light2_pos);
     // s_lit->SetVec3("p_lights[2].color", p_lights[2].color);
     // s_lit->SetFloat("p_lights[2].intensity", p_lights[2].intensity * 300);
-
     s_lit->SetVec3("d_lights[0].direction", d_lights[0].direction);
     s_lit->SetVec3("d_lights[0].color", d_lights[0].color);
     s_lit->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
     s_lit->SetVec3("ws_cam_pos", camera.GetPosition());
+
+    s_pbr->Use();
+    s_pbr->SetVec3("p_lights[0].ws_position", p_light0_pos);
+    s_pbr->SetVec3("p_lights[0].color", p_lights[0].color);
+    s_pbr->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
+    s_pbr->SetVec3("p_lights[1].ws_position", p_light1_pos);
+    s_pbr->SetVec3("p_lights[1].color", p_lights[1].color);
+    s_pbr->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
 #pragma endregion
 
 #pragma region render ground
-    s_lit->Use();
-    auto ground_model = glm::mat4(1);
-    // you should do scale and rotation at origin!
-    // ground_model = glm::translate(ground_model, {0, 0, 0});
-    // ground_model = glm::rotate(ground_model, glm::radians(30.0f), {0, 1, 0});
-    ground_model = glm::scale(ground_model, {150, 1, 150});
-    ground_model = glm::translate(ground_model, {0, -0.5, 0});  // move to origin then scale
-    s_lit->SetMat4("Model", ground_model);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, t_white);
-    s_lit->SetInt("texture_diffuse0", 0);
-    s_lit->SetInt("texture_specular0", 1);
-    m_ground.Draw();
+    // s_lit->Use();
+    // auto ground_model = glm::mat4(1);
+    // // you should do scale and rotation at origin!
+    // // ground_model = glm::translate(ground_model, {0, 0, 0});
+    // // ground_model = glm::rotate(ground_model, glm::radians(30.0f), {0, 1, 0});
+    // ground_model = glm::scale(ground_model, {150, 1, 150});
+    // ground_model = glm::translate(ground_model, {0, -0.5, 0});  // move to origin then scale
+    // s_lit->SetMat4("Model", ground_model);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, t_white);
+    // s_lit->SetInt("texture_diffuse0", 0);
+    // s_lit->SetInt("texture_specular0", 1);
+    // m_ground.Draw();
 #pragma endregion
 
 #pragma region render cubes
-    s_lit->Use();
-    s_lit->SetVec4("base_color", glm::vec4{1});
+    s_pbr->Use();
+    s_pbr->SetVec3("albedo", glm::vec3{1});
+    // s_pbr->SetFloat("roughness", 0.5);
     // you should do scale and rotation at origin!
     auto cube_model = glm::mat4(1);
-    cube_model = glm::translate(cube_model, {20.0, 0, -30.0});
+    cube_model = glm::translate(cube_model, {0.0, 0, -10.0});
     cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, {5, 5, 5});
-    s_lit->SetMat4("Model", cube_model);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_box_diffuse);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, t_box_specular);
-    s_lit->SetInt("texture_diffuse0", 0);
-    s_lit->SetInt("texture_specular0", 1);
+    s_pbr->SetMat4("Model", cube_model);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, t_box_diffuse);
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, t_box_specular);
+    // s_pbr->SetInt("texture_diffuse0", 0);
+    // s_pbr->SetInt("texture_specular0", 1);
     m_box.Draw();
 
     cube_model = glm::mat4(1);
     cube_model = glm::translate(cube_model, {0, 25.0, 10});
     cube_model = glm::rotate(cube_model, glm::radians(20.0f), {0, 1, 0});
     cube_model = glm::scale(cube_model, glm::vec3{2});
-    s_lit->SetMat4("Model", cube_model);
+    s_pbr->SetMat4("Model", cube_model);
 
     m_box.Draw();
 #pragma endregion
