@@ -6,12 +6,12 @@ in VS_OUT {
   vec2 uv;
 } fs_in;
 
-uniform vec4 color = vec4(1);
+uniform vec3 color = vec3(1);
 uniform sampler2D tex;
 
 out vec4 FragColor;
 
 void main() { 
   // FragColor = color * texture(tex, fs_in.uv); 
-  FragColor = color;
+  FragColor = vec4(color, 1);
 }

@@ -214,6 +214,8 @@ auto main() -> int {
   auto s_unlit = std::make_shared<xac::Shader>("../23-pbr/shader/common.vert.glsl", "../23-pbr/shader/unlit.frag.glsl");
   auto s_lit = std::make_shared<xac::Shader>("../23-pbr/shader/common.vert.glsl", "../23-pbr/shader/lit.frag.glsl");
   auto s_pbr = std::make_shared<xac::Shader>("../23-pbr/shader/common.vert.glsl", "../23-pbr/shader/pbr.frag.glsl");
+  s_pbr->AddDefine("vert", "MODEL_NORMAL");
+  s_pbr->CompileShaders();
   auto s_skybox =
       std::make_shared<xac::Shader>("../23-pbr/shader/skybox.vert.glsl", "../23-pbr/shader/skybox.frag.glsl");
   auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
@@ -393,6 +395,8 @@ auto main() -> int {
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glm::vec3 d_light0_pos = d_lights[0].direction * 60.0f;
 
+  assert(glGetError() == GL_NO_ERROR);
+
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -424,7 +428,7 @@ auto main() -> int {
     s_unlit->Use();
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light0_pos), glm::vec3{3.0f});
     s_unlit->SetMat4("Model", d_light_model);
-    s_unlit->SetVec4("color", d_lights[0].color);
+    s_unlit->SetVec3("color", d_lights[0].color);
     m_light.Draw();
 #pragma endregion
 
@@ -487,8 +491,10 @@ auto main() -> int {
         model =
             glm::translate(model, glm::vec3(spacing * (col - (nrColumns / 2)), (row - (nrRows / 2)) * spacing, 0.0f));
         s_pbr->SetMat4("Model", model);
-        // s_pbr->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        s_pbr->SetMat3("normal_model_to_world", glm::transpose(glm::inverse(glm::mat3(model))));
+        assert(glGetError() == GL_NO_ERROR);
         glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+        assert(glGetError() == GL_NO_ERROR);
       }
     }
     // s_pbr->SetFloat("roughness", 0.5);

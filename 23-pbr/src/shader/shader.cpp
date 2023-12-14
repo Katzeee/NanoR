@@ -82,6 +82,10 @@ void Shader::SetFloat(std::string_view name, float value) const {
   glUniform1f(glGetUniformLocation(id_, name.data()), value);
 }
 
+void Shader::SetMat3(std::string_view name, const glm::mat3 &mat) const {
+  glUniformMatrix3fv(glGetUniformLocation(id_, name.data()), 1, GL_FALSE, glm::value_ptr(mat));
+}
+
 void Shader::SetMat4(std::string_view name, const glm::mat4 &mat) const {
   glUniformMatrix4fv(glGetUniformLocation(id_, name.data()), 1, GL_FALSE, glm::value_ptr(mat));
 }

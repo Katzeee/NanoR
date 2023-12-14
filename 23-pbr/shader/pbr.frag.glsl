@@ -32,19 +32,19 @@ float DistributionGGX(vec3 N, vec3 H, float roughness) {
   float a = roughness * roughness;
   float a_square = a * a;
   float nh = max(dot(N, H), 0.0);
-  float denom = (nh * nh) * (a_square - 1) + 1;
+  float denom = (nh * nh) * (a_square - 1.0) + 1.0;
   denom = PI * denom * denom;
   return a_square / denom;
 }
 
 float GeometrySchlickGGX(vec3 N, vec3 D, float roughness) {
   float nd = max(dot(N, D), 0.0);
-  float k = (roughness + 1) * (roughness + 1) / 8;
-  float denom = nd * (1 - k) + k;
+  float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+  float denom = nd * (1.0 - k) + k;
   return nd / denom;
 }
 
-float GeometrytSmith(vec3 N, vec3 V, vec3 L, float roughness) {
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
   float G1nl = GeometrySchlickGGX(N, L, roughness);
   float G1nv = GeometrySchlickGGX(N, V, roughness);
   return G1nl * G1nv;
@@ -60,8 +60,7 @@ void main() {
   for (int i = 0; i < 4; i++) {
     PointLight light = p_lights[i];
     vec3 L = light.ws_position - fs_in.P;
-    float attennuation = 1 / length(L) / length(L);
-    // float attennuation = 1;
+    float attennuation = 1.0 / length(L) / length(L);
     L = normalize(L);
     vec3 H = normalize(L + V);
     float nl = max(dot(N, L), 0.0);
@@ -70,7 +69,7 @@ void main() {
     vec3 Kd = vec3(1.0) - Ks;
     Kd *= 1.0 - metallic;
     float D = DistributionGGX(N, H, roughness);
-    float G = GeometrytSmith(N, V, L, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
     // float D = 1;
     // float G = 1;
     vec3 nom = D * G * F;
@@ -80,5 +79,6 @@ void main() {
     specular += nom / denom * light.color * light.intensity * nl * attennuation;
     diffuse += Kd * albedo / PI * light.color * light.intensity * nl * attennuation;
   }
-  FragColor = vec4(diffuse + specular, 1);
+  FragColor = vec4(diffuse + specular, 1.0);
+  // FragColor = vec4(N, 1.0);
 }
