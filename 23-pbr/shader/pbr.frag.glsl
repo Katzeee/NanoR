@@ -15,9 +15,9 @@ struct PointLight {
 
 uniform vec3 ws_cam_pos;
 
-uniform vec3 albedo;
-uniform float metallic = 0;
-uniform float roughness = 1;
+uniform vec3 albedo = vec3(0.5, 0, 0);
+uniform float metallic;
+uniform float roughness;
 uniform float ao;
 uniform PointLight p_lights[4];
 
@@ -26,7 +26,7 @@ const float PI = 3.14159265359;
 out vec4 FragColor;
 
 // clamp to avoid black points
-vec3 fresnelSchlick(float cosTheta, vec3 F0) { return F0 + (1 - F0) * pow(clamp(1 - cosTheta, 0.0, 1.0), 5); }
+vec3 fresnelSchlick(float cosTheta, vec3 F0) { return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0); }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
   float a = roughness * roughness;
@@ -44,7 +44,7 @@ float GeometrySchlickGGX(vec3 N, vec3 D, float roughness) {
   return nd / denom;
 }
 
-float GeomerytSmith(vec3 N, vec3 V, vec3 L, float roughness) {
+float GeometrytSmith(vec3 N, vec3 V, vec3 L, float roughness) {
   float G1nl = GeometrySchlickGGX(N, L, roughness);
   float G1nv = GeometrySchlickGGX(N, V, roughness);
   return G1nl * G1nv;
@@ -57,7 +57,7 @@ void main() {
   vec3 V = normalize(ws_cam_pos - fs_in.P);
   vec3 F0 = vec3(0.04);
   F0 = mix(F0, albedo, metallic);
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 4; i++) {
     PointLight light = p_lights[i];
     vec3 L = light.ws_position - fs_in.P;
     float attennuation = 1 / length(L) / length(L);
@@ -70,15 +70,15 @@ void main() {
     vec3 Kd = vec3(1.0) - Ks;
     Kd *= 1.0 - metallic;
     float D = DistributionGGX(N, H, roughness);
-    float G = GeomerytSmith(N, V, L, roughness);
+    float G = GeometrytSmith(N, V, L, roughness);
     // float D = 1;
     // float G = 1;
     vec3 nom = D * G * F;
     // avoid devide 0
     float denom = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001;
+    // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     specular += nom / denom * light.color * light.intensity * nl * attennuation;
     diffuse += Kd * albedo / PI * light.color * light.intensity * nl * attennuation;
   }
-
-  FragColor = vec4(specular + diffuse, 1);
+  FragColor = vec4(diffuse + specular, 1);
 }

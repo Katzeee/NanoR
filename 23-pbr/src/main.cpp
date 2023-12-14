@@ -39,6 +39,86 @@ static auto InCommand(xac::ControlCommand command) -> bool {
   return static_cast<uint32_t>(command) & global_context.control_commad_;
 }
 
+unsigned int indexCount;
+static auto GenSphereMesh() -> unsigned int {
+  unsigned int sphereVAO = 0;
+  glGenVertexArrays(1, &sphereVAO);
+
+  unsigned int vbo, ebo;
+  glGenBuffers(1, &vbo);
+  glGenBuffers(1, &ebo);
+
+  std::vector<glm::vec3> positions;
+  std::vector<glm::vec2> uv;
+  std::vector<glm::vec3> normals;
+  std::vector<unsigned int> indices;
+
+  const unsigned int X_SEGMENTS = 64;
+  const unsigned int Y_SEGMENTS = 64;
+  const float PI = 3.14159265359f;
+  for (unsigned int x = 0; x <= X_SEGMENTS; ++x) {
+    for (unsigned int y = 0; y <= Y_SEGMENTS; ++y) {
+      float xSegment = (float)x / (float)X_SEGMENTS;
+      float ySegment = (float)y / (float)Y_SEGMENTS;
+      float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+      float yPos = std::cos(ySegment * PI);
+      float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+
+      positions.push_back(glm::vec3(xPos, yPos, zPos));
+      uv.push_back(glm::vec2(xSegment, ySegment));
+      normals.push_back(glm::vec3(xPos, yPos, zPos));
+    }
+  }
+
+  bool oddRow = false;
+  for (unsigned int y = 0; y < Y_SEGMENTS; ++y) {
+    if (!oddRow)  // even rows: y == 0, y == 2; and so on
+    {
+      for (unsigned int x = 0; x <= X_SEGMENTS; ++x) {
+        indices.push_back(y * (X_SEGMENTS + 1) + x);
+        indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+      }
+    } else {
+      for (int x = X_SEGMENTS; x >= 0; --x) {
+        indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+        indices.push_back(y * (X_SEGMENTS + 1) + x);
+      }
+    }
+    oddRow = !oddRow;
+  }
+  indexCount = static_cast<unsigned int>(indices.size());
+
+  std::vector<float> data;
+  for (unsigned int i = 0; i < positions.size(); ++i) {
+    data.push_back(positions[i].x);
+    data.push_back(positions[i].y);
+    data.push_back(positions[i].z);
+    if (normals.size() > 0) {
+      data.push_back(normals[i].x);
+      data.push_back(normals[i].y);
+      data.push_back(normals[i].z);
+    }
+    if (uv.size() > 0) {
+      data.push_back(uv[i].x);
+      data.push_back(uv[i].y);
+    }
+  }
+  glBindVertexArray(sphereVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+  unsigned int stride = (3 + 2 + 3) * sizeof(float);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void *)(6 * sizeof(float)));
+
+  return sphereVAO;
+}
+
 auto main() -> int {
   global_context.Init();
   float delta_time_per_frame;
@@ -154,6 +234,8 @@ auto main() -> int {
   m_ground.SetShader(s_lit);
   m_box.SetShader(s_pbr);
   m_quad.SetShader(s_unlit);
+
+  auto vao_sphere = GenSphereMesh();
 #pragma endregion
 
 #pragma region depth framebuffer
@@ -223,17 +305,23 @@ auto main() -> int {
 
 #pragma region imgui variables
   struct PointLight {
-    glm::vec4 color = glm::vec4{1};
-    float intensity = 15;
+    glm::vec3 color = glm::vec3{1};
+    float intensity = 300;
   };
   struct DirectLight {
     glm::vec4 color = glm::vec4{1};
     float intensity = 1;
     glm::vec3 direction = glm::vec3{1, 1, 1};
   };
+  glm::vec3 p_light_positions[] = {
+      glm::vec3(-10.0f, 10.0f, 10.0f),
+      glm::vec3(10.0f, 10.0f, 10.0f),
+      glm::vec3(-10.0f, -10.0f, 10.0f),
+      glm::vec3(10.0f, -10.0f, 10.0f),
+  };
 
   glm::vec4 background_color{};
-  PointLight p_lights[3];
+  PointLight p_lights[4];
   DirectLight d_lights[1];
   glm::vec3 rotation_axis{1, 1, 1};
   float rotation_degree{60};
@@ -315,38 +403,23 @@ auto main() -> int {
     glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
 
 #pragma region render light
-    glm::mat4 light0_model(1.0f);
-    float rotate_speed = 0.5;
-    glm::vec3 p_light0_pos(8, 9, -4);
-    // Because you do the transformation by the order scale->rotate->translate,
-    // glm functions are doing right multiply, so
-    // the model matrix should reverse it, that is translate->rotate->scale
-    light0_model = glm::translate(light0_model, p_light0_pos);
-    light0_model = glm::scale(light0_model, glm::vec3(0.2f));
-
     s_unlit->Use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_white);
     s_unlit->SetInt("tex", 0);
 
-    s_unlit->Use();
-    s_unlit->SetMat4("Model", light0_model);
-    s_unlit->SetVec4("color", p_lights[0].color);
-    m_light.Draw();
-
-    s_unlit->Use();
-    glm::vec3 p_light1_pos{3, 7, 0};
-    auto light1_model = glm::scale(glm::translate(glm::mat4{1}, p_light1_pos), glm::vec3{0.2});
-    s_unlit->SetMat4("Model", light1_model);
-    s_unlit->SetVec4("color", p_lights[1].color);
-    m_light.Draw();
-
-    // s_unlit->Use();
-    // glm::vec3 p_light2_pos{0, -10, 0};
-    // auto light2_model = glm::scale(glm::translate(glm::mat4{1}, p_light2_pos), glm::vec3{2});
-    // s_unlit->SetMat4("Model", light2_model);
-    // s_unlit->SetVec4("color", p_lights[2].color);
-    // m_light.Draw();
+    for (int i = 0; i < 4; i++) {
+      glm::mat4 model{1.0f};
+      glm::vec3 position = p_light_positions[i];
+      // Because you do the transformation by the order scale->rotate->translate,
+      // glm functions are doing right multiply, so
+      // the model matrix should reverse it, that is translate->rotate->scale
+      model = glm::translate(model, position);
+      model = glm::scale(model, glm::vec3(0.2f));
+      s_unlit->SetMat4("Model", model);
+      s_unlit->SetVec3("color", p_lights[i].color);
+      m_light.Draw();
+    }
 
     s_unlit->Use();
     auto d_light_model = glm::scale(glm::translate(glm::mat4{1}, d_light0_pos), glm::vec3{3.0f});
@@ -357,27 +430,24 @@ auto main() -> int {
 
 #pragma region common settings for obj shader
     s_lit->Use();
-    s_lit->SetVec3("p_lights[0].ws_position", p_light0_pos);
-    s_lit->SetVec3("p_lights[0].color", p_lights[0].color);
-    s_lit->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
-    s_lit->SetVec3("p_lights[1].ws_position", p_light1_pos);
-    s_lit->SetVec3("p_lights[1].color", p_lights[1].color);
-    s_lit->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
-    // s_lit->SetVec3("p_lights[2].ws_position", light2_pos);
-    // s_lit->SetVec3("p_lights[2].color", p_lights[2].color);
-    // s_lit->SetFloat("p_lights[2].intensity", p_lights[2].intensity * 300);
+    for (int i = 0; i < 4; i++) {
+      s_lit->SetVec3("p_lights[" + std::to_string(i) + "].ws_position", p_light_positions[i]);
+      s_lit->SetVec3("p_lights[" + std::to_string(i) + "].color", p_lights[i].color);
+      s_lit->SetFloat("p_lights[" + std::to_string(i) + "].intensity", p_lights[i].intensity);
+    }
+
     s_lit->SetVec3("d_lights[0].direction", d_lights[0].direction);
     s_lit->SetVec3("d_lights[0].color", d_lights[0].color);
     s_lit->SetFloat("d_lights[0].intensity", d_lights[0].intensity);
     s_lit->SetVec3("ws_cam_pos", camera.GetPosition());
 
     s_pbr->Use();
-    s_pbr->SetVec3("p_lights[0].ws_position", p_light0_pos);
-    s_pbr->SetVec3("p_lights[0].color", p_lights[0].color);
-    s_pbr->SetFloat("p_lights[0].intensity", p_lights[0].intensity);
-    s_pbr->SetVec3("p_lights[1].ws_position", p_light1_pos);
-    s_pbr->SetVec3("p_lights[1].color", p_lights[1].color);
-    s_pbr->SetFloat("p_lights[1].intensity", p_lights[1].intensity);
+    for (int i = 0; i < 4; i++) {
+      s_pbr->SetVec3("p_lights[" + std::to_string(i) + "].ws_position", p_light_positions[i]);
+      s_pbr->SetVec3("p_lights[" + std::to_string(i) + "].color", p_lights[i].color);
+      s_pbr->SetFloat("p_lights[" + std::to_string(i) + "].intensity", p_lights[i].intensity);
+    }
+
 #pragma endregion
 
 #pragma region render ground
@@ -398,31 +468,45 @@ auto main() -> int {
     // m_ground.Draw();
 #pragma endregion
 
-#pragma region render cubes
+#pragma region render spheres
     s_pbr->Use();
-    s_pbr->SetVec3("albedo", glm::vec3{1});
+    // s_pbr->SetVec3("albedo", glm::vec3{1});
+
+    glBindVertexArray(vao_sphere);
+    int nrRows = 7, nrColumns = 7;
+    float spacing = 2.5;
+    for (int row = 0; row < nrRows; ++row) {
+      s_pbr->SetFloat("metallic", (float)row / (float)nrRows);
+      s_pbr->SetFloat("ao", 1.0);
+      for (int col = 0; col < nrColumns; ++col) {
+        // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+        // on direct lighting.
+        s_pbr->SetFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
+
+        auto model = glm::mat4(1.0f);
+        model =
+            glm::translate(model, glm::vec3(spacing * (col - (nrColumns / 2)), (row - (nrRows / 2)) * spacing, 0.0f));
+        s_pbr->SetMat4("Model", model);
+        // s_pbr->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+      }
+    }
     // s_pbr->SetFloat("roughness", 0.5);
     // you should do scale and rotation at origin!
-    auto cube_model = glm::mat4(1);
-    cube_model = glm::translate(cube_model, {0.0, 0, -10.0});
-    cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
-    cube_model = glm::scale(cube_model, {5, 5, 5});
-    s_pbr->SetMat4("Model", cube_model);
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, t_box_diffuse);
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, t_box_specular);
-    // s_pbr->SetInt("texture_diffuse0", 0);
-    // s_pbr->SetInt("texture_specular0", 1);
-    m_box.Draw();
+    // auto cube_model = glm::mat4(1);
+    // cube_model = glm::translate(cube_model, {0.0, 0, -10.0});
+    // cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
+    // cube_model = glm::scale(cube_model, {5, 5, 5});
+    // s_pbr->SetMat4("Model", cube_model);
 
-    cube_model = glm::mat4(1);
-    cube_model = glm::translate(cube_model, {0, 25.0, 10});
-    cube_model = glm::rotate(cube_model, glm::radians(20.0f), {0, 1, 0});
-    cube_model = glm::scale(cube_model, glm::vec3{2});
-    s_pbr->SetMat4("Model", cube_model);
+    // cube_model = glm::mat4(1);
+    // cube_model = glm::translate(cube_model, {0, 25.0, 10});
+    // cube_model = glm::rotate(cube_model, glm::radians(20.0f), {0, 1, 0});
+    // cube_model = glm::scale(cube_model, glm::vec3{2});
+    // s_pbr->SetMat4("Model", cube_model);
 
-    m_box.Draw();
+    // m_box.Draw();
+
 #pragma endregion
 
 #pragma region render herta

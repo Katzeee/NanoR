@@ -44,4 +44,6 @@ class WatchVar : public WatchVarBase {
   T old_val_;
   WatchFunc f_;
 };
+
+
 }  // namespace xac
