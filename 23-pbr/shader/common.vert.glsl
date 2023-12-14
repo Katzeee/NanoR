@@ -26,6 +26,6 @@ void main() {
 #ifdef MODEL_NORMAL
   vs_out.N = normal_model_to_world * inN;
 #else
-// vs_out.N = inN;
+  vs_out.N = inN;
 #endif
 }

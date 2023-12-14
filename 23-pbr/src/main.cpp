@@ -49,8 +49,8 @@ static auto GenSphereMesh() -> unsigned int {
   glGenBuffers(1, &ebo);
 
   std::vector<glm::vec3> positions;
-  std::vector<glm::vec2> uv;
   std::vector<glm::vec3> normals;
+  std::vector<glm::vec2> uv;
   std::vector<unsigned int> indices;
 
   const unsigned int X_SEGMENTS = 64;
@@ -65,8 +65,8 @@ static auto GenSphereMesh() -> unsigned int {
       float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 
       positions.push_back(glm::vec3(xPos, yPos, zPos));
-      uv.push_back(glm::vec2(xSegment, ySegment));
       normals.push_back(glm::vec3(xPos, yPos, zPos));
+      uv.push_back(glm::vec2(xSegment, ySegment));
     }
   }
 
@@ -105,10 +105,10 @@ static auto GenSphereMesh() -> unsigned int {
   }
   glBindVertexArray(sphereVAO);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), data.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-  unsigned int stride = (3 + 2 + 3) * sizeof(float);
+  unsigned int stride = (3 + 3 + 2) * sizeof(float);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
   glEnableVertexAttribArray(1);
@@ -202,7 +202,7 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region setup objs
-  xac::Model m_herta("../resources/models/Herta/heita.obj");
+  // xac::Model m_herta("../resources/models/Herta/heita.obj");
   xac::Model m_sphere("../resources/models/Sphere/sphere.obj");
   xac::Model m_cube("../resources/models/Cube/cube.obj");
   xac::Mesh m_ground{ground_vertices, ground_indices, {glm::vec3{0}, glm::vec3{0.5}, glm::vec3{0.5}, {}}, "ground"};
@@ -222,17 +222,17 @@ auto main() -> int {
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
-  auto t_skybox = xac::LoadCubemapFromFile({
-      "../resources/textures/skybox/right.jpg",
-      "../resources/textures/skybox/left.jpg",
-      "../resources/textures/skybox/top.jpg",
-      "../resources/textures/skybox/bottom.jpg",
-      "../resources/textures/skybox/front.jpg",
-      "../resources/textures/skybox/back.jpg",
-  });
+  // auto t_skybox = xac::LoadCubemapFromFile({
+  //     "../resources/textures/skybox/right.jpg",
+  //     "../resources/textures/skybox/left.jpg",
+  //     "../resources/textures/skybox/top.jpg",
+  //     "../resources/textures/skybox/bottom.jpg",
+  //     "../resources/textures/skybox/front.jpg",
+  //     "../resources/textures/skybox/back.jpg",
+  // });
 
   m_light.SetShader(s_unlit);
-  m_herta.SetShader(s_lit);
+  // m_herta.SetShader(s_lit);
   m_ground.SetShader(s_lit);
   m_box.SetShader(s_pbr);
   m_quad.SetShader(s_unlit);
@@ -451,6 +451,7 @@ auto main() -> int {
       s_pbr->SetVec3("p_lights[" + std::to_string(i) + "].color", p_lights[i].color);
       s_pbr->SetFloat("p_lights[" + std::to_string(i) + "].intensity", p_lights[i].intensity);
     }
+    s_pbr->SetVec3("ws_cam_pos", camera.GetPosition());
 
 #pragma endregion
 
@@ -479,6 +480,7 @@ auto main() -> int {
     glBindVertexArray(vao_sphere);
     int nrRows = 7, nrColumns = 7;
     float spacing = 2.5;
+    glm::mat4 model = glm::mat4(1.0f);
     for (int row = 0; row < nrRows; ++row) {
       s_pbr->SetFloat("metallic", (float)row / (float)nrRows);
       s_pbr->SetFloat("ao", 1.0);
@@ -487,14 +489,12 @@ auto main() -> int {
         // on direct lighting.
         s_pbr->SetFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
 
-        auto model = glm::mat4(1.0f);
+        model = glm::mat4(1.0f);
         model =
-            glm::translate(model, glm::vec3(spacing * (col - (nrColumns / 2)), (row - (nrRows / 2)) * spacing, 0.0f));
+            glm::translate(model, glm::vec3((col - (nrColumns / 2)) * spacing, (row - (nrRows / 2)) * spacing, 0.0f));
         s_pbr->SetMat4("Model", model);
         s_pbr->SetMat3("normal_model_to_world", glm::transpose(glm::inverse(glm::mat3(model))));
-        assert(glGetError() == GL_NO_ERROR);
         glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
-        assert(glGetError() == GL_NO_ERROR);
       }
     }
     // s_pbr->SetFloat("roughness", 0.5);
