@@ -6,6 +6,7 @@
 #include <GL/gl.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+
 #include <assimp/Importer.hpp>
 #include <iostream>
 #include <iterator>
@@ -77,6 +78,44 @@ static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    stbi_image_free(image_data);
+    std::cout << "LoadTex: " << file_path << ", channels: " << nchs << std::endl;
+  } else {
+    std::cout << "ERROR::LoadTex: " << file_path << std::endl;
+  }
+  return texture_id;
+}
+
+static auto LoadHdrTextureFromFile(std::string_view file_path) -> unsigned int {
+  // stbi_set_flip_vertically_on_load(true);
+  unsigned int texture_id;
+  glGenTextures(1, &texture_id);
+  int x;
+  int y;
+  int nchs;
+  auto *image_data = stbi_load(file_path.data(), &x, &y, &nchs, 0);
+  GLenum format = 0;
+  if (image_data) {
+    switch (nchs) {
+      case 1:
+        format = GL_RED;
+        break;
+      case 3:
+        format = GL_RGB;
+        break;
+      case 4:
+        format = GL_RGBA;
+        break;
+      default:
+        break;
+    }
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, x, y, 0, format, GL_UNSIGNED_BYTE, image_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     stbi_image_free(image_data);
     std::cout << "LoadTex: " << file_path << ", channels: " << nchs << std::endl;
   } else {
@@ -159,20 +198,25 @@ class Model {
       material->Get(AI_MATKEY_COLOR_SPECULAR, ks);
 
       auto diffuse_mats = LoadTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-      textures.insert(textures.end(), std::make_move_iterator(diffuse_mats.begin()),
-                      std::make_move_iterator(diffuse_mats.end()));
+      textures.insert(
+          textures.end(), std::make_move_iterator(diffuse_mats.begin()), std::make_move_iterator(diffuse_mats.end())
+      );
       auto specular_mats = LoadTextures(material, aiTextureType_SPECULAR, "texture_specular");
-      textures.insert(textures.end(), std::make_move_iterator(specular_mats.begin()),
-                      std::make_move_iterator(specular_mats.end()));
+      textures.insert(
+          textures.end(), std::make_move_iterator(specular_mats.begin()), std::make_move_iterator(specular_mats.end())
+      );
       auto normal_mats = LoadTextures(material, aiTextureType_NORMALS, "texture_normal");
-      textures.insert(textures.end(), std::make_move_iterator(normal_mats.begin()),
-                      std::make_move_iterator(normal_mats.end()));
+      textures.insert(
+          textures.end(), std::make_move_iterator(normal_mats.begin()), std::make_move_iterator(normal_mats.end())
+      );
     }
 
-    return {std::move(vertices), std::move(indices),
-            Material(glm::vec3(ka.r, ka.g, ka.b), glm::vec3(kd.r, kd.g, kd.b), glm::vec3(ks.r, ks.g, ks.b),
-                     std::move(textures)),
-            mesh->mName.C_Str()};
+    return {
+        std::move(vertices), std::move(indices),
+        Material(
+            glm::vec3(ka.r, ka.g, ka.b), glm::vec3(kd.r, kd.g, kd.b), glm::vec3(ks.r, ks.g, ks.b), std::move(textures)
+        ),
+        mesh->mName.C_Str()};
   }
 
   auto LoadTextures(aiMaterial *material, aiTextureType type, const std::string &type_name) -> std::vector<Texture> {
@@ -212,4 +256,5 @@ class Model {
     }
   }
 };
+
 };  // namespace xac

@@ -222,6 +222,7 @@ auto main() -> int {
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
+  auto t_ibl_skybox = xac::LoadHdrTextureFromFile("../resources/textures/ibl_hdr_radiance.png");
   // auto t_skybox = xac::LoadCubemapFromFile({
   //     "../resources/textures/skybox/right.jpg",
   //     "../resources/textures/skybox/left.jpg",
