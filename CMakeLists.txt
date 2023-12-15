@@ -95,6 +95,7 @@ add_subdirectory(20-interface-block)
 add_subdirectory(21-blinn-phong)
 add_subdirectory(22-shadow)
 add_subdirectory(23-pbr)
+add_subdirectory(24-ibl)
 
 ##################### demo
 # add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
