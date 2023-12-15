@@ -455,24 +455,6 @@ auto main() -> int {
 
 #pragma endregion
 
-#pragma region render ground
-    // s_lit->Use();
-    // auto ground_model = glm::mat4(1);
-    // // you should do scale and rotation at origin!
-    // // ground_model = glm::translate(ground_model, {0, 0, 0});
-    // // ground_model = glm::rotate(ground_model, glm::radians(30.0f), {0, 1, 0});
-    // ground_model = glm::scale(ground_model, {150, 1, 150});
-    // ground_model = glm::translate(ground_model, {0, -0.5, 0});  // move to origin then scale
-    // s_lit->SetMat4("Model", ground_model);
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, t_white);
-    // s_lit->SetInt("texture_diffuse0", 0);
-    // s_lit->SetInt("texture_specular0", 1);
-    // m_ground.Draw();
-#pragma endregion
-
 #pragma region render spheres
     s_pbr->Use();
     // s_pbr->SetVec3("albedo", glm::vec3{1});
@@ -497,32 +479,6 @@ auto main() -> int {
         glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
       }
     }
-    // s_pbr->SetFloat("roughness", 0.5);
-    // you should do scale and rotation at origin!
-    // auto cube_model = glm::mat4(1);
-    // cube_model = glm::translate(cube_model, {0.0, 0, -10.0});
-    // cube_model = glm::rotate(cube_model, glm::radians(30.0f), {0, 1, 0});
-    // cube_model = glm::scale(cube_model, {5, 5, 5});
-    // s_pbr->SetMat4("Model", cube_model);
-
-    // cube_model = glm::mat4(1);
-    // cube_model = glm::translate(cube_model, {0, 25.0, 10});
-    // cube_model = glm::rotate(cube_model, glm::radians(20.0f), {0, 1, 0});
-    // cube_model = glm::scale(cube_model, glm::vec3{2});
-    // s_pbr->SetMat4("Model", cube_model);
-
-    // m_box.Draw();
-
-#pragma endregion
-
-#pragma region render herta
-    // s_lit->Use();
-    // s_lit->SetMat4("Model", glm::scale(glm::translate(glm::mat4(1), glm::vec3(-3, 0, 0)), glm::vec3(0.4)));
-    // m_herta.Draw();
-    // glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    // glDepthFunc(GL_NEVER + global_context.imgui_layer_->GetWatchVar<int>("gl_depth_func").Value());
-    // // HINT: or else can't clear stencil buffer bit
-    // glad_glStencilMask(0xFF);
 #pragma endregion
   };
 
@@ -552,90 +508,14 @@ auto main() -> int {
     global_context.camera_->Tick(delta_time_per_frame);
     xac::InputSystem::Tick();
 
-#pragma region Render Shadow Map
-    // auto light_cam = xac::Camera(d_light0_pos, glm::vec3{0}, xac::Camera::ProjectionMethod::ORTHO);
-    // auto frustum = global_context.camera_->GetFrustumInWorld();
-    // // auto frustum = debug_frustum;
-    // auto light_cam_view = light_cam.GetViewMatrix();
-    // std::ranges::for_each(frustum, [&light_cam_view](auto &&p) {
-    //   auto p_ls = light_cam_view * glm::vec4{p, 1.0};
-    //   p = glm::vec3{p_ls / p_ls.w};
-    // });
-    // auto min_max_x = std::ranges::minmax(frustum, {}, &glm::vec3::x);
-    // auto min_max_y = std::ranges::minmax(frustum, {}, &glm::vec3::y);
-    // auto min_max_z = std::ranges::minmax(frustum, {}, &glm::vec3::z);
-    // auto left = min_max_x.min.x;
-    // auto right = min_max_x.max.x;
-    // auto bottom = min_max_y.min.y;
-    // auto top = min_max_y.max.y;
-    // // look to z negative
-    // auto near = min_max_z.max.z;
-    // auto far = min_max_z.min.z;
-    // light_cam.SetOrtho(left, right, bottom, top);
-    // // HINT: Fuck glm::ortho
-    // light_cam.SetNear(-near);
-    // light_cam.SetFar(-far);
-    // glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
-    // glViewport(0, 0, depth_map_h_w, depth_map_h_w);
-    // DrawScene(delta_time_per_frame, light_cam);
-#pragma endregion
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(
         global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
         global_context.window_height_
     );
-    // s_lit->Use();
-    // s_lit->SetMat4("world_to_light_space_matrix", light_cam.GetProjectionMatrix() * light_cam.GetViewMatrix());
-    // glActiveTexture(GL_TEXTURE12);
-    // glBindTexture(GL_TEXTURE_2D, t_depth_map);
-    // s_lit->SetInt("depth_map", 12);
+
     DrawScene(delta_time_per_frame, *global_context.camera_);
 
-#pragma region Debug shadow map
-    // s_unlit->Use();
-    // auto identity = glm::mat4{1};
-    // s_unlit->SetMat4("Model", identity);
-    // glm::mat4 view = global_context.camera_->GetViewMatrix();
-    // glm::mat4 proj = global_context.camera_->GetProjectionMatrix();
-    // glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&view));
-    // glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, t_white);
-    // s_unlit->SetInt("tex", 0);
-    // s_unlit->SetVec4("color", glm::vec4{1, 0, 0, 1});
-    // DrawBox(debug_frustum);
-    // s_unlit->SetVec4("color", glm::vec4{0, 1, 0, 1});
-    // auto light_frustum = std::array<glm::vec3, 8>{
-    //     glm::vec3{left, bottom, near},  glm::vec3{left, top, near},    glm::vec3{right, top, near},
-    //     glm::vec3{right, bottom, near}, glm::vec3{left, bottom, far},  glm::vec3{left, top, far},
-    //     glm::vec3{right, top, far},     glm::vec3{right, bottom, far},
-    // };
-    // std::ranges::for_each(light_frustum, [&light_cam_view](auto &&p) {
-    //   auto p_ls = glm::inverse(light_cam_view) * glm::vec4{p, 1.0};
-    //   p = glm::vec3{p_ls / p_ls.w};
-    // });
-    // DrawBox(light_frustum);
-#pragma endregion
-#pragma region render to quad
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    // glViewport(
-    //     global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
-    //     global_context.window_height_
-    // );
-    // glDisable(GL_DEPTH_TEST);
-    // s_unlit->Use();
-    // auto identity = glm::mat4{1.0};
-    // s_unlit->SetMat4("Model", identity);
-    // glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&identity));
-    // glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&identity));
-    // s_unlit->SetVec4("color", glm::vec4{1.0f});
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, t_ground_diffuse);
-    // s_unlit->SetInt("tex", 0);
-    // m_quad.Draw();
-#pragma endregion
     global_context.imgui_layer_->Render();
 
     global_context.window_->SwapBuffers();
