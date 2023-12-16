@@ -7,6 +7,7 @@ uniform mat4 Proj;
 
 out vec3 uv;
 
+
 void main() {
   uv = P;
   vec4 pos = Proj * View * vec4(P, 1);

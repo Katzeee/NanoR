@@ -20,8 +20,17 @@ vs_out;
 
 void main() {
   gl_Position = Proj * View * Model * vec4(lP, 1);
+#ifdef LOCAL_POS
+  vs_out.P = lP;
+#else
   vs_out.P = (Model * vec4(lP, 1)).xyz;
+#endif
+
+#ifdef SKY_MAP
+  vs_out.uv = lP;
+#else
   vs_out.uv = inuv;
+#endif
 
 #ifdef MODEL_NORMAL
   vs_out.N = normal_model_to_world * inN;

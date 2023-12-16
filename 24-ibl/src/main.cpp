@@ -208,7 +208,7 @@ auto main() -> int {
   xac::Mesh m_ground{ground_vertices, ground_indices, {glm::vec3{0}, glm::vec3{0.5}, glm::vec3{0.5}, {}}, "ground"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
   xac::Model m_box = m_cube;
-  // xac::Model m_skybox = m_cube;
+  xac::Model m_skybox = m_cube;
   xac::Model m_light = m_sphere;
 
   auto s_unlit = std::make_shared<xac::Shader>("../24-ibl/shader/common.vert.glsl", "../24-ibl/shader/unlit.frag.glsl");
@@ -216,58 +216,55 @@ auto main() -> int {
   auto s_pbr = std::make_shared<xac::Shader>("../24-ibl/shader/common.vert.glsl", "../24-ibl/shader/pbr.frag.glsl");
   s_pbr->AddDefine("vert", "MODEL_NORMAL");
   s_pbr->CompileShaders();
+  auto s_equirectangle_to_cube = std::make_shared<xac::Shader>(
+      "../24-ibl/shader/common.vert.glsl", "../24-ibl/shader/equirectangle_to_cubemap.frag.glsl"
+  );
+  s_equirectangle_to_cube->AddDefine("vert", "LOCAL_POS");
+  s_equirectangle_to_cube->CompileShaders();
   auto s_skybox =
       std::make_shared<xac::Shader>("../24-ibl/shader/skybox.vert.glsl", "../24-ibl/shader/skybox.frag.glsl");
   auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
-  auto t_ibl_skybox = xac::LoadHdrTextureFromFile("../resources/textures/ibl_hdr_radiance.png");
-  // auto t_skybox = xac::LoadCubemapFromFile({
-  //     "../resources/textures/skybox/right.jpg",
-  //     "../resources/textures/skybox/left.jpg",
-  //     "../resources/textures/skybox/top.jpg",
-  //     "../resources/textures/skybox/bottom.jpg",
-  //     "../resources/textures/skybox/front.jpg",
-  //     "../resources/textures/skybox/back.jpg",
-  // });
+  auto t_ibl_hdr = xac::LoadHdrTextureFromFile("../resources/textures/ibl_hdr_radiance.png");
+  auto t_skybox = xac::LoadCubemapFromFile({
+      "../resources/textures/skybox/right.jpg",
+      "../resources/textures/skybox/left.jpg",
+      "../resources/textures/skybox/top.jpg",
+      "../resources/textures/skybox/bottom.jpg",
+      "../resources/textures/skybox/front.jpg",
+      "../resources/textures/skybox/back.jpg",
+  });
 
   m_light.SetShader(s_unlit);
-  // m_herta.SetShader(s_lit);
   m_ground.SetShader(s_lit);
-  m_box.SetShader(s_pbr);
+  m_box.SetShader(s_equirectangle_to_cube);
+  m_skybox.SetShader(s_skybox);
   m_quad.SetShader(s_unlit);
 
   auto vao_sphere = GenSphereMesh();
 #pragma endregion
 
-#pragma region depth framebuffer
-  float depth_map_h_w = 1024;
-  unsigned int fbo_depth_map;
-  glGenFramebuffers(1, &fbo_depth_map);
-  unsigned int t_depth_map;
-  glGenTextures(1, &t_depth_map);
-  glBindTexture(GL_TEXTURE_2D, t_depth_map);
-  // glTexImage2D(
-  //     GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_h_w, depth_map_h_w, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
-  // );
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_h_w, depth_map_h_w, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  // for uv out of texture(not exceeding far plane)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  glm::vec4 border_color{1.0, 1.0, 1.0, 1.0};
-  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(border_color));
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
-  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t_depth_map, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t_depth_map, 0);
-  // glDrawBuffer(GL_NONE);
-  // glReadBuffer(GL_NONE);
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+#pragma region Render HDR to cubemap
+  unsigned int fbo_capture, rbo_captuer;
+  glCreateFramebuffers(1, &fbo_capture);
+  glCreateRenderbuffers(1, &rbo_captuer);
+  glNamedRenderbufferStorage(rbo_captuer, GL_DEPTH_COMPONENT24, 512, 512);
+  glNamedFramebufferRenderbuffer(fbo_capture, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_captuer);
+
+  unsigned int t_ibl_cubemap;
+  glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &t_ibl_cubemap);
+  // glTextureStorage2D(t_ibl_cubemap, 1, GL_RGB16F, 512, 512);
+  for (int i = 0; i < 6; i++) {
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_cubemap);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 #pragma endregion
 
 #pragma region Draw Box Helper
@@ -293,13 +290,8 @@ auto main() -> int {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    // 绘制线条
     glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
-
-    // 解绑VAO
     glBindVertexArray(0);
-
-    // 删除资源
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteVertexArrays(1, &VAO);
@@ -398,14 +390,74 @@ auto main() -> int {
 
   assert(glGetError() == GL_NO_ERROR);
 
+#pragma region convert hdr to cubemap
+  auto convert_cubemap = [&]() {
+    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 captureViews[] = {
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+
+    glDisable(GL_CULL_FACE);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_capture);
+    s_equirectangle_to_cube->Use();
+    glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), &captureProjection);
+    // glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), &captureViews[1]);
+
+    glViewport(0, 0, 512, 512);
+    auto model = glm::mat4{1};
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, t_ibl_hdr);
+    s_equirectangle_to_cube->SetMat4("Model", model);
+    s_equirectangle_to_cube->SetInt("tex", 0);
+    assert(glGetError() == GL_NO_ERROR);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // m_box.Draw();
+
+    for (int i = 0; i < 6; i++) {
+      glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), &captureViews[i]);
+      assert(glGetError() == GL_NO_ERROR);
+      glNamedFramebufferTextureLayer(fbo_capture, GL_COLOR_ATTACHMENT0, t_ibl_cubemap, 0, i);
+      assert(glGetError() == GL_NO_ERROR);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      m_box.Draw();
+      assert(glGetError() == GL_NO_ERROR);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    assert(glGetError() == GL_NO_ERROR);
+    glViewport(
+        global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+        global_context.window_height_
+    );
+
+    // glEnable(GL_CULL_FACE);
+  };
+  convert_cubemap();
+#pragma endregion
+
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
     glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 proj = camera.GetProjectionMatrix();
-    glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), reinterpret_cast<void *>(&view));
-    glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), reinterpret_cast<void *>(&proj));
+    glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), &view);
+    glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), &proj);
+#pragma region render cubemap
+    s_skybox->Use();
+    s_skybox->SetMat4("View", glm::mat4(glm::mat3(camera.GetViewMatrix())));
+    s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_cubemap);
+    s_skybox->SetInt("skybox", 0);
+    glDisable(GL_CULL_FACE);
+    m_skybox.Draw();
+    glEnable(GL_CULL_FACE);
+
+#pragma endregion
 
 #pragma region render light
     s_unlit->Use();
@@ -516,6 +568,7 @@ auto main() -> int {
     );
 
     DrawScene(delta_time_per_frame, *global_context.camera_);
+    // convert_cubemap();
 
     global_context.imgui_layer_->Render();
 

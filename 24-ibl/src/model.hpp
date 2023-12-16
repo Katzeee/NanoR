@@ -87,13 +87,14 @@ static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int {
 }
 
 static auto LoadHdrTextureFromFile(std::string_view file_path) -> unsigned int {
-  // stbi_set_flip_vertically_on_load(true);
+  stbi_set_flip_vertically_on_load(true);
   unsigned int texture_id;
   glGenTextures(1, &texture_id);
   int x;
   int y;
   int nchs;
   auto *image_data = stbi_load(file_path.data(), &x, &y, &nchs, 0);
+  stbi_set_flip_vertically_on_load(false);
   GLenum format = 0;
   if (image_data) {
     switch (nchs) {
