@@ -142,29 +142,8 @@ auto main() -> int {
 
 #pragma region mesh data
   // clang-format off
-  std::vector<unsigned int> light_box_indices {
-     0,  1,  2,  2,  3,  0, 
-     4,  5,  6,  6,  7,  4,
-     8,  9, 10, 10, 11,  8,
-    12, 13, 14, 14, 15, 12,
-    16, 17, 18, 18, 19, 16,
-    20, 21, 22, 22, 23, 20,
-  };
-
   std::vector<unsigned int> ground_indices {
     0, 1, 2, 2, 3, 0,
-  };
-
-  std::vector<unsigned int> window_indices {
-    12, 13, 14, 14, 15, 12,
-  };
-
-  std::vector<glm::vec3> window_positions {
-    {-15.0f, 0.0f, -4.8f },
-    { 15.0f, 0.0f, 5.1f },
-    { 0.0f, 0.0f, 7.0f },
-    {-3.0f, 0.0f, -23.f },
-    { 5.0f, 0.0f, -6.f }
   };
 
   std::vector<std::vector<unsigned int>> cage_face_indices {
@@ -223,11 +202,13 @@ auto main() -> int {
   s_equirectangle_to_cube->CompileShaders();
   auto s_skybox =
       std::make_shared<xac::Shader>("../24-ibl/shader/skybox.vert.glsl", "../24-ibl/shader/skybox.frag.glsl");
+  auto s_ibl_convolution =
+      std::make_shared<xac::Shader>("../24-ibl/shader/skybox.vert.glsl", "../24-ibl/shader/ibl_diffuse.frag.glsl");
   auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
-  auto t_ibl_hdr = xac::LoadHdrTextureFromFile("../resources/textures/ibl_hdr_radiance.png");
+  auto t_ibl_hdr = xac::LoadHdrTextureFromFile("../resources/textures/kart_club_4k.hdr");
   auto t_skybox = xac::LoadCubemapFromFile({
       "../resources/textures/skybox/right.jpg",
       "../resources/textures/skybox/left.jpg",
@@ -255,16 +236,29 @@ auto main() -> int {
 
   unsigned int t_ibl_cubemap;
   glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &t_ibl_cubemap);
-  // glTextureStorage2D(t_ibl_cubemap, 1, GL_RGB16F, 512, 512);
-  for (int i = 0; i < 6; i++) {
-    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_cubemap);
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
-  }
+  glTextureStorage2D(t_ibl_cubemap, 1, GL_RGB16F, 512, 512);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#pragma endregion
+
+#pragma region cubemap convolution
+  unsigned int fbo_ibl_diffuse;
+  glCreateFramebuffers(1, &fbo_ibl_diffuse);
+  // glCreateRenderbuffers(1, &rbo_captuer);
+  // glNamedRenderbufferStorage(rbo_captuer, GL_DEPTH_COMPONENT24, 512, 512);
+  // glNamedFramebufferRenderbuffer(fbo_capture, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_captuer);
+
+  unsigned int t_ibl_diffuse;
+  glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &t_ibl_diffuse);
+  glTextureStorage2D(t_ibl_diffuse, 1, GL_RGB16F, 512, 512);
+  glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 #pragma endregion
 
 #pragma region Draw Box Helper
@@ -342,7 +336,7 @@ auto main() -> int {
         break;
     }
   });
-  global_context.imgui_layer_->RegisterWatchVar<bool>("cull_face_enable", true, [](bool new_val) {
+  global_context.imgui_layer_->RegisterWatchVar<bool>("cull_face_enable", false, [](bool new_val) {
     if (new_val) {
       glEnable(GL_CULL_FACE);
     } else {
@@ -391,21 +385,18 @@ auto main() -> int {
   assert(glGetError() == GL_NO_ERROR);
 
 #pragma region convert hdr to cubemap
+  glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+  glm::mat4 captureViews[] = {
+      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
   auto convert_cubemap = [&]() {
-    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    glm::mat4 captureViews[] = {
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
-
-    glDisable(GL_CULL_FACE);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_capture);
     s_equirectangle_to_cube->Use();
     glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), &captureProjection);
-    // glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), &captureViews[1]);
 
     glViewport(0, 0, 512, 512);
     auto model = glm::mat4{1};
@@ -415,16 +406,12 @@ auto main() -> int {
     s_equirectangle_to_cube->SetInt("tex", 0);
     assert(glGetError() == GL_NO_ERROR);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // m_box.Draw();
 
     for (int i = 0; i < 6; i++) {
       glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), &captureViews[i]);
-      assert(glGetError() == GL_NO_ERROR);
       glNamedFramebufferTextureLayer(fbo_capture, GL_COLOR_ATTACHMENT0, t_ibl_cubemap, 0, i);
-      assert(glGetError() == GL_NO_ERROR);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       m_box.Draw();
-      assert(glGetError() == GL_NO_ERROR);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     assert(glGetError() == GL_NO_ERROR);
@@ -432,10 +419,33 @@ auto main() -> int {
         global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
         global_context.window_height_
     );
-
-    // glEnable(GL_CULL_FACE);
   };
   convert_cubemap();
+
+  auto convolution_cubemap = [&]() {
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_ibl_diffuse);
+    glViewport(0, 0, 512, 512);
+    s_ibl_convolution->Use();
+    auto model = glm::mat4{1};
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_cubemap);
+    s_ibl_convolution->SetInt("tex", 0);
+    s_ibl_convolution->SetMat4("Proj", captureProjection);
+    for (int i = 0; i < 6; i++) {
+      s_ibl_convolution->SetMat4("View", captureViews[i]);
+      glNamedFramebufferTextureLayer(fbo_ibl_diffuse, GL_COLOR_ATTACHMENT0, t_ibl_diffuse, 0, i);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      m_box.SetShader(s_ibl_convolution);
+      m_box.Draw();
+      assert(glGetError() == GL_NO_ERROR);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(
+        global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+        global_context.window_height_
+    );
+  };
+  convolution_cubemap();
 #pragma endregion
 
   auto DrawScene = [&](float delta_time, xac::Camera &camera) {
@@ -451,7 +461,7 @@ auto main() -> int {
     s_skybox->SetMat4("View", glm::mat4(glm::mat3(camera.GetViewMatrix())));
     s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_cubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_diffuse);
     s_skybox->SetInt("skybox", 0);
     glDisable(GL_CULL_FACE);
     m_skybox.Draw();
