@@ -8,8 +8,8 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <assimp/Importer.hpp>
 #include <cmath>
 #include <filesystem>
@@ -89,10 +89,13 @@ auto main() -> int {
     return -1;
   }
 
-  glViewport(global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
-             global_context.window_height_);
-  global_context.camera_->SetAspect(static_cast<float>(global_context.window_width_ - global_context.imgui_width_) /
-                                    global_context.window_height_);
+  glViewport(
+      global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+      global_context.window_height_
+  );
+  global_context.camera_->SetAspect(
+      static_cast<float>(global_context.window_width_ - global_context.imgui_width_) / global_context.window_height_
+  );
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_STENCIL_TEST);
   glEnable(GL_BLEND);
@@ -100,14 +103,7 @@ auto main() -> int {
 
 #pragma region mesh data
   // clang-format off
-  std::vector<unsigned int> light_box_indices {
-     0,  1,  2,  2,  3,  0, 
-     4,  5,  6,  6,  7,  4,
-     8,  9, 10, 10, 11,  8,
-    12, 13, 14, 14, 15, 12,
-    16, 17, 18, 18, 19, 16,
-    20, 21, 22, 22, 23, 20,
-  };
+
 
   std::vector<unsigned int> ground_indices {
     20, 21, 22, 22, 23, 20,
@@ -175,61 +171,44 @@ auto main() -> int {
     {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f}}, 
   };
 
-    float skyboxVertices[] = {
-        // positions          
-        -1.0f,  1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-
-        -1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
-
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-
-        -1.0f, -1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
-
-        -1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f,
-
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f
-    };
-
-    unsigned int skyboxVAO, skyboxVBO;
-    glGenVertexArrays(1, &skyboxVAO);
-    glGenBuffers(1, &skyboxVBO);
-    glBindVertexArray(skyboxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-
+  float v_skybox[] = {
+    // positions
+    -1.0f, 1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    1.0f, 1.0f, -1.0f,
+    -1.0f, 1.0f, 1.0f,
+    1.0f, -1.0f,1.0f,
+    1.0f, -1.0f,1.0f,
+    1.0f, 1.0f, 1.0f,
+  };
+  std::vector<unsigned int> i_skybox {
+    0, 1, 2,
+    2, 3, 0,
+    4, 6, 5,
+    6, 4, 7,
+    4, 5, 1,
+    1, 0, 4,
+    3, 2, 6,
+    6, 7, 3,
+    4, 0, 3,
+    3, 7, 4,
+    1, 5, 6,
+    6, 2, 1};
   // clang-format on
+
+  unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
+  glGenVertexArrays(1, &skyboxVAO);
+  glBindVertexArray(skyboxVAO);
+  glGenBuffers(1, &skyboxVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(v_skybox), v_skybox, GL_STATIC_DRAW);
+  glGenBuffers(1, &skyboxEBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, i_skybox.size() * sizeof(unsigned int), i_skybox.data(), GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+
 #pragma endregion
 
 #pragma region setup objs
@@ -240,7 +219,7 @@ auto main() -> int {
   xac::Mesh m_window{cage_vertices, window_indices, {}, "window"};
   xac::Mesh m_quad{quad_vertices, {0, 2, 1, 0, 3, 2}, {}, "quad"};
   xac::Model m_box = m_cube;
-  // xac::Model m_skybox = m_cube;
+  xac::Model m_skybox = m_cube;
   xac::Model m_light = m_sphere;
 
   auto s_unlit =
@@ -249,8 +228,9 @@ auto main() -> int {
       std::make_shared<xac::Shader>("../19-cube-map/shader/common.vert.glsl", "../19-cube-map/shader/lit.frag.glsl");
   auto s_skybox =
       std::make_shared<xac::Shader>("../19-cube-map/shader/skybox.vert.glsl", "../19-cube-map/shader/skybox.frag.glsl");
-  auto s_reflect = std::make_shared<xac::Shader>("../19-cube-map/shader/common.vert.glsl",
-                                                 "../19-cube-map/shader/reflect.frag.glsl");
+  auto s_reflect = std::make_shared<xac::Shader>(
+      "../19-cube-map/shader/common.vert.glsl", "../19-cube-map/shader/reflect.frag.glsl"
+  );
 
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_ground_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
@@ -271,7 +251,7 @@ auto main() -> int {
   m_box.SetShader(s_lit);
   m_window.SetShader(s_lit);
   m_quad.SetShader(s_unlit);
-  // m_skybox.SetShader(s_skybox);
+  m_skybox.SetShader(s_skybox);
   // m_sphere.SetShader(s_refract);
   m_cube.SetShader(s_reflect);
 
@@ -290,8 +270,10 @@ auto main() -> int {
   unsigned int t_fb_screen_color;
   glGenTextures(1, &t_fb_screen_color);
   glBindTexture(GL_TEXTURE_2D, t_fb_screen_color);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, global_context.window_width_ - global_context.imgui_width_,
-               global_context.window_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  glTexImage2D(
+      GL_TEXTURE_2D, 0, GL_RGB, global_context.window_width_ - global_context.imgui_width_,
+      global_context.window_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr
+  );
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // HINT: bind color buffer
@@ -299,8 +281,10 @@ auto main() -> int {
   unsigned int rbo;
   glGenRenderbuffers(1, &rbo);
   glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-                        global_context.window_width_ - global_context.imgui_width_, global_context.window_height_);
+  glRenderbufferStorage(
+      GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, global_context.window_width_ - global_context.imgui_width_,
+      global_context.window_height_
+  );
   // HINT: bind depth buffer
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -567,7 +551,8 @@ auto main() -> int {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
     s_skybox->SetInt("skybox", 0);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    // m_skybox.Draw();
     glDepthMask(GL_TRUE);
 #pragma endregion
 
@@ -693,8 +678,10 @@ auto main() -> int {
     // glViewport(0, 0, global_context.window_width_ - global_context.imgui_width_, global_context.window_height_);
 
     if (!debug_sky_map) {
-      glViewport(global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
-                 global_context.window_height_);
+      glViewport(
+          global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+          global_context.window_height_
+      );
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
       DrawScene(delta_time_per_frame, *global_context.camera_);
@@ -739,7 +726,8 @@ auto main() -> int {
       ImGui::NewFrame();
       ImGui::SetNextWindowPos({0, 0});
       ImGui::SetNextWindowSize(
-          {static_cast<float>(global_context.imgui_width_), static_cast<float>(global_context.window_height_)});
+          {static_cast<float>(global_context.imgui_width_), static_cast<float>(global_context.window_height_)}
+      );
       ImGui::Begin("Hello, World!", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
       ImGui::SetWindowFontScale(1.2);
 
@@ -766,8 +754,10 @@ auto main() -> int {
 
       if (ImGui::TreeNodeEx("Depth test", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Combo("Debug Mode", &shader_debug_mode, "NODEBUG\0NORMAL\0DEPTH\0");
-        ImGui::Combo("Depth test", &gl_depth_func,
-                     "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0");
+        ImGui::Combo(
+            "Depth test", &gl_depth_func,
+            "GL_NEVER\0GL_LESS\0GL_EQUAL\0GL_LEQUAL\0GL_GREATER\0GL_NOTEQUAL\0GL_GEQUAL\0GL_ALWAYS\0"
+        );
         ImGui::TreePop();
       }
 
@@ -775,9 +765,11 @@ auto main() -> int {
         ImGui::Checkbox("Face culling enable", &face_culling_enable);
         ImGui::SameLine();
         ImGui::Checkbox("Debug sky map", &debug_sky_map);
-        ImGui::Combo("Face culling", &culled_face,
-                     "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
-                     "RIGHT\0GL_FRONT_AND_BACK\0");
+        ImGui::Combo(
+            "Face culling", &culled_face,
+            "GL_FRONT_LEFT\0GL_FRONT_RIGHT\0GL_BACK_LEFT\0GL_BACK_RIGHT\0GL_FRONT\0GL_BACK\0GL_LEFT\0GL_"
+            "RIGHT\0GL_FRONT_AND_BACK\0"
+        );
         ImGui::TreePop();
       }
 
@@ -788,19 +780,25 @@ auto main() -> int {
         }
 
         if (ImGui::TreeNodeEx("Cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("xoffset: %f\nyoffset: %f", xac::InputSystem::cursor_x_offset_,
-                      xac::InputSystem::cursor_y_offset_);
+          ImGui::Text(
+              "xoffset: %f\nyoffset: %f", xac::InputSystem::cursor_x_offset_, xac::InputSystem::cursor_y_offset_
+          );
           ImVec2 mouse_position_absolute = ImGui::GetMousePos();
           ImGui::Text("Position: %f, %f", mouse_position_absolute.x, mouse_position_absolute.y);
           ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("Command", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Text("FORWARD: %d, BACKWARD: %d", xac::InCommand(xac::ControlCommand::FORWARD),
-                      xac::InCommand(xac::ControlCommand::BACKWARD));
-          ImGui::Text("LEFT: %4d, RIGHT: %4d", xac::InCommand(xac::ControlCommand::LEFT),
-                      xac::InCommand(xac::ControlCommand::RIGHT));
-          ImGui::Text("DOWN: %4d, UP: %7d", xac::InCommand(xac::ControlCommand::DOWN),
-                      xac::InCommand(xac::ControlCommand::UP));
+          ImGui::Text(
+              "FORWARD: %d, BACKWARD: %d", xac::InCommand(xac::ControlCommand::FORWARD),
+              xac::InCommand(xac::ControlCommand::BACKWARD)
+          );
+          ImGui::Text(
+              "LEFT: %4d, RIGHT: %4d", xac::InCommand(xac::ControlCommand::LEFT),
+              xac::InCommand(xac::ControlCommand::RIGHT)
+          );
+          ImGui::Text(
+              "DOWN: %4d, UP: %7d", xac::InCommand(xac::ControlCommand::DOWN), xac::InCommand(xac::ControlCommand::UP)
+          );
           ImGui::TreePop();
         }
         ImGui::Text("Frame rate: %f", 1.0 / delta_time_per_frame);
