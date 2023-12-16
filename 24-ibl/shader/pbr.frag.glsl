@@ -19,6 +19,8 @@ uniform vec3 albedo = vec3(0.5, 0, 0);
 uniform float metallic;
 uniform float roughness;
 uniform float ao;
+uniform samplerCube ibl_diffuse;
+
 uniform PointLight p_lights[4];
 
 const float PI = 3.14159265359;
@@ -79,7 +81,10 @@ void main() {
     specular += nom / denom * light.color * light.intensity * nl * attennuation;
     diffuse += Kd * albedo / PI * light.color * light.intensity * nl * attennuation;
   }
-  vec3 color = diffuse + specular;
+  vec3 Ks = fresnelSchlick(max(dot(N, V), 0.0), F0);
+  vec3 Kd = 1 - Ks;
+  vec3 ambient = Kd * albedo * texture(ibl_diffuse, N).rgb * ao;
+  vec3 color = ambient + diffuse + specular;
   color = color / (color + vec3(1.0));
   color = pow(color, vec3(1.0 / 2.2));
   FragColor = vec4(color, 1.0);

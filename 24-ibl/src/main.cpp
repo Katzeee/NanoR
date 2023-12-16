@@ -208,7 +208,7 @@ auto main() -> int {
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
-  auto t_ibl_hdr = xac::LoadHdrTextureFromFile("../resources/textures/kart_club_4k.hdr");
+  auto t_ibl_hdr = xac::LoadHdrTextureFromFile("../resources/textures/je_gray_02_2k.hdr");
   auto t_skybox = xac::LoadCubemapFromFile({
       "../resources/textures/skybox/right.jpg",
       "../resources/textures/skybox/left.jpg",
@@ -231,12 +231,12 @@ auto main() -> int {
   unsigned int fbo_capture, rbo_captuer;
   glCreateFramebuffers(1, &fbo_capture);
   glCreateRenderbuffers(1, &rbo_captuer);
-  glNamedRenderbufferStorage(rbo_captuer, GL_DEPTH_COMPONENT24, 512, 512);
+  glNamedRenderbufferStorage(rbo_captuer, GL_DEPTH_COMPONENT24, 1024, 1024);
   glNamedFramebufferRenderbuffer(fbo_capture, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_captuer);
 
   unsigned int t_ibl_cubemap;
   glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &t_ibl_cubemap);
-  glTextureStorage2D(t_ibl_cubemap, 1, GL_RGB16F, 512, 512);
+  glTextureStorage2D(t_ibl_cubemap, 1, GL_RGB16F, 1024, 1024);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTextureParameteri(t_ibl_cubemap, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -247,13 +247,10 @@ auto main() -> int {
 #pragma region cubemap convolution
   unsigned int fbo_ibl_diffuse;
   glCreateFramebuffers(1, &fbo_ibl_diffuse);
-  // glCreateRenderbuffers(1, &rbo_captuer);
-  // glNamedRenderbufferStorage(rbo_captuer, GL_DEPTH_COMPONENT24, 512, 512);
-  // glNamedFramebufferRenderbuffer(fbo_capture, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_captuer);
 
   unsigned int t_ibl_diffuse;
   glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &t_ibl_diffuse);
-  glTextureStorage2D(t_ibl_diffuse, 1, GL_RGB16F, 512, 512);
+  glTextureStorage2D(t_ibl_diffuse, 1, GL_RGB16F, 32, 32);
   glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTextureParameteri(t_ibl_diffuse, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -398,7 +395,7 @@ auto main() -> int {
     s_equirectangle_to_cube->Use();
     glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), &captureProjection);
 
-    glViewport(0, 0, 512, 512);
+    glViewport(0, 0, 1024, 1024);
     auto model = glm::mat4{1};
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_ibl_hdr);
@@ -424,7 +421,7 @@ auto main() -> int {
 
   auto convolution_cubemap = [&]() {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_ibl_diffuse);
-    glViewport(0, 0, 512, 512);
+    glViewport(0, 0, 32, 32);
     s_ibl_convolution->Use();
     auto model = glm::mat4{1};
     glActiveTexture(GL_TEXTURE0);
@@ -461,7 +458,7 @@ auto main() -> int {
     s_skybox->SetMat4("View", glm::mat4(glm::mat3(camera.GetViewMatrix())));
     s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_diffuse);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_cubemap);
     s_skybox->SetInt("skybox", 0);
     glDisable(GL_CULL_FACE);
     m_skybox.Draw();
@@ -520,12 +517,15 @@ auto main() -> int {
 
 #pragma region render spheres
     s_pbr->Use();
-    // s_pbr->SetVec3("albedo", glm::vec3{1});
+    s_pbr->SetVec3("albedo", glm::vec3{1});
 
     glBindVertexArray(vao_sphere);
     int nrRows = 7, nrColumns = 7;
     float spacing = 2.5;
     glm::mat4 model = glm::mat4(1.0f);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_diffuse);
+    s_pbr->SetInt("ibl_diffuse", 0);
     for (int row = 0; row < nrRows; ++row) {
       s_pbr->SetFloat("metallic", (float)row / (float)nrRows);
       s_pbr->SetFloat("ao", 1.0);
