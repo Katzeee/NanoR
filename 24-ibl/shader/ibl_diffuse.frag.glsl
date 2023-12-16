@@ -1,6 +1,6 @@
 #version 450 core
 
-// sample normal
+// sample normal, i.e. localPos
 in vec3 uv;
 const float PI = 3.14159265359;
 
