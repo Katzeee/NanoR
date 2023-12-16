@@ -170,44 +170,7 @@ auto main() -> int {
     {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 1.0f}}, 
     {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f}}, 
   };
-
-  float v_skybox[] = {
-    // positions
-    -1.0f, 1.0f, -1.0f,
-    -1.0f, -1.0f, -1.0f,
-    1.0f, -1.0f, -1.0f,
-    1.0f, 1.0f, -1.0f,
-    -1.0f, 1.0f, 1.0f,
-    1.0f, -1.0f,1.0f,
-    1.0f, -1.0f,1.0f,
-    1.0f, 1.0f, 1.0f,
-  };
-  std::vector<unsigned int> i_skybox {
-    0, 1, 2,
-    2, 3, 0,
-    4, 6, 5,
-    6, 4, 7,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-    4, 0, 3,
-    3, 7, 4,
-    1, 5, 6,
-    6, 2, 1};
   // clang-format on
-
-  unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
-  glGenVertexArrays(1, &skyboxVAO);
-  glBindVertexArray(skyboxVAO);
-  glGenBuffers(1, &skyboxVBO);
-  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(v_skybox), v_skybox, GL_STATIC_DRAW);
-  glGenBuffers(1, &skyboxEBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, i_skybox.size() * sizeof(unsigned int), i_skybox.data(), GL_STATIC_DRAW);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
 #pragma endregion
 
@@ -542,8 +505,6 @@ auto main() -> int {
 #pragma endregion
 
 #pragma region render skybox
-    glDepthMask(GL_FALSE);
-    glBindVertexArray(skyboxVAO);
     glm::mat4 skybox_view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
     s_skybox->Use();
     s_skybox->SetMat4("View", skybox_view);
@@ -551,9 +512,9 @@ auto main() -> int {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, t_skybox);
     s_skybox->SetInt("skybox", 0);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    // m_skybox.Draw();
-    glDepthMask(GL_TRUE);
+    glDisable(GL_CULL_FACE);
+    m_skybox.Draw();
+    glEnable(GL_CULL_FACE);
 #pragma endregion
 
 #pragma region render transparent window
