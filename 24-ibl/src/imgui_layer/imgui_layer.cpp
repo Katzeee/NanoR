@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "camera/camera.hpp"
+// #include "camera/camera.hpp"
 #include "context/context.hpp"
 
 namespace xac {
@@ -21,9 +21,6 @@ auto ImguiLayer::Init(GLFWwindow *window) -> void {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 450 core");
   ImGui::StyleColorsDark();
-
-  // int x;
-  // WatchVar watch_x(&x, [](auto &&new_val) { std::cout << new_val << std::endl; });
 }
 
 auto ImguiLayer::Render() -> void {
@@ -116,20 +113,20 @@ auto ImguiLayer::Render() -> void {
   // }
   ImGui::End();
 
-  {
-    ImGui::Begin("Input");
-    auto front = global_context.camera_->GetFornt();
-    auto position = global_context.camera_->GetPosition();
-    ImGui::Text("Position: %f, %f, %f ", position.x, position.y, position.z);
-    ImGui::Text("Front: %f, %f, %f ", front.x, front.y, front.z);
-    ImGui::End();
-  }
+  // {
+  //   ImGui::Begin("Input");
+  //   auto front = global_context.camera_->GetFornt();
+  //   auto position = global_context.camera_->GetPosition();
+  //   ImGui::Text("Position: %f, %f, %f ", position.x, position.y, position.z);
+  //   ImGui::Text("Front: %f, %f, %f ", front.x, front.y, front.z);
+  //   ImGui::End();
+  // }
 
-  {
-    ImGui::Begin("lut");
-    ImGui::Image((void *)10, ImVec2{128, 128});
-    ImGui::End();
-  }
+  // {
+  //   ImGui::Begin("lut");
+  //   ImGui::Image((void *)10, ImVec2{128, 128});
+  //   ImGui::End();
+  // }
 
   // ImGui::Begin("Debug image");
   // // FIX: Can't see anything without doing LinearizeDepth

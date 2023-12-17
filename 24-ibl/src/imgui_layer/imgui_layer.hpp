@@ -8,7 +8,7 @@
 
 #include "utils.hpp"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace xac {
 class ImguiLayer {
