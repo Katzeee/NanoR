@@ -138,6 +138,7 @@ auto main() -> int {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_STENCIL_TEST);
   glEnable(GL_BLEND);
+  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 #pragma region mesh data
@@ -157,10 +158,10 @@ auto main() -> int {
 
   std::vector<xac::Mesh::Vertex> quad_vertices {
     // positions              normals        texture coords
-    {{-1.0f,  1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 1.0f}}, 
-    {{ 1.0f,  1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}}, 
-    {{ 1.0f, -1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f}}, 
-    {{-1.0f, -1.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}}, 
+    {{-1.0f,  1.0f, 1.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 1.0f}}, 
+    {{ 1.0f,  1.0f, 1.0f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}}, 
+    {{ 1.0f, -1.0f, 1.0f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f}}, 
+    {{-1.0f, -1.0f, 1.0f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}}, 
   };
 
   std::vector<xac::Mesh::Vertex> ground_vertices {
@@ -207,6 +208,8 @@ auto main() -> int {
   auto s_ibl_specular_prefilter = std::make_shared<xac::Shader>(
       "../24-ibl/shader/skybox.vert.glsl", "../24-ibl/shader/ibl_specular_prefilter.frag.glsl"
   );
+  auto s_ibl_specular_lut =
+      std::make_shared<xac::Shader>("../24-ibl/shader/common.vert.glsl", "../24-ibl/shader/ibl_specular_lut.frag.glsl");
   auto t_box_diffuse = xac::LoadTextureFromFile("../resources/textures/container2.png");
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
@@ -281,7 +284,7 @@ auto main() -> int {
   convert_cubemap();
 #pragma endregion
 
-#pragma region cubemap convolution
+#pragma region ibl diffuse cubemap convolution
   unsigned int fbo_ibl_diffuse;
   glCreateFramebuffers(1, &fbo_ibl_diffuse);
   unsigned int t_ibl_diffuse;
@@ -319,7 +322,7 @@ auto main() -> int {
   convolution_cubemap();
 #pragma endregion
 
-#pragma region cubemap mipmap
+#pragma region ibl specular prefilter
   unsigned int fbo_ibl_specular_prefilter, t_ibl_specular_prefilter;
   glCreateFramebuffers(1, &fbo_ibl_specular_prefilter);
   glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &t_ibl_specular_prefilter);
@@ -344,7 +347,8 @@ auto main() -> int {
     for (int mip = 0; mip < 5; mip++) {
       unsigned int mip_width = 128 * std::pow(0.5, mip), mip_height = 128 * std::pow(0.5, mip);
       glViewport(0, 0, mip_width, mip_height);
-      float roughness = (float)mip / (float)(5 - 1);
+      float roughness = (float)mip / (float)5;
+      roughness += 0.1;
       s_ibl_specular_prefilter->SetFloat("roughness", roughness);
       assert(glGetError() == GL_NO_ERROR);
       for (int i = 0; i < 6; i++) {
@@ -367,6 +371,36 @@ auto main() -> int {
     );
   };
   prefilter_map();
+#pragma endregion
+
+#pragma region ibl specular lut
+  unsigned int fbo_ibl_specular_lut, t_ibl_specular_lut;
+  glCreateFramebuffers(1, &fbo_ibl_specular_lut);
+  glCreateTextures(GL_TEXTURE_2D, 1, &t_ibl_specular_lut);
+  glTextureStorage2D(t_ibl_specular_lut, 1, GL_RGB16F, 512, 512);
+  glTextureParameteri(t_ibl_specular_lut, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_specular_lut, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTextureParameteri(t_ibl_specular_lut, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTextureParameteri(t_ibl_specular_lut, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glNamedFramebufferTexture(fbo_ibl_specular_lut, GL_COLOR_ATTACHMENT0, t_ibl_specular_lut, 0);
+  auto ibl_specular_map = [&]() {
+    glNamedBufferSubData(ubo, 0, sizeof(glm::mat4), &captureViews[4]);
+    glNamedBufferSubData(ubo, sizeof(glm::mat4), sizeof(glm::mat4), &captureProjection);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_ibl_specular_lut);
+    glViewport(0, 0, 512, 512);
+    s_ibl_specular_lut->Use();
+    s_ibl_specular_lut->SetMat4("Model", glm::mat4{1});
+    m_quad.SetShader(s_ibl_specular_lut);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    m_quad.Draw();
+    assert(glGetError() == GL_NO_ERROR);
+    glViewport(
+        global_context.imgui_width_, 0, global_context.window_width_ - global_context.imgui_width_,
+        global_context.window_height_
+    );
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  };
+  ibl_specular_map();
 #pragma endregion
 
 #pragma region imgui variables
@@ -481,7 +515,6 @@ auto main() -> int {
     glDisable(GL_CULL_FACE);
     m_skybox.Draw();
     glEnable(GL_CULL_FACE);
-
 #pragma endregion
 
 #pragma region render light

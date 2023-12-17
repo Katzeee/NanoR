@@ -1,8 +1,11 @@
 #version 450 core
 
-in vec3 uv;
-uniform samplerCube tex;
-uniform float roughness;
+in VS_OUT {
+  vec3 P;
+  vec3 N;
+  vec2 uv;
+}
+fs_in;
 const float PI = 3.14159265359;
 out vec4 FragColor;
 
@@ -44,26 +47,55 @@ vec4 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
   return vec4(normalize(sampleVec), PDF);
 }
 
-void main() {
-  vec3 N = normalize(uv);
-  vec3 V = N;
-  const uint sample_count = 1024;
-  vec3 color = vec3(0.0);
-  float weight = 0;
-  uint samlpes = 0;
-  for (uint i = 0; i < sample_count; i++) {
-    vec2 Xi = Hammersley(i, sample_count);
+float GeometrySchlickGGX(vec3 N, vec3 D, float roughness) {
+  float nd = max(dot(N, D), 0.0);
+  float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+  float denom = nd * (1.0 - k) + k;
+  return nd / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+  float G1nl = GeometrySchlickGGX(N, L, roughness);
+  float G1nv = GeometrySchlickGGX(N, V, roughness);
+  return G1nl * G1nv;
+}
+
+vec2 IntegrateBRDF(float NdotV, float roughness) {
+  vec3 V;
+  V.x = sqrt(1.0 - NdotV * NdotV);
+  V.y = 0.0;
+  V.z = NdotV;
+
+  float A = 0.0;
+  float B = 0.0;
+
+  vec3 N = vec3(0.0, 0.0, 1.0);
+
+  const uint SAMPLE_COUNT = 1024u;
+  for (uint i = 0u; i < SAMPLE_COUNT; ++i) {
+    vec2 Xi = Hammersley(i, SAMPLE_COUNT);
     vec4 H = ImportanceSampleGGX(Xi, N, roughness);
-    vec3 L = normalize(dot(V, H.xyz) * 2 * H.xyz - V);
-    float nl = max(dot(N, L), 0.0);
-    // semi sphere, doesn't count light from bottom
-    if (nl > 0) {
-      // color += texture(tex, L).rgb * nl;
-      // weight += nl;
-      color += texture(tex, L).rgb;
-      samlpes += 1;
+    vec3 L = normalize(2.0 * dot(V, H.xyz) * H.xyz - V);
+
+    float NdotL = max(L.z, 0.0);
+    float NdotH = max(H.z, 0.0);
+    float VdotH = max(dot(V, H.xyz), 0.0);
+
+    if (NdotL > 0.0) {
+      float G = GeometrySmith(N, V, L, roughness);
+      float G_Vis = (G * VdotH) / (NdotH * NdotV);
+      float Fc = pow(1.0 - VdotH, 5.0);
+
+      A += (1.0 - Fc) * G_Vis;
+      B += Fc * G_Vis;
     }
   }
-  color /= samlpes;
-  FragColor = vec4(color, 1.0);
+  A /= float(SAMPLE_COUNT);
+  B /= float(SAMPLE_COUNT);
+  return vec2(A, B);
+}
+
+void main() {
+  vec2 color = IntegrateBRDF(fs_in.uv.x, fs_in.uv.y);
+  FragColor = vec4(color, 0.0, 1.0);
 }

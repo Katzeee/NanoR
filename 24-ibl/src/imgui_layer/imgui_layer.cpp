@@ -125,6 +125,12 @@ auto ImguiLayer::Render() -> void {
     ImGui::End();
   }
 
+  {
+    ImGui::Begin("lut");
+    ImGui::Image((void *)10, ImVec2{128, 128});
+    ImGui::End();
+  }
+
   // ImGui::Begin("Debug image");
   // // FIX: Can't see anything without doing LinearizeDepth
   // ImGui::Image(reinterpret_cast<void *>(13), ImVec2{256, 256});
