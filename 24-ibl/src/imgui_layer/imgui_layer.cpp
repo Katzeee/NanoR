@@ -16,6 +16,11 @@ ImguiLayer::ImguiLayer() {
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
 }
+ImguiLayer::~ImguiLayer() {
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+}
 
 auto ImguiLayer::Init(GLFWwindow *window) -> void {
   ImGui_ImplGlfw_InitForOpenGL(window, true);

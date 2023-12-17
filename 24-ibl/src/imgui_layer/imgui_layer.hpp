@@ -14,6 +14,7 @@ namespace xac {
 class ImguiLayer {
  public:
   ImguiLayer();
+  ~ImguiLayer();
   auto Init(GLFWwindow *window) -> void;
   auto Watch(WatchVarBase *watch_var) -> void;
   auto Render() -> void;
