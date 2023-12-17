@@ -214,7 +214,7 @@ auto main() -> int {
   auto t_box_specular = xac::LoadTextureFromFile("../resources/textures/container2_specular.png");
   auto t_ground_diffuse = xac::LoadTextureFromFile("../resources/textures/wood.png");
   auto t_white = xac::LoadTextureFromFile("../resources/textures/white.png");
-  auto t_ibl_hdr = xac::LoadHdrTextureFromFile("../resources/textures/je_gray_02_2k.hdr");
+  auto t_ibl_hdr = xac::LoadHdrTextureFromFile("../resources/textures/kart_club_4k.hdr");
   auto t_skybox = xac::LoadCubemapFromFile({
       "../resources/textures/skybox/right.jpg",
       "../resources/textures/skybox/left.jpg",
@@ -510,7 +510,7 @@ auto main() -> int {
     s_skybox->SetMat4("View", glm::mat4(glm::mat3(camera.GetViewMatrix())));
     s_skybox->SetMat4("Proj", camera.GetProjectionMatrix());
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_specular_prefilter);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_cubemap);
     s_skybox->SetInt("skybox", 0);
     glDisable(GL_CULL_FACE);
     m_skybox.Draw();
@@ -577,6 +577,12 @@ auto main() -> int {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_diffuse);
     s_pbr->SetInt("ibl_diffuse", 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, t_ibl_specular_prefilter);
+    s_pbr->SetInt("ibl_specular_prefilter", 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, t_ibl_specular_lut);
+    s_pbr->SetInt("ibl_specular_lut", 2);
     for (int row = 0; row < nrRows; ++row) {
       s_pbr->SetFloat("metallic", (float)row / (float)nrRows);
       s_pbr->SetFloat("ao", 1.0);

@@ -20,6 +20,8 @@ uniform float metallic;
 uniform float roughness;
 uniform float ao;
 uniform samplerCube ibl_diffuse;
+uniform samplerCube ibl_specular_prefilter;
+uniform sampler2D ibl_specular_lut;
 
 uniform PointLight p_lights[4];
 
@@ -29,6 +31,10 @@ out vec4 FragColor;
 
 // clamp to avoid black points
 vec3 fresnelSchlick(float cosTheta, vec3 F0) { return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0); }
+
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
+  return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
   float a = roughness * roughness;
@@ -57,6 +63,8 @@ void main() {
   vec3 specular = vec3(0.0);
   vec3 N = normalize(fs_in.N);
   vec3 V = normalize(ws_cam_pos - fs_in.P);
+  vec3 R = normalize(reflect(-V, N));
+  const float MAX_REFLECTION_LOD = 4.0;
   vec3 F0 = vec3(0.04);
   F0 = mix(F0, albedo, metallic);
   for (int i = 0; i < 4; i++) {
@@ -72,8 +80,6 @@ void main() {
     Kd *= 1.0 - metallic;
     float D = DistributionGGX(N, H, roughness);
     float G = GeometrySmith(N, V, L, roughness);
-    // float D = 1;
-    // float G = 1;
     vec3 nom = D * G * F;
     // avoid devide 0
     float denom = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001;
@@ -81,9 +87,14 @@ void main() {
     specular += nom / denom * light.color * light.intensity * nl * attennuation;
     diffuse += Kd * albedo / PI * light.color * light.intensity * nl * attennuation;
   }
-  vec3 Ks = fresnelSchlick(max(dot(N, V), 0.0), F0);
+  vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+  vec3 Ks = F;
   vec3 Kd = 1 - Ks;
-  vec3 ambient = Kd * albedo * texture(ibl_diffuse, N).rgb * ao;
+  Kd *= 1.0 - metallic;
+  vec3 prefilter_color = textureLod(ibl_specular_prefilter, R, roughness * MAX_REFLECTION_LOD).rgb;
+  vec2 lut = texture(ibl_specular_lut, vec2(max(dot(N, V), 0.0), roughness)).rg;
+  vec3 env_specular = prefilter_color * (Ks * lut.x + lut.y);
+  vec3 ambient = (Kd * albedo * texture(ibl_diffuse, N).rgb + env_specular) * ao;
   vec3 color = ambient + diffuse + specular;
   color = color / (color + vec3(1.0));
   color = pow(color, vec3(1.0 / 2.2));
