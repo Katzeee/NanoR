@@ -5,8 +5,9 @@
 namespace nanoR {
 
 auto Scene::CreateEntity() -> Entity {
-  auto id = world_.create();
-  return {};
+  auto e = world_.create();
+  auto c = world_.assign<TransformComponent>(e, TransformComponent{});
+  return Entity{e, this};
 }
 
 }  // namespace nanoR

@@ -55,9 +55,9 @@ auto ResourceManager::LoadTextureFromFile(std::string_view file_path) -> unsigne
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     stbi_image_free(image_data);
-    std::cout << "LoadTex: " << file_path << ", channels: " << nchs << std::endl;
+    LOG_INFO("LoadTex: {}, channels: {}\n", file_path, nchs);
   } else {
-    std::cout << "ERROR::LoadTex: " << file_path << std::endl;
+    LOG_ERROR("LoadTex: {}\n", file_path);
   }
   return texture_id;
 }

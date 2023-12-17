@@ -12,7 +12,6 @@ class EditorLayer : public nanoR::Layer {
   }
 
   auto OnAttach() -> void override {
-    auto e = scene_->CreateEntity();
     auto cube = nanoR::Model("../resources/models/Cube/cube.obj");
     mesh_ = nanoR::CreateMesh(&rhi_, cube.meshes_.at(0));
     rhi_.CreateFramebuffer({}, fbo_);
@@ -34,19 +33,26 @@ class EditorLayer : public nanoR::Layer {
     rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
     shader_program_ = nanoR::ResourceManager::GetLitShader(&rhi_);
     // shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
-    t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
+    // t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
+    // auto t_point_light = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
+    t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
 
     nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
     buffer_create_info.data = nullptr;
     buffer_create_info.size = 2 * sizeof(glm::mat4);
     buffer_create_info.flags = GL_DYNAMIC_STORAGE_BIT;
     rhi_.CreateBuffer(buffer_create_info, ubo_);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    auto e = scene_->CreateEntity();
   }
 
   auto Tick(uint64_t delta_time) -> void override {
     main_camera_.Tick(delta_time);
     glBindFramebuffer(GL_FRAMEBUFFER, dynamic_cast<nanoR::RHIFramebufferOpenGL*>(fbo_.get())->id);
-    glClearColor(0, 0, 0, 1);
+    glClearColor(0.2, 0.2, 0.2, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
