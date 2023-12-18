@@ -61,13 +61,17 @@ class InputSystem<Platform::Linux> {
     }
     if (event->GetType() == EventType::kMouseButtonDown) {
       auto button_event = dynamic_cast<MouseButtonDownEvent*>(event.get());
+      glfwGetCursorPos(
+          reinterpret_cast<GLFWwindow*>(GlobalContext::Instance().window->GetRawWindow()), &last_cursor_x_pos,
+          &last_cursor_y_pos
+      );
       switch (button_event->button_code) {
         case GLFW_MOUSE_BUTTON_1:
           control_commad |= static_cast<uint32_t>(ControlCommand::kLeftButtonDown);
-          glfwGetCursorPos(
-              reinterpret_cast<GLFWwindow*>(GlobalContext::Instance().window->GetRawWindow()), &last_cursor_x_pos,
-              &last_cursor_y_pos
-          );
+          break;
+        case GLFW_MOUSE_BUTTON_2:
+          control_commad |= static_cast<uint32_t>(ControlCommand::kRightButtonDown);
+
           break;
         default:
           break;
@@ -78,11 +82,14 @@ class InputSystem<Platform::Linux> {
         case GLFW_MOUSE_BUTTON_1:
           control_commad &= ~static_cast<uint32_t>(ControlCommand::kLeftButtonDown);
           break;
+        case GLFW_MOUSE_BUTTON_2:
+          control_commad &= ~static_cast<uint32_t>(ControlCommand::kRightButtonDown);
+          break;
         default:
           break;
       }
     }
-    if (ReceiveCommand(ControlCommand::kLeftButtonDown)) {
+    if (ReceiveCommand(ControlCommand::kLeftButtonDown) || ReceiveCommand(ControlCommand::kRightButtonDown)) {
       if (event->GetType() == EventType::kMouseCursorMove) {
         auto cursor_event = dynamic_cast<MouseCursorMoveEvent*>(event.get());
         cursor_x_offset = cursor_event->xpos - last_cursor_x_pos;

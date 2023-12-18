@@ -148,12 +148,19 @@ class EditorLayer : public nanoR::Layer {
     );
     ImGui::End();
     ImGui::Begin("Input");
-    ImGui::Text("%X", nanoR::GlobalContext::Instance().input_system->control_commad);
+    ImGui::Text("%d", nanoR::GlobalContext::Instance().input_system->control_commad);
+    auto cam_pos = main_camera_.GetPosition();
+    ImGui::Text("Position: %f, %f, %f", cam_pos.x, cam_pos.y, cam_pos.z);
     ImGui::Text(
-        "x_offset: %f, y_offset: %f", nanoR::GlobalContext::Instance().input_system->cursor_x_offset,
+        "x_offset: %.10f, y_offset: %.10f", nanoR::GlobalContext::Instance().input_system->cursor_x_offset,
         nanoR::GlobalContext::Instance().input_system->cursor_x_offset
     );
+    ImGui::Text("yaw: %f, pitch: %f", main_camera_.yaw_, main_camera_.pitch_);
     ImGui::End();
+  }
+
+  auto OnEvent(const std::shared_ptr<nanoR::Event>& event) -> bool override {
+    return true;
   }
 
  private:

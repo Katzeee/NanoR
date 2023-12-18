@@ -17,7 +17,7 @@ class Camera<CameraType::kPersp> {
  public:
   Camera(glm::vec3 position, glm::vec3 target) : position_(position) {
     auto front = glm::normalize(target - position);
-    pitch_ = std::asin(front.y);
+    pitch_ = std::asin(-front.y);
     yaw_ = atan2(-front.x, front.z);
     UpdateQuat();
   }
@@ -35,10 +35,12 @@ class Camera<CameraType::kPersp> {
     return glm::lookAt(position_, position_ + front, up);
   }
 
+  // HINT: can't put input process to OnEvent because when frame count is low, event count will decrease
   auto Tick(uint64_t delta_time) -> void {
     float distance = delta_time * speed_ / 1000;
     auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
     auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
+    auto right = glm::normalize(glm::cross(front, up));
     if (ReceiveCommand(ControlCommand::kForward)) {
       position_ += front * distance;
     }
@@ -46,13 +48,27 @@ class Camera<CameraType::kPersp> {
       position_ += front * -distance;
     }
     if (ReceiveCommand(ControlCommand::kRight)) {
-      position_ += glm::cross(front, up) * distance;
+      position_ += right * -distance;
     }
     if (ReceiveCommand(ControlCommand::kLeft)) {
-      position_ += glm::cross(front, up) * -distance;
+      position_ += right * distance;
     }
-    yaw_ += GlobalContext::Instance().input_system->cursor_x_offset * sensitivity_ * delta_time * fov_;
-    pitch_ += GlobalContext::Instance().input_system->cursor_y_offset * sensitivity_ * delta_time * fov_;
+    float cursor_x_offset = GlobalContext::Instance().input_system->cursor_x_offset;
+    float cursor_y_offset = GlobalContext::Instance().input_system->cursor_y_offset;
+    if (ReceiveCommand(ControlCommand::kLeftButtonDown)) {
+      yaw_ += cursor_x_offset * translate_sensitivity_ * delta_time * fov_;
+      pitch_ += cursor_y_offset * translate_sensitivity_ * delta_time * fov_;
+    }
+    if (ReceiveCommand(ControlCommand::kRightButtonDown)) {
+      glm::vec3 rotate_origin = position_ + 5.0F * glm::normalize(front);
+      auto rotate_matrix = glm::rotate(glm::mat4{1}, cursor_x_offset * rotate_sensitivity_, up);
+      position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
+      rotate_matrix = glm::rotate(glm::mat4{1}, cursor_y_offset * rotate_sensitivity_, right);
+      position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
+      front = glm::normalize(rotate_origin - position_);
+      pitch_ = std::asin(-front.y);
+      yaw_ = atan2(-front.x, front.z);
+    }
     UpdateQuat();
   }
 
@@ -76,7 +92,8 @@ class Camera<CameraType::kPersp> {
   float pitch_;
   glm::vec3 position_;
   inline static float speed_ = 1.5f;
-  inline static float sensitivity_ = 0.00002;
+  inline static float translate_sensitivity_ = 0.00002;
+  inline static float rotate_sensitivity_ = 0.002;
 
   float fov_ = 43.0f;
   float aspect_ = 0.5f;
