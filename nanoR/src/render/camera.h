@@ -64,7 +64,7 @@ class Camera<CameraType::kPersp> {
     rotation_ = glm::normalize(rotation_);
   }
 
- private:
+ public:
   glm::quat rotation_;
   // rotation around y, like shaking head
   float yaw_;
@@ -74,8 +74,8 @@ class Camera<CameraType::kPersp> {
   inline static float speed_ = 1.5f;
   inline static float sensitivity_ = 0.00002;
 
-  float fov_ = 45.0f;
-  float aspect_ = 1.5f;
+  float fov_ = 43.0f;
+  float aspect_ = 0.5f;
   float near_ = 0.1f;
   float far_ = 150.0f;
 };

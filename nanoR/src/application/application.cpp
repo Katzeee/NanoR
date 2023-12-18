@@ -43,10 +43,12 @@ auto Application::EventCallback(std::shared_ptr<Event> const& event) -> void {
   if (event->GetType() == EventType::kWindowClose) {
     is_running_ = false;
   }
-  GlobalContext::Instance().input_system->OnEvent(event);
   for (auto&& it : layer_stack_->GetLayers()) {
-    it->OnEvent(event);
+    if (!it->OnEvent(event)) {
+      return;
+    }
   }
+  GlobalContext::Instance().input_system->OnEvent(event);
 }
 
 auto Application::PushLayer(std::shared_ptr<Layer> layer) -> void {

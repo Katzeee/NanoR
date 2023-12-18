@@ -25,7 +25,9 @@ auto UILayerGLFWOpenGL3::OnDetach() -> void {
   ImGui::DestroyContext();
 }
 
-auto UILayerGLFWOpenGL3::OnEvent(std::shared_ptr<Event> const& event) -> void {}
+auto UILayerGLFWOpenGL3::OnEvent(std::shared_ptr<Event> const& event) -> bool {
+  return passthough_event_;
+}
 
 auto UILayerGLFWOpenGL3::Begin() -> void {
   ImGui_ImplOpenGL3_NewFrame();

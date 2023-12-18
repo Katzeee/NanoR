@@ -13,8 +13,8 @@ class ResourceManager {
   // TODO: not create like this
   static auto GetUnlitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
   static auto GetLitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
-
   static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int;
+  static auto GetQuadMeshData() -> MeshData;
 
  private:
   static auto ReadFromFile(char const *file_path) -> std::string;

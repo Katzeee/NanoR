@@ -10,7 +10,9 @@ auto Layer::Tick(uint64_t delta_time) -> void {}
 
 auto Layer::OnDetach() -> void {}
 
-auto Layer::OnEvent(std::shared_ptr<Event> const& event) -> void {}
+auto Layer::OnEvent(std::shared_ptr<Event> const& event) -> bool {
+  return true;
+}
 
 auto Layer::TickUI() -> void {}
 

@@ -10,7 +10,8 @@ class Layer {
   // HINT: the unit of delta_time is milliseconds
   virtual auto Tick(uint64_t delta_time) -> void;
   virtual auto OnDetach() -> void;
-  virtual auto OnEvent(std::shared_ptr<Event> const& event) -> void;
+  // HINT: true means pass this event to next layer, false means block this event
+  virtual auto OnEvent(std::shared_ptr<Event> const& event) -> bool;
   virtual auto TickUI() -> void;
   auto GetName() const -> std::string;
 

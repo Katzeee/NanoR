@@ -13,7 +13,9 @@ class EditorLayer : public nanoR::Layer {
 
   auto OnAttach() -> void override {
     auto cube = nanoR::Model("../resources/models/Cube/cube.obj");
-    mesh_ = nanoR::CreateMesh(&rhi_, cube.meshes_.at(0));
+    auto quad = nanoR::ResourceManager::GetQuadMeshData();
+    cube_mesh_ = nanoR::CreateMesh(&rhi_, cube.meshes_.at(0));
+    quad_mesh_ = nanoR::CreateMesh(&rhi_, quad);
     rhi_.CreateFramebuffer({}, fbo_);
     fbo_color_attachment_create_info_.internal_format = GL_RGBA8;
     fbo_color_attachment_create_info_.format = GL_RGB;
@@ -73,7 +75,8 @@ class EditorLayer : public nanoR::Layer {
     glBindTexture(GL_TEXTURE_2D, t_white_);
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue<int>("texture_diffuse0", 0);
 
-    rhi_.Draw(mesh_.vao.get(), shader_program_.get(), fbo_.get());
+    // rhi_.Draw(cube_mesh_.vao.get(), shader_program_.get(), fbo_.get());
+    rhi_.Draw(quad_mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
 
   auto TickUI() -> void override {
@@ -105,6 +108,7 @@ class EditorLayer : public nanoR::Layer {
 
     // DockSpace
     ImGuiIO& io = ImGui::GetIO();
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
     ImGuiStyle& style = ImGui::GetStyle();
     float minWinSizeX = style.WindowMinSize.x;
     style.WindowMinSize.x = 370.0f;
@@ -114,6 +118,11 @@ class EditorLayer : public nanoR::Layer {
     }
     ImGui::End();
     ImGui::Begin("Scene");
+
+    nanoR::GlobalContext::Instance().ui_layer->SetBlockEvent(
+        ImGui::IsItemHovered() || !(ImGui::IsWindowFocused() && ImGui::IsWindowHovered())
+    );
+
     ImVec2 scene_size = ImGui::GetContentRegionAvail();
     if (scene_size.x != fbo_color_attachment_create_info_.width ||
         scene_size.y != fbo_color_attachment_create_info_.height) {
@@ -123,6 +132,9 @@ class EditorLayer : public nanoR::Layer {
       auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
       attach_color_attachment_info.level = 0;
       rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
+      LOG_TRACE("scene size: {} {}\n", scene_size.x, scene_size.y);
+      glViewport(0, 0, scene_size.x, scene_size.y);
+      main_camera_.aspect_ = scene_size.x / scene_size.y;
     }
     ImGui::Image(
         reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(t_fbo_color_attachment_.get())->id)),
@@ -141,7 +153,8 @@ class EditorLayer : public nanoR::Layer {
  private:
   std::shared_ptr<nanoR::RHIShaderProgram> shader_program_;
   std::shared_ptr<nanoR::Scene> scene_;
-  nanoR::OpenGLMesh mesh_;
+  nanoR::OpenGLMesh cube_mesh_;
+  nanoR::OpenGLMesh quad_mesh_;
   nanoR::RHITextureCreateInfoOpenGL fbo_color_attachment_create_info_;
   std::shared_ptr<nanoR::RHITexture> t_fbo_color_attachment_;
   GLuint t_white_ = 0;
@@ -150,16 +163,17 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIFramebuffer> fbo_;
   nanoR::RHIOpenGL rhi_;
 
-  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{1, 1, 5}, {0, 0, 0}};
+  nanoR::Camera<nanoR::CameraType::kPersp> main_camera_{{0, 0, 5}, {0, 0, 0}};
 };
 
 class InputLayer : public nanoR::Layer {
  public:
   InputLayer(std::string const& name) : Layer(name) {}
-  auto OnEvent(std::shared_ptr<nanoR::Event> const& event) -> void override {
+  auto OnEvent(std::shared_ptr<nanoR::Event> const& event) -> bool override {
     if (event->GetType() == nanoR::EventType::kKeyDown) {
       auto key_event = dynamic_cast<nanoR::KeyDownEvent*>(event.get());
     }
+    return true;
   }
 };
 

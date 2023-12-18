@@ -62,6 +62,21 @@ auto ResourceManager::LoadTextureFromFile(std::string_view file_path) -> unsigne
   return texture_id;
 }
 
+auto ResourceManager::GetQuadMeshData() -> MeshData {
+  MeshData mesh_data;
+  mesh_data.vertices.resize(4);
+  mesh_data.vertices[0].position = {-1, -1, 0};
+  mesh_data.vertices[0].texcoord = {0, 0};
+  mesh_data.vertices[1].position = {1, -1, 0};
+  mesh_data.vertices[0].texcoord = {1, 0};
+  mesh_data.vertices[2].position = {-1, 1, 0};
+  mesh_data.vertices[0].texcoord = {0, 1};
+  mesh_data.vertices[3].position = {1, 1, 0};
+  mesh_data.vertices[0].texcoord = {1, 1};
+  mesh_data.indices = {0, 1, 2, 1, 2, 3};
+  return mesh_data;
+}
+
 // TODO: not create like this
 auto ResourceManager::GetUnlitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram> {
   ShaderData shader_data =
