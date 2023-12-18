@@ -13,6 +13,7 @@ class ResourceManager {
   // TODO: not create like this
   static auto GetUnlitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
   static auto GetLitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
+  static auto GetUiShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
   static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int;
   static auto GetQuadMeshData() -> MeshData;
 
@@ -83,7 +84,8 @@ class Model {
 
     //   auto diffuse_mats = LoadTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     //   textures.insert(
-    //       textures.end(), std::make_move_iterator(diffuse_mats.begin()), std::make_move_iterator(diffuse_mats.end())
+    //       textures.end(), std::make_move_iterator(diffuse_mats.begin()),
+    //       std::make_move_iterator(diffuse_mats.end())
     //   );
     //   auto specular_mats = LoadTextures(material, aiTextureType_SPECULAR, "texture_specular");
     //   textures.insert(
@@ -99,7 +101,8 @@ class Model {
     return {std::move(vertices), std::move(indices)};
   }
 
-  // auto LoadTextures(aiMaterial *material, aiTextureType type, const std::string &type_name) -> std::vector<Texture> {
+  // auto LoadTextures(aiMaterial *material, aiTextureType type, const std::string &type_name) -> std::vector<Texture>
+  // {
   //   std::vector<Texture> textures;
   //   aiString path;
   //   for (auto i = 0; i < material->GetTextureCount(type); i++) {

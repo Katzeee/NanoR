@@ -68,11 +68,11 @@ auto ResourceManager::GetQuadMeshData() -> MeshData {
   mesh_data.vertices[0].position = {-1, -1, 0};
   mesh_data.vertices[0].texcoord = {0, 0};
   mesh_data.vertices[1].position = {1, -1, 0};
-  mesh_data.vertices[0].texcoord = {1, 0};
+  mesh_data.vertices[1].texcoord = {1, 0};
   mesh_data.vertices[2].position = {-1, 1, 0};
-  mesh_data.vertices[0].texcoord = {0, 1};
+  mesh_data.vertices[2].texcoord = {0, 1};
   mesh_data.vertices[3].position = {1, 1, 0};
-  mesh_data.vertices[0].texcoord = {1, 1};
+  mesh_data.vertices[3].texcoord = {1, 1};
   mesh_data.indices = {0, 1, 2, 1, 2, 3};
   return mesh_data;
 }
@@ -102,6 +102,27 @@ auto ResourceManager::GetUnlitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgr
 auto ResourceManager::GetLitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram> {
   ShaderData shader_data =
       ResourceManager::LoadShaderData("../nanoR/shader/common.vert.glsl", "../nanoR/shader/lit.frag.glsl");
+  std::shared_ptr<RHIShaderModule> vert_shader;
+  std::shared_ptr<RHIShaderModule> frag_shader;
+  std::shared_ptr<RHIShaderProgram> shader_program;
+  auto shader_module_create_info = RHIShaderModuleCreateInfoOpenGL{};
+  shader_module_create_info.type = GL_VERTEX_SHADER;
+  shader_module_create_info.src = shader_data.vs_src.c_str();
+  rhi->CreateShaderModule(shader_module_create_info, vert_shader);
+  shader_module_create_info.type = GL_FRAGMENT_SHADER;
+  shader_module_create_info.src = shader_data.fs_src.c_str();
+  rhi->CreateShaderModule(shader_module_create_info, frag_shader);
+  auto shader_program_create_info = RHIShaderProgramCreateInfoOpenGL{};
+  shader_program_create_info.shaders.push_back(vert_shader);
+  shader_program_create_info.shaders.push_back(frag_shader);
+  rhi->CreateShaderProgram(shader_program_create_info, shader_program);
+  return shader_program;
+}
+
+// TODO: not create like this
+auto ResourceManager::GetUiShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram> {
+  ShaderData shader_data =
+      ResourceManager::LoadShaderData("../nanoR/shader/ui.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
   std::shared_ptr<RHIShaderModule> vert_shader;
   std::shared_ptr<RHIShaderModule> frag_shader;
   std::shared_ptr<RHIShaderProgram> shader_program;

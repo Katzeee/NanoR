@@ -8,7 +8,6 @@ class UILayer : public Layer {
   auto Tick(uint64_t delta_time) -> void override final {}
   auto TickUI() -> void override final {}
   auto SetBlockEvent(bool block) -> void {
-    LOG_TRACE("block: {}\n", block);
     passthough_event_ = !block;
   }
 

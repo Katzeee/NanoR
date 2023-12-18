@@ -21,6 +21,10 @@ class Camera<CameraType::kPersp> {
     yaw_ = atan2(-front.x, front.z);
     UpdateQuat();
   }
+  auto GetPosition() -> glm::vec3 {
+    return position_;
+  }
+
   auto GetProjectionMatrix() -> glm::mat4 {
     return glm::perspective(fov_, aspect_, near_, far_);
   }

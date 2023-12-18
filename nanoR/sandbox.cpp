@@ -33,7 +33,7 @@ class EditorLayer : public nanoR::Layer {
     auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
     attach_color_attachment_info.level = 0;
     rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
-    shader_program_ = nanoR::ResourceManager::GetLitShader(&rhi_);
+    shader_program_ = nanoR::ResourceManager::GetUiShader(&rhi_);
     // shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
     // t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
     // auto t_point_light = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
@@ -70,6 +70,12 @@ class EditorLayer : public nanoR::Layer {
     bind_uniform_buffer_info.index = 0;
     bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
     rhi_.BindUniformBuffer(bind_uniform_buffer_info, shader_program_.get(), ubo_.get());
+
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("model", glm::mat4{1});
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("view", view);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("proj", proj);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())
+        ->SetValue("ws_cam_pos", main_camera_.GetPosition());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_white_);
