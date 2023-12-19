@@ -16,6 +16,7 @@ class InputSystem<Platform::Linux> {
   auto Tick() -> void {
     cursor_x_offset = 0;
     cursor_y_offset = 0;
+    scroll_y_offset = 0;
   }
 
   auto OnEvent(std::shared_ptr<Event> const& event) {
@@ -58,8 +59,7 @@ class InputSystem<Platform::Linux> {
         default:
           break;
       }
-    }
-    if (event->GetType() == EventType::kMouseButtonDown) {
+    } else if (event->GetType() == EventType::kMouseButtonDown) {
       auto button_event = dynamic_cast<MouseButtonDownEvent*>(event.get());
       glfwGetCursorPos(
           reinterpret_cast<GLFWwindow*>(GlobalContext::Instance().window->GetRawWindow()), &last_cursor_x_pos,
@@ -88,6 +88,9 @@ class InputSystem<Platform::Linux> {
         default:
           break;
       }
+    } else if (event->GetType() == EventType::kMouseButtonScroll) {
+      auto scroll_event = dynamic_cast<MouseButtonScrollEvent*>(event.get());
+      scroll_y_offset = scroll_event->yoffset;
     }
     if (ReceiveCommand(ControlCommand::kLeftButtonDown) || ReceiveCommand(ControlCommand::kRightButtonDown)) {
       if (event->GetType() == EventType::kMouseCursorMove) {
@@ -105,6 +108,7 @@ class InputSystem<Platform::Linux> {
   double cursor_y_offset = 0;
   double last_cursor_x_pos = 0;
   double last_cursor_y_pos = 0;
+  double scroll_y_offset = 0;
 };
 
 inline static auto ReceiveCommand(ControlCommand command) -> bool {

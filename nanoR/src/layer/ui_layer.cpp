@@ -147,7 +147,8 @@ auto UILayer::Scene() -> void {
 
 auto UILayer::Input() -> void {
   ImGui::Begin("Input");
-  ImGui::Text("%d", nanoR::GlobalContext::Instance().input_system->control_commad);
+  ImGui::Text("Commands: %d", nanoR::GlobalContext::Instance().input_system->control_commad);
+  ImGui::Text("Scroll: %lf", nanoR::GlobalContext::Instance().input_system->scroll_y_offset);
   // auto cam_pos = main_camera_.GetPosition();
   // ImGui::Text("Position: %f, %f, %f", cam_pos.x, cam_pos.y, cam_pos.z);
   // ImGui::Text(

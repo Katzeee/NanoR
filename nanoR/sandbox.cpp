@@ -69,11 +69,6 @@ class EditorLayer : public nanoR::Layer {
     bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
     rhi_.BindUniformBuffer(bind_uniform_buffer_info, shader_program_.get(), ubo_.get());
 
-    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("view", view);
-    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("proj", proj);
-    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())
-    // ->SetValue("ws_cam_pos", main_camera_->GetPosition());
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_white_);
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue<int>("texture_diffuse0", 0);
@@ -85,9 +80,6 @@ class EditorLayer : public nanoR::Layer {
           ->SetValue("model", c_transform.GetModelMatrix());
       rhi_.Draw(c_mesh.mesh->vao.get(), shader_program_.get(), fbo);
     }
-
-    // rhi_.Draw(cube_mesh_.vao.get(), shader_program_.get(), fbo_.get());
-    // rhi_.Draw(quad_mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
 
   auto TickUI() -> void override {

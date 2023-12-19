@@ -43,19 +43,17 @@ struct MouseButtonUpEvent final : public Event {
   int mods;
 };
 
-class MouseButtonScrollEvent final : public Event {
- public:
+struct MouseButtonScrollEvent final : public Event {
   DECLARE_EVENT_TYPE(kMouseButtonScroll)
   DECLARE_EVENT_CATEGORY(EventCategory::kInput | EventCategory::kMouse)
 
-  MouseButtonScrollEvent(double xoffset, double yoffset) : xoffset_(xoffset), yoffset_(yoffset) {}
+  MouseButtonScrollEvent(double xoffset, double yoffset) : xoffset(xoffset), yoffset(yoffset) {}
   auto ToString() const -> std::string override {
-    return fmt::format("[MouseButtonScrollEvent] xoffset: {}, yoffset: {}", xoffset_, yoffset_);
+    return fmt::format("[MouseButtonScrollEvent] xoffset: {}, yoffset: {}", xoffset, yoffset);
   }
 
- private:
-  double xoffset_;
-  double yoffset_;
+  double xoffset;
+  double yoffset;
 };
 
 }  // namespace nanoR

@@ -29,7 +29,7 @@ class PrespCamera : public Camera {
 
   // HINT: can't put input process to OnEvent because when frame count is low, event count will decrease
   auto Tick(uint64_t delta_time) -> void {
-    float distance = delta_time * speed_ / 1000;
+    float distance = speed_ * delta_time / 100;
     auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
     auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
     auto right = glm::normalize(glm::cross(front, up));
@@ -47,15 +47,21 @@ class PrespCamera : public Camera {
     }
     float cursor_x_offset = GlobalContext::Instance().input_system->cursor_x_offset;
     float cursor_y_offset = GlobalContext::Instance().input_system->cursor_y_offset;
+    float scroll_y_offset = GlobalContext::Instance().input_system->scroll_y_offset;
+    position_ += front * scroll_y_offset * distance * 10.0f;
     if (ReceiveCommand(ControlCommand::kLeftButtonDown)) {
-      yaw_ += cursor_x_offset * translate_sensitivity_ * delta_time * fov_;
-      pitch_ += cursor_y_offset * translate_sensitivity_ * delta_time * fov_;
+      position_ += cursor_x_offset * distance * right * translate_sensitivity_;
+      position_ += cursor_y_offset * distance * -up * translate_sensitivity_;
+    }
+    if (ReceiveCommand(ControlCommand::kLeftAlt)) {
+      // yaw_ += cursor_x_offset * view_sensitivity_ * delta_time * fov_;
+      // pitch_ += cursor_y_offset * view_sensitivity_ * delta_time * fov_;
     }
     if (ReceiveCommand(ControlCommand::kRightButtonDown)) {
       glm::vec3 rotate_origin = position_ + 5.0F * glm::normalize(front);
-      auto rotate_matrix = glm::rotate(glm::mat4{1}, cursor_x_offset * rotate_sensitivity_, up);
+      auto rotate_matrix = glm::rotate(glm::mat4{1}, cursor_x_offset * rotate_sensitivity_ * delta_time, up);
       position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
-      rotate_matrix = glm::rotate(glm::mat4{1}, cursor_y_offset * rotate_sensitivity_, right);
+      rotate_matrix = glm::rotate(glm::mat4{1}, cursor_y_offset * rotate_sensitivity_ * delta_time, right);
       position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
       front = glm::normalize(rotate_origin - position_);
       pitch_ = std::asin(-front.y);
@@ -88,8 +94,8 @@ class PrespCamera : public Camera {
   float pitch_;
   glm::vec3 position_;
   inline static float speed_ = 1.5f;
-  inline static float translate_sensitivity_ = 0.00002;
-  inline static float rotate_sensitivity_ = 0.002;
+  inline static float translate_sensitivity_ = 0.25;
+  inline static float rotate_sensitivity_ = 0.0006;
 
   float fov_ = 43.0f;
   float aspect_ = 0.5f;

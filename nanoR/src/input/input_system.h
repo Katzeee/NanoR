@@ -12,6 +12,7 @@ enum class ControlCommand : uint32_t {
   kDown = 1 << 5,
   kLeftButtonDown = 1 << 6,
   kRightButtonDown = 1 << 7,
+  kLeftAlt = 1 << 8,
 };
 
 enum class Platform {
