@@ -12,10 +12,15 @@ class EditorLayer : public nanoR::Layer {
   }
 
   auto OnAttach() -> void override {
-    auto cube = nanoR::Model("../resources/models/Cube/cube.obj");
-    auto quad = nanoR::ResourceManager::GetQuadMeshData();
-    cube_mesh_ = nanoR::CreateMesh(&rhi_, cube.meshes_.at(0));
-    quad_mesh_ = nanoR::CreateMesh(&rhi_, quad);
+    auto cube_mesh_data = nanoR::Model("../resources/models/Cube/cube.obj");
+    auto quad_mesh_data = nanoR::ResourceManager::GetQuadMeshData();
+    auto* cube_mesh = nanoR::CreateMesh(&rhi_, cube_mesh_data.meshes_.at(0));
+    auto* quad_mesh = nanoR::CreateMesh(&rhi_, quad_mesh_data);
+    auto cube = scene_->CreateEntity();
+    auto cube_name = scene_->Get<nanoR::NameComponent>(cube);
+    cube_name->name = "cube";
+    auto comp_sprite = cube.AddComponent<nanoR::MeshComponent>();
+    comp_sprite->mesh = std::shared_ptr<nanoR::OpenGLMesh>(cube_mesh);
     rhi_.CreateFramebuffer({}, fbo_);
     fbo_color_attachment_create_info_.internal_format = GL_RGBA8;
     fbo_color_attachment_create_info_.format = GL_RGB;
@@ -33,8 +38,9 @@ class EditorLayer : public nanoR::Layer {
     auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
     attach_color_attachment_info.level = 0;
     rhi_.AttachColorAttachment(attach_color_attachment_info, fbo_.get(), t_fbo_color_attachment_.get());
-    shader_program_ = nanoR::ResourceManager::GetUiShader(&rhi_);
+    // shader_program_ = nanoR::ResourceManager::GetUiShader(&rhi_);
     // shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
+    shader_program_ = nanoR::ResourceManager::GetLitShader(&rhi_);
     // t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
     // auto t_point_light = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
     t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
@@ -47,8 +53,6 @@ class EditorLayer : public nanoR::Layer {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    auto e = scene_->CreateEntity();
   }
 
   auto Tick(uint64_t delta_time) -> void override {
@@ -81,8 +85,14 @@ class EditorLayer : public nanoR::Layer {
     glBindTexture(GL_TEXTURE_2D, t_white_);
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue<int>("texture_diffuse0", 0);
 
+    auto v = scene_->View<nanoR::MeshComponent>();
+    for (auto it = v.begin(); it != v.end(); ++it) {
+      auto [mesh] = *it;
+      rhi_.Draw(mesh.mesh->vao.get(), shader_program_.get(), fbo_.get());
+    }
+
     // rhi_.Draw(cube_mesh_.vao.get(), shader_program_.get(), fbo_.get());
-    rhi_.Draw(quad_mesh_.vao.get(), shader_program_.get(), fbo_.get());
+    // rhi_.Draw(quad_mesh_.vao.get(), shader_program_.get(), fbo_.get());
   }
 
   auto TickUI() -> void override {
@@ -157,6 +167,15 @@ class EditorLayer : public nanoR::Layer {
     );
     ImGui::Text("yaw: %f, pitch: %f", main_camera_.yaw_, main_camera_.pitch_);
     ImGui::End();
+
+    ImGui::Begin("World");
+    auto v = scene_->View<nanoR::NameComponent>();
+    for (auto it = v.begin(); it != v.end(); ++it) {
+      auto [name] = *it;
+      ImGui::Text("%s", name.name.c_str());
+    }
+    ImGui::End();
+    ImGui::ShowDemoWindow();
   }
 
   auto OnEvent(const std::shared_ptr<nanoR::Event>& event) -> bool override {
@@ -166,8 +185,6 @@ class EditorLayer : public nanoR::Layer {
  private:
   std::shared_ptr<nanoR::RHIShaderProgram> shader_program_;
   std::shared_ptr<nanoR::Scene> scene_;
-  nanoR::OpenGLMesh cube_mesh_;
-  nanoR::OpenGLMesh quad_mesh_;
   nanoR::RHITextureCreateInfoOpenGL fbo_color_attachment_create_info_;
   std::shared_ptr<nanoR::RHITexture> t_fbo_color_attachment_;
   GLuint t_white_ = 0;

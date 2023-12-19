@@ -14,6 +14,9 @@ auto Application::Init() -> void {
   window->user_data_.event_callback = [this](auto&& event) { EventCallback(std::forward<decltype(event)>(event)); };
   GlobalContext::Instance().window = window;
   GlobalContext::Instance().input_system = std::make_shared<InputSystem<Platform::Linux>>();
+  layer_stack_ = std::make_unique<LayerStack>();
+  GlobalContext::Instance().ui_layer = std::make_shared<UILayer>("UILayer");
+  PushOverlayLayer(GlobalContext::Instance().ui_layer);
 }
 
 auto Application::Run() -> void {
@@ -26,11 +29,12 @@ auto Application::Run() -> void {
       it->Tick(delta);
     }
 
-    ui_layer_->Begin();
-    for (auto&& it : layer_stack_->GetLayers()) {
-      it->TickUI();
-    }
-    ui_layer_->End();
+    // ui_layer_->Begin();
+    // for (auto&& it : layer_stack_->GetLayers()) {
+    //   it->TickUI();
+    // }
+    // ui_layer_->End();
+
     // FIX: execute order
     GlobalContext::Instance().input_system->Tick();
     GlobalContext::Instance().window->Tick();
@@ -51,13 +55,13 @@ auto Application::EventCallback(std::shared_ptr<Event> const& event) -> void {
   GlobalContext::Instance().input_system->OnEvent(event);
 }
 
-auto Application::PushLayer(std::shared_ptr<Layer> layer) -> void {
+auto Application::PushLayer(std::shared_ptr<Layer> const& layer) -> void {
   layer_stack_->PushLayer(layer);
 }
-auto Application::PushOverlayLayer(std::shared_ptr<Layer> layer) -> void {
+auto Application::PushOverlayLayer(std::shared_ptr<Layer> const& layer) -> void {
   layer_stack_->PushOverlayLayer(layer);
 }
-auto Application::PopLayer(std::shared_ptr<Layer> layer) -> void {
+auto Application::PopLayer(std::shared_ptr<Layer> const& layer) -> void {
   layer_stack_->PopLayer(layer);
 }
 

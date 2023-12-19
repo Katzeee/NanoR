@@ -2,19 +2,19 @@
 
 namespace nanoR {
 
-auto LayerStack::PushLayer(std::shared_ptr<Layer> layer) -> void {
+auto LayerStack::PushLayer(std::shared_ptr<Layer> const& layer) -> void {
   auto pos = last_overlay_layer_ + 1;
   layers_.insert(layers_.begin(), layer);
   layer->OnAttach();
 }
 
-auto LayerStack::PushOverlayLayer(std::shared_ptr<Layer> layer) -> void {
+auto LayerStack::PushOverlayLayer(std::shared_ptr<Layer> const& layer) -> void {
   layers_.emplace_front(layer);
   last_overlay_layer_++;
   layer->OnAttach();
 }
 
-auto LayerStack::PopLayer(std::shared_ptr<Layer> layer) -> void {
+auto LayerStack::PopLayer(std::shared_ptr<Layer> const& layer) -> void {
   if (auto layer_it = std::find(layers_.begin(), layers_.end(), layer); layer_it != layers_.end()) {
     auto diff = layer_it - layers_.begin();
     if (diff <= last_overlay_layer_) {

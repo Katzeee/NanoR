@@ -5,9 +5,9 @@
 namespace nanoR {
 class LayerStack {
  public:
-  auto PushLayer(std::shared_ptr<Layer> layer) -> void;
-  auto PushOverlayLayer(std::shared_ptr<Layer> layer) -> void;
-  auto PopLayer(std::shared_ptr<Layer> layer) -> void;
+  auto PushLayer(std::shared_ptr<Layer> const& layer) -> void;
+  auto PushOverlayLayer(std::shared_ptr<Layer> const& layer) -> void;
+  auto PopLayer(std::shared_ptr<Layer> const& layer) -> void;
   auto GetLayers() -> std::deque<std::shared_ptr<Layer>>&;
 
   auto ToString() -> std::string;
