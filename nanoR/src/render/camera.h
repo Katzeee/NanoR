@@ -64,6 +64,10 @@ class PrespCamera : public Camera {
     UpdateQuat();
   }
 
+  auto SetAspect(float aspect) -> void {
+    aspect_ = aspect;
+  }
+
  private:
   void UpdateQuat() {
     rotation_ = glm::angleAxis(yaw_, glm::vec3(0.0f, -1.0f, 0.0f));
@@ -76,7 +80,7 @@ class PrespCamera : public Camera {
     rotation_ = glm::normalize(rotation_);
   }
 
- public:
+ private:
   glm::quat rotation_;
   // rotation around y, like shaking head
   float yaw_;

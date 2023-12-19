@@ -8,6 +8,7 @@
 #include "platform/input_system_glfw.h"
 #include "platform/opengl/rhi_opengl.h"
 #include "platform/window_linux.h"
+#include "render/camera.h"
 
 namespace nanoR {
 
@@ -131,7 +132,7 @@ auto UILayer::Scene() -> void {
     rhi_->AttachColorAttachment(attach_color_attachment_info, scene_framebuffer_.get(), scene_color_attachment_.get());
     LOG_TRACE("scene size: {} {}\n", scene_size.x, scene_size.y);
     glViewport(0, 0, scene_size.x, scene_size.y);
-    // main_camera_.aspect_ = scene_size.x / scene_size.y;
+    GlobalContext::Instance().main_camera->SetAspect(scene_size.x / scene_size.y);
   }
   ImGui::Image(
       reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(scene_color_attachment_.get())->id)), scene_size,
