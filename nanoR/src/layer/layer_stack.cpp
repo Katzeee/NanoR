@@ -3,7 +3,8 @@
 namespace nanoR {
 
 auto LayerStack::PushLayer(std::shared_ptr<Layer> layer) -> void {
-  layers_.insert(layers_.begin() + last_overlay_layer_ + 1, layer);
+  auto pos = last_overlay_layer_ + 1;
+  layers_.insert(layers_.begin(), layer);
   layer->OnAttach();
 }
 
