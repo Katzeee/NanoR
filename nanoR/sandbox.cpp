@@ -17,16 +17,18 @@ class EditorLayer : public nanoR::Layer {
     auto quad_mesh_data = nanoR::ResourceManager::GetQuadMeshData();
     auto* cube_mesh = nanoR::CreateMesh(&rhi_, cube_mesh_data.meshes_.at(0));
     auto* quad_mesh = nanoR::CreateMesh(&rhi_, quad_mesh_data);
-    auto cube = scene_->CreateEntity();
-    auto cube_name = scene_->GetComponent<nanoR::NameComponent>(cube);
+    cube_ = scene_->CreateEntity();
+    auto cube_name = scene_->GetComponent<nanoR::NameComponent>(cube_);
     cube_name->name = "cube";
-    auto comp_sprite = cube.AddComponent<nanoR::MeshComponent>();
-    comp_sprite->mesh = std::shared_ptr<nanoR::OpenGLMesh>(cube_mesh);
+    auto c_mesh = cube_.AddComponent<nanoR::MeshComponent>();
+    c_mesh->mesh = std::shared_ptr<nanoR::OpenGLMesh>(cube_mesh);
     auto quad = scene_->CreateEntity();
+    c_mesh = quad.AddComponent<nanoR::MeshComponent>();
+    c_mesh->mesh = std::shared_ptr<nanoR::OpenGLMesh>(quad_mesh);
     auto quad_name = scene_->GetComponent<nanoR::NameComponent>(quad);
     quad_name->name = "quad";
 
-    LOG_TRACE("{}\n", (void*)cube.GetComponenet<nanoR::TransformComponent>().get());
+    LOG_TRACE("{}\n", (void*)cube_.GetComponenet<nanoR::TransformComponent>().get());
     LOG_TRACE("{}\n", (void*)quad.GetComponenet<nanoR::TransformComponent>().get());
 
     // shader_program_ = nanoR::ResourceManager::GetUiShader(&rhi_);
@@ -67,20 +69,21 @@ class EditorLayer : public nanoR::Layer {
     bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
     rhi_.BindUniformBuffer(bind_uniform_buffer_info, shader_program_.get(), ubo_.get());
 
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("model", glm::mat4{1});
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("view", view);
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("proj", proj);
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())
-        ->SetValue("ws_cam_pos", main_camera_->GetPosition());
+    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("view", view);
+    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue("proj", proj);
+    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())
+    // ->SetValue("ws_cam_pos", main_camera_->GetPosition());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_white_);
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue<int>("texture_diffuse0", 0);
 
-    auto v = scene_->View<nanoR::MeshComponent>();
+    auto v = scene_->View<nanoR::TransformComponent, nanoR::MeshComponent>();
     for (auto it = v.begin(); it != v.end(); ++it) {
-      auto [mesh] = *it;
-      rhi_.Draw(mesh.mesh->vao.get(), shader_program_.get(), fbo);
+      auto [c_transform, c_mesh] = *it;
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())
+          ->SetValue("model", c_transform.GetModelMatrix());
+      rhi_.Draw(c_mesh.mesh->vao.get(), shader_program_.get(), fbo);
     }
 
     // rhi_.Draw(cube_mesh_.vao.get(), shader_program_.get(), fbo_.get());
@@ -109,6 +112,7 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIBuffer> ubo_;
   nanoR::RHIOpenGL rhi_;
   nanoR::PrespCamera* main_camera_;
+  nanoR::Entity cube_;
 };
 
 class InputLayer : public nanoR::Layer {

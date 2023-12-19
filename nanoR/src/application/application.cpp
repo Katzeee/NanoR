@@ -21,7 +21,7 @@ auto Application::Init() -> void {
   layer_stack_ = std::make_unique<LayerStack>();
   scene_ = std::make_shared<Scene>();
   GlobalContext::Instance().scene = scene_;
-  GlobalContext::Instance().main_camera = std::make_shared<PrespCamera>(glm::vec3{0, 0, 5}, glm::vec3{0, 0, 0});
+  GlobalContext::Instance().main_camera = std::make_shared<PrespCamera>(glm::vec3{5, 5, 15}, glm::vec3{0, 0, 0});
 }
 
 auto Application::Run() -> void {

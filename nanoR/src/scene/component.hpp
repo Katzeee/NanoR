@@ -13,8 +13,19 @@ struct NameComponent {
 
 struct TransformComponent {
   glm::vec3 position{0.0f, 0.0f, 0.0f};
-  glm::quat rotation;
+  // glm::quat rotation;
+  glm::vec3 rotation;
   glm::vec3 scale{1.0f, 1.0f, 1.0f};
+
+  auto GetModelMatrix() -> glm::mat4 {
+    auto model = glm::mat4{1};
+    model = glm::scale(model, scale);
+    auto quat = glm::quat(rotation);
+    // model = glm::rotate(model, rotation);
+    model = glm::toMat4(quat) * model;
+    model = glm::translate(model, position);
+    return model;
+  }
 };
 
 struct SpriteComponent {

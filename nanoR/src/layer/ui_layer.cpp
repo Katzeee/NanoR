@@ -198,8 +198,18 @@ auto UILayer::Inspector() -> void {
   }
   {
     if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+      // ImGui::PushID()
       auto c_transform = selected_entity_.GetComponenet<TransformComponent>();
-      ImGui::DragFloat3("Position", (float*)&c_transform->position, 0.01F);
+      ImGui::DragFloat3("Position", glm::value_ptr(c_transform->position), 0.01F);
+
+      auto eular = glm::degrees(c_transform->rotation);
+      ImGui::DragFloat3("Rotation", glm::value_ptr(eular), 1.0F);
+      eular = glm::radians(eular);
+      if (auto res = glm::epsilonNotEqual(eular, c_transform->rotation, glm::epsilon<float>()); glm::any(res)) {
+        c_transform->rotation = eular;
+      }
+
+      ImGui::DragFloat3("Scale", glm::value_ptr(c_transform->scale), 0.01F);
       ImGui::TreePop();
     }
   }
