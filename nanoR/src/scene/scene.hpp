@@ -15,10 +15,13 @@ class Scene {
   auto CreateEntity() -> Entity;
 
   template <typename T>
-  auto Get(const Entity &e) -> xac::ecs::ComponentHandle<Settings, T>;
+  auto GetComponent(const Entity &e) -> xac::ecs::ComponentHandle<Settings, T>;
 
   template <typename... Args>
   auto View();
+
+  template <typename F>
+  auto Each(F &&f) -> void;
 
  private:
   xac::ecs::World<Settings> world_;

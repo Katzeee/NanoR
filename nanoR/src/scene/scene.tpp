@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "entity.hpp"
 #include "scene.hpp"
 
@@ -11,13 +13,22 @@ inline auto Scene::CreateEntity() -> Entity {
   return Entity{e, this};
 }
 template <typename T>
-auto Scene::Get(const Entity& e) -> xac::ecs::ComponentHandle<Settings, T> {
+auto Scene::GetComponent(const Entity& e) -> xac::ecs::ComponentHandle<Settings, T> {
   return world_.get<T>(e.id_);
 }
 
 template <typename... Args>
 auto Scene::View() {
   return world_.view<Args...>();
+}
+
+template <typename F>
+auto Scene::Each(F&& f) -> void {
+  world_.each([&](auto&& e, uint32_t i) {
+    // HINT: this entity is a temp object
+    auto entity = Entity{e.GetId(), this};
+    std::invoke(f, entity, i);
+  });
 }
 
 }  // namespace nanoR

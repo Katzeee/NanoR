@@ -18,10 +18,16 @@ class EditorLayer : public nanoR::Layer {
     auto* cube_mesh = nanoR::CreateMesh(&rhi_, cube_mesh_data.meshes_.at(0));
     auto* quad_mesh = nanoR::CreateMesh(&rhi_, quad_mesh_data);
     auto cube = scene_->CreateEntity();
-    auto cube_name = scene_->Get<nanoR::NameComponent>(cube);
+    auto cube_name = scene_->GetComponent<nanoR::NameComponent>(cube);
     cube_name->name = "cube";
     auto comp_sprite = cube.AddComponent<nanoR::MeshComponent>();
     comp_sprite->mesh = std::shared_ptr<nanoR::OpenGLMesh>(cube_mesh);
+    auto quad = scene_->CreateEntity();
+    auto quad_name = scene_->GetComponent<nanoR::NameComponent>(quad);
+    quad_name->name = "quad";
+
+    LOG_TRACE("{}\n", (void*)cube.GetComponenet<nanoR::TransformComponent>().get());
+    LOG_TRACE("{}\n", (void*)quad.GetComponenet<nanoR::TransformComponent>().get());
 
     // shader_program_ = nanoR::ResourceManager::GetUiShader(&rhi_);
     // shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);

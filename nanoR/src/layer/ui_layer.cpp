@@ -63,6 +63,7 @@ auto UILayer::Tick(uint64_t delta_time) -> void {
   Scene();
   Input();
   Hierarchy();
+  Inspector();
   ImGui::ShowDemoWindow();
   End();
 }
@@ -161,28 +162,46 @@ auto UILayer::Hierarchy() -> void {
   static ImGuiTreeNodeFlags base_flags =
       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
   ImGui::Begin("Hierarchy");
-  if (ImGui::TreeNode("Scene")) {
-    auto view = GlobalContext::Instance().scene->View<NameComponent>();
-    int i = 0;
+  if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen)) {
     static int selected = -1;
-    for (auto it = view.begin(); it != view.end(); ++it) {
-      auto [c_name] = *it;
+    GlobalContext::Instance().scene->Each([&](Entity& entity, uint32_t i) {
+      auto c_name = entity.GetComponenet<NameComponent>();
       auto node_flags = base_flags | ImGuiTreeNodeFlags_Leaf;
       if (selected == i) {
         node_flags |= ImGuiTreeNodeFlags_Selected;
       }
-      bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "%s", c_name.name.c_str());
+      bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "%s", c_name->name.c_str());
 
       if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
         selected = i;
+        selected_entity_ = entity;
       };
       if (node_open) {
         ImGui::TreePop();
       }
-      ++i;
-    }
-    // LOG_TRACE("{}\n", selected);
+    });
     ImGui::TreePop();
+  }
+  ImGui::End();
+}
+
+auto UILayer::Inspector() -> void {
+  ImGui::Begin("inspector");
+  if (!selected_entity_) {
+    ImGui::End();
+    return;
+  }
+
+  {
+    auto c_name = selected_entity_.GetComponenet<NameComponent>();
+    ImGui::Text("%s", c_name->name.c_str());
+  }
+  {
+    if (ImGui::TreeNodeEx("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+      auto c_transform = selected_entity_.GetComponenet<TransformComponent>();
+      ImGui::DragFloat3("Position", (float*)&c_transform->position, 0.01F);
+      ImGui::TreePop();
+    }
   }
   ImGui::End();
 }

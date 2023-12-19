@@ -3,8 +3,10 @@
 #include "platform/opengl/rhi_type_opengl.h"
 #include "render/rhi.h"
 #include "render/rhi_type.h"
+#include "scene/entity.hpp"
 
 namespace nanoR {
+class Entity;
 class UILayer final : public Layer {
  public:
   UILayer(std::string name) : Layer(name) {}
@@ -25,6 +27,7 @@ class UILayer final : public Layer {
   RHITextureCreateInfoOpenGL scene_color_attachment_create_info_;
   std::shared_ptr<nanoR::RHITexture> scene_color_attachment_;
   std::shared_ptr<RHI> rhi_;
+  Entity selected_entity_;
 
   auto CreateSceneFramebuffer() -> void;
   auto Begin() -> void;
@@ -32,6 +35,7 @@ class UILayer final : public Layer {
   auto Scene() -> void;
   auto Input() -> void;
   auto Hierarchy() -> void;
+  auto Inspector() -> void;
   auto End() -> void;
 };
 }  // namespace nanoR

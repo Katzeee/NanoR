@@ -10,18 +10,19 @@ class Entity {
   friend class Scene;
 
  public:
-  Entity() = delete;
+  Entity() = default;
   Entity(xac::ecs::Entity<Settings>::Id id, Scene* scene) : id_(id), scene_(scene) {}
+  operator bool();
 
   template <typename T, typename... Args>
   auto AddComponent(Args&&... args) -> xac::ecs::ComponentHandle<Settings, T>;
 
   template <typename T>
-  auto GetComponenet() -> xac::ecs::ComponentHandle<Settings, T>;
+  auto GetComponenet() const -> xac::ecs::ComponentHandle<Settings, T>;
 
  private:
   xac::ecs::Entity<Settings>::Id id_;
-  Scene* scene_;
+  Scene* scene_ = nullptr;
 };
 
 }  // namespace nanoR
