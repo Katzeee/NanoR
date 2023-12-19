@@ -3,19 +3,11 @@
 #include "platform/input_system_glfw.h"
 
 namespace nanoR {
-
-enum class CameraType {
-  kOrtho,
-  kPersp,
-};
-
-template <CameraType T>
 class Camera {};
 
-template <>
-class Camera<CameraType::kPersp> {
+class PrespCamera : public Camera {
  public:
-  Camera(glm::vec3 position, glm::vec3 target) : position_(position) {
+  PrespCamera(glm::vec3 position, glm::vec3 target) : position_(position) {
     auto front = glm::normalize(target - position);
     pitch_ = std::asin(-front.y);
     yaw_ = atan2(-front.x, front.z);

@@ -45,6 +45,10 @@ auto UILayer::CreateSceneFramebuffer() -> void {
   rhi_->AttachColorAttachment(attach_color_attachment_info, scene_framebuffer_.get(), scene_color_attachment_.get());
 }
 
+auto UILayer::GetSceneFramebuffer() -> RHIFramebuffer* {
+  return scene_framebuffer_.get();
+}
+
 auto UILayer::OnDetach() -> void {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();

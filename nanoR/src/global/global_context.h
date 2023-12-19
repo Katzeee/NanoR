@@ -1,6 +1,7 @@
 #pragma once
 #include "input/input_system.h"
 #include "nanorpch.h"
+// #include "render/camera.h"
 
 namespace nanoR {
 class WindowBase;
@@ -9,6 +10,7 @@ class RHI;
 class UILayer;
 template <Platform T>
 class InputSystem;
+class PrespCamera;
 
 class GlobalContext {
  public:
@@ -20,6 +22,7 @@ class GlobalContext {
   std::shared_ptr<UILayer> ui_layer;
   std::shared_ptr<Scene> scene;
   std::shared_ptr<RHI> rhi;
+  std::shared_ptr<PrespCamera> main_camera;
 };
 
 }  // namespace nanoR

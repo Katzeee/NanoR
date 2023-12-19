@@ -3,6 +3,7 @@
 #include "global/global_context.h"
 #include "layer/ui_layer.h"
 #include "platform/input_system_glfw.h"
+#include "render/camera.h"
 #include "scene/scene.hpp"
 #include "window/window.h"
 
@@ -18,9 +19,9 @@ auto Application::Init() -> void {
   GlobalContext::Instance().window = window;
   GlobalContext::Instance().input_system = std::make_shared<InputSystem<Platform::Linux>>();
   layer_stack_ = std::make_unique<LayerStack>();
-
   scene_ = std::make_shared<Scene>();
   GlobalContext::Instance().scene = scene_;
+  GlobalContext::Instance().main_camera = std::make_shared<PrespCamera>(glm::vec3{0, 0, 5}, glm::vec3{0, 0, 0});
 }
 
 auto Application::Run() -> void {
