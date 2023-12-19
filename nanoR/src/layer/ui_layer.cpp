@@ -9,6 +9,8 @@
 #include "platform/opengl/rhi_opengl.h"
 #include "platform/window_linux.h"
 #include "render/camera.h"
+#include "scene/component.hpp"
+#include "scene/scene.hpp"
 
 namespace nanoR {
 
@@ -60,6 +62,7 @@ auto UILayer::Tick(uint64_t delta_time) -> void {
   Begin();
   Scene();
   Input();
+  Hierarchy();
   ImGui::ShowDemoWindow();
   End();
 }
@@ -151,6 +154,36 @@ auto UILayer::Input() -> void {
   //     nanoR::GlobalContext::Instance().input_system->cursor_x_offset
   // );
   // ImGui::Text("yaw: %f, pitch: %f", main_camera_.yaw_, main_camera_.pitch_);
+  ImGui::End();
+}
+
+auto UILayer::Hierarchy() -> void {
+  static ImGuiTreeNodeFlags base_flags =
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+  ImGui::Begin("Hierarchy");
+  if (ImGui::TreeNode("Scene")) {
+    auto view = GlobalContext::Instance().scene->View<NameComponent>();
+    int i = 0;
+    static int selected = -1;
+    for (auto it = view.begin(); it != view.end(); ++it) {
+      auto [c_name] = *it;
+      auto node_flags = base_flags | ImGuiTreeNodeFlags_Leaf;
+      if (selected == i) {
+        node_flags |= ImGuiTreeNodeFlags_Selected;
+      }
+      bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "%s", c_name.name.c_str());
+
+      if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+        selected = i;
+      };
+      if (node_open) {
+        ImGui::TreePop();
+      }
+      ++i;
+    }
+    // LOG_TRACE("{}\n", selected);
+    ImGui::TreePop();
+  }
   ImGui::End();
 }
 

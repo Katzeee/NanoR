@@ -31,6 +31,7 @@ class UILayer final : public Layer {
   auto DockSpace() -> void;
   auto Scene() -> void;
   auto Input() -> void;
+  auto Hierarchy() -> void;
   auto End() -> void;
 };
 }  // namespace nanoR
