@@ -1,7 +1,10 @@
 #include "application.h"
 
 #include "global/global_context.h"
+#include "layer/ui_layer.h"
 #include "platform/input_system_glfw.h"
+#include "scene/scene.hpp"
+#include "window/window.h"
 
 namespace nanoR {
 
@@ -15,8 +18,9 @@ auto Application::Init() -> void {
   GlobalContext::Instance().window = window;
   GlobalContext::Instance().input_system = std::make_shared<InputSystem<Platform::Linux>>();
   layer_stack_ = std::make_unique<LayerStack>();
-  GlobalContext::Instance().ui_layer = std::make_shared<UILayer>("UILayer");
-  PushOverlayLayer(GlobalContext::Instance().ui_layer);
+
+  scene_ = std::make_shared<Scene>();
+  GlobalContext::Instance().scene = scene_;
 }
 
 auto Application::Run() -> void {
@@ -28,13 +32,6 @@ auto Application::Run() -> void {
     for (auto&& it : layer_stack_->GetLayers()) {
       it->Tick(delta);
     }
-
-    // ui_layer_->Begin();
-    // for (auto&& it : layer_stack_->GetLayers()) {
-    //   it->TickUI();
-    // }
-    // ui_layer_->End();
-
     // FIX: execute order
     GlobalContext::Instance().input_system->Tick();
     GlobalContext::Instance().window->Tick();

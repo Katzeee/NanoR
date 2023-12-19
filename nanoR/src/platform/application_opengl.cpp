@@ -1,6 +1,7 @@
 #include "application_opengl.h"
 
-#include "input_system_glfw.h"
+#include "layer/ui_layer.h"
+#include "platform/opengl/rhi_opengl.h"
 
 namespace nanoR {
 
@@ -12,8 +13,9 @@ auto ApplicationOpenGL::Init() -> void {
   glViewport(
       0, 0, GlobalContext::Instance().window->window_prop_.width, GlobalContext::Instance().window->window_prop_.height
   );
-  auto input_system = std::make_unique<InputSystem<Platform::Linux>>();
-
+  GlobalContext::Instance().rhi = std::make_shared<RHIOpenGL>();
+  GlobalContext::Instance().ui_layer = std::make_shared<UILayer>("UILayer");
+  PushOverlayLayer(GlobalContext::Instance().ui_layer);
 
   is_running_ = true;
 }

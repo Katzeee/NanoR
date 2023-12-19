@@ -3,7 +3,6 @@
 #include "global/global_context.h"
 #include "layer/layer.h"
 #include "layer/layer_stack.h"
-#include "ui_layer_glfw_opengl3.h"
 #include "window/window.h"
 
 namespace nanoR {

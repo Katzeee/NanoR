@@ -1,13 +1,12 @@
 #pragma once
 #include "layer/layer_stack.h"
-#include "layer/ui_layer.h"
 #include "nanorpch.h"
-#include "window/window.h"
 
 namespace nanoR {
 
 class WindowBase;
 class Event;
+class Scene;
 
 class Application {
  public:
@@ -23,6 +22,7 @@ class Application {
 
  protected:
   std::unique_ptr<LayerStack> layer_stack_;
+  std::shared_ptr<Scene> scene_;
   bool is_running_ = false;
 };
 }  // namespace nanoR

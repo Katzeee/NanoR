@@ -3,7 +3,8 @@
 
 namespace nanoR {
 
-auto Scene::CreateEntity() -> Entity {
+// HINT: not a template function but defined in tpp means will be include into other cpps
+inline auto Scene::CreateEntity() -> Entity {
   auto e = world_.create();
   auto c_t = world_.assign<TransformComponent>(e);
   auto c_n = world_.assign<NameComponent>(e);
