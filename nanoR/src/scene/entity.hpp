@@ -3,23 +3,21 @@
 #include <pico_libs/ecs/entity.hpp>
 
 #include "component.hpp"
-#include "scene.hpp"
 
 namespace nanoR {
 class Scene;
 class Entity {
+  friend class Scene;
+
  public:
   Entity() = delete;
   Entity(xac::ecs::Entity<Settings>::Id id, Scene* scene) : id_(id), scene_(scene) {}
 
   template <typename T, typename... Args>
-  auto AddComponent(Args&&... args) -> xac::ecs::ComponentHandle<Settings, T> {
-    return scene_->world_.assign<T>(id_, std::forward<Args>(args)...);
-  }
+  auto AddComponent(Args&&... args) -> xac::ecs::ComponentHandle<Settings, T>;
+
   template <typename T>
-  auto GetComponenet() -> xac::ecs::ComponentHandle<Settings, T> {
-    return scene_->world_.get<T>(id_);
-  }
+  auto GetComponenet() -> xac::ecs::ComponentHandle<Settings, T>;
 
  private:
   xac::ecs::Entity<Settings>::Id id_;
@@ -27,3 +25,5 @@ class Entity {
 };
 
 }  // namespace nanoR
+
+#include "entity.tpp"

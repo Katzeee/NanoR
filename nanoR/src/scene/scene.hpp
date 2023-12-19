@@ -14,7 +14,15 @@ class Scene {
   ~Scene() = default;
   auto CreateEntity() -> Entity;
 
+  template <typename T>
+  auto Get(const Entity &e) -> xac::ecs::ComponentHandle<Settings, T>;
+
+  template <typename... Args>
+  auto View();
+
  private:
   xac::ecs::World<Settings> world_;
 };
 }  // namespace nanoR
+
+#include "scene.tpp"
