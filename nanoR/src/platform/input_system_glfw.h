@@ -8,7 +8,7 @@
 
 namespace nanoR {
 
-auto ReceiveCommand(ControlCommand command) -> bool;
+static auto ReceiveCommand(ControlCommand command) -> bool;
 
 template <>
 class InputSystem<Platform::Linux> {
@@ -111,7 +111,7 @@ class InputSystem<Platform::Linux> {
   double scroll_y_offset = 0;
 };
 
-inline static auto ReceiveCommand(ControlCommand command) -> bool {
+static auto ReceiveCommand(ControlCommand command) -> bool {
   return static_cast<uint32_t>(command) & GlobalContext::Instance().input_system->control_commad;
 }
 
