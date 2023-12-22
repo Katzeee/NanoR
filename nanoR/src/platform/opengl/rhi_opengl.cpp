@@ -105,7 +105,7 @@ auto RHIOpenGL::CreateShaderProgram(
   glGetProgramiv(shader_program_opengl->id, GL_LINK_STATUS, &success);
   if (!static_cast<bool>(success)) {
     glGetProgramInfoLog(shader_program_opengl->id, 512, nullptr, info);
-    LOG_FATAL("ERROR::SHADER::PROGRAM::LINKING_FAILED: {}", info);
+    LOG_FATAL("ERROR::SHADER::PROGRAM::LINKING_FAILED: {}\n", info);
   }
   shader_program.reset(shader_program_opengl);
   return OpenGLCheckError();

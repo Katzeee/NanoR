@@ -1,11 +1,16 @@
 #version 450 core
 
 layout(location = 0) in vec3 ls_pos;
+layout(location = 2) in vec2 texcoord;
 
 uniform vec3 ws_cam_pos;
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
+layout(std140, binding = 0) uniform Matrices {
+  mat4 view;
+  mat4 proj;
+};
+
+out vec2 uv;
 
 void main() {
   // construct a new local pos which z axis point to cam
@@ -16,5 +21,6 @@ void main() {
   y = normalize(cross(z, x));
   // transform from another local pos to real local
   vec3 pos = ls_pos.x * x + ls_pos.y * y + ls_pos.z * z;
+  uv = texcoord;
   gl_Position = proj * view * model * vec4(pos, 1.0);
 }

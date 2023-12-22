@@ -16,7 +16,7 @@ class EditorLayer : public nanoR::Layer {
     auto cube_mesh_data = nanoR::Model("../resources/models/Cube/cube.obj");
     auto quad_mesh_data = nanoR::ResourceManager::GetQuadMeshData();
     auto* cube_mesh = nanoR::CreateMesh(&rhi_, cube_mesh_data.meshes_.at(0));
-    auto* quad_mesh = nanoR::CreateMesh(&rhi_, quad_mesh_data);
+    quad_mesh_ = nanoR::CreateMesh(&rhi_, quad_mesh_data);
     cube_ = scene_->CreateEntity();
     auto cube_name = scene_->GetComponent<nanoR::NameComponent>(cube_);
     cube_name->name = "cube";
@@ -24,19 +24,23 @@ class EditorLayer : public nanoR::Layer {
     c_mesh->mesh = std::shared_ptr<nanoR::OpenGLMesh>(cube_mesh);
     auto quad = scene_->CreateEntity();
     c_mesh = quad.AddComponent<nanoR::MeshComponent>();
-    c_mesh->mesh = std::shared_ptr<nanoR::OpenGLMesh>(quad_mesh);
+    c_mesh->mesh = std::shared_ptr<nanoR::OpenGLMesh>(quad_mesh_);
     auto quad_name = scene_->GetComponent<nanoR::NameComponent>(quad);
     quad_name->name = "quad";
+
+    auto* point_light = new nanoR::Light{glm::vec3{1, 1, 1}, 100};
+    auto light = scene_->CreateEntity();
+    auto c_light = light.AddComponent<nanoR::LightCompoenent>();
+    c_light->light.reset(point_light);
 
     LOG_TRACE("{}\n", (void*)cube_.GetComponenet<nanoR::TransformComponent>().get());
     LOG_TRACE("{}\n", (void*)quad.GetComponenet<nanoR::TransformComponent>().get());
 
-    // shader_program_ = nanoR::ResourceManager::GetUiShader(&rhi_);
-    // shader_program_ = nanoR::ResourceManager::GetUnlitShader(&rhi_);
-    shader_program_ = nanoR::ResourceManager::GetLitShader(&rhi_);
+    ui_shader_ = nanoR::ResourceManager::GetUiShader(&rhi_);
+    lit_shader_ = nanoR::ResourceManager::GetLitShader(&rhi_);
     // t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
     // auto t_point_light = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
-    t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
+    t_point_light_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
 
     nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
     buffer_create_info.data = nullptr;
@@ -67,30 +71,26 @@ class EditorLayer : public nanoR::Layer {
     nanoR::RHIBindUniformBufferInfoOpenGL bind_uniform_buffer_info;
     bind_uniform_buffer_info.index = 0;
     bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
-    rhi_.BindUniformBuffer(bind_uniform_buffer_info, shader_program_.get(), ubo_.get());
+    rhi_.BindUniformBuffer(bind_uniform_buffer_info, lit_shader_.get(), ubo_.get());
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_white_);
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())->SetValue<int>("texture_diffuse0", 0);
+    glBindTexture(GL_TEXTURE_2D, t_point_light_);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("texture_diffuse0", 0);
 
-    auto v = scene_->View<nanoR::TransformComponent, nanoR::MeshComponent>();
-    for (auto it = v.begin(); it != v.end(); ++it) {
-      auto [c_transform, c_mesh] = *it;
-      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader_program_.get())
-          ->SetValue("model", c_transform.GetModelMatrix());
-      rhi_.Draw(c_mesh.mesh->vao.get(), shader_program_.get(), fbo);
+    for (auto&& [c_transform, c_light] : scene_->View<nanoR::TransformComponent, const nanoR::LightCompoenent>()) {
+      c_transform.scale = glm::vec3{0.5};
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(ui_shader_.get())->SetValue("model", c_transform.GetModelMatrix());
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(ui_shader_.get())
+          ->SetValue("ws_cam_pos", main_camera_->GetPosition());
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(ui_shader_.get())
+          ->SetValue("color", glm::vec4{c_light.light->GetColor(), 1.0});
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(ui_shader_.get())->SetValue("tex", t_point_light_);
+      rhi_.Draw(quad_mesh_->vao.get(), ui_shader_.get(), fbo);
     }
-  }
-
-  auto TickUI() -> void override {
-    ImGui::Begin("World");
-    auto v = scene_->View<nanoR::NameComponent>();
-    for (auto it = v.begin(); it != v.end(); ++it) {
-      auto [name] = *it;
-      ImGui::Text("%s", name.name.c_str());
+    for (auto&& [c_transform, c_mesh] : scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent>()) {
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue("model", c_transform.GetModelMatrix());
+      rhi_.Draw(c_mesh.mesh->vao.get(), lit_shader_.get(), fbo);
     }
-    ImGui::End();
-    ImGui::ShowDemoWindow();
   }
 
   auto OnEvent(const std::shared_ptr<nanoR::Event>& event) -> bool override {
@@ -98,24 +98,15 @@ class EditorLayer : public nanoR::Layer {
   }
 
  private:
-  std::shared_ptr<nanoR::RHIShaderProgram> shader_program_;
+  std::shared_ptr<nanoR::RHIShaderProgram> lit_shader_;
+  std::shared_ptr<nanoR::RHIShaderProgram> ui_shader_;
   std::shared_ptr<nanoR::Scene> scene_;
-  GLuint t_white_ = 0;
+  nanoR::OpenGLMesh* quad_mesh_;
+  GLuint t_point_light_ = 0;
   std::shared_ptr<nanoR::RHIBuffer> ubo_;
   nanoR::RHIOpenGL rhi_;
   nanoR::PrespCamera* main_camera_;
   nanoR::Entity cube_;
-};
-
-class InputLayer : public nanoR::Layer {
- public:
-  InputLayer(std::string const& name) : Layer(name) {}
-  auto OnEvent(std::shared_ptr<nanoR::Event> const& event) -> bool override {
-    if (event->GetType() == nanoR::EventType::kKeyDown) {
-      auto key_event = dynamic_cast<nanoR::KeyDownEvent*>(event.get());
-    }
-    return true;
-  }
 };
 
 class Sandbox : public nanoR::ApplicationOpenGL {
@@ -126,9 +117,7 @@ class Sandbox : public nanoR::ApplicationOpenGL {
 auto main() -> int {
   std::unique_ptr<Sandbox> sandbox = std::make_unique<Sandbox>();
   auto editor_layer = std::make_shared<EditorLayer>("editor_layer");
-  auto input_layer = std::make_shared<InputLayer>("input layer");
   sandbox->PushLayer(editor_layer);
-  sandbox->PushLayer(input_layer);
   LOG_TRACE("{}\n", sandbox->GetLayerStack().ToString());
 
   sandbox->Run();

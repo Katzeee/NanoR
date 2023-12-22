@@ -95,7 +95,7 @@ struct RHIShaderProgramOpenGL : public RHIShaderProgram {
     } else if constexpr (std::is_same_v<std::decay_t<T>, glm::vec3>) {
       glUniform3fv(glGetUniformLocation(id, name.data()), 1, glm::value_ptr(value));
     } else if constexpr (std::is_same_v<std::decay_t<T>, glm::vec4>) {
-      glUniform3fv(glGetUniformLocation(id, name.data()), 1, glm::value_ptr(value));
+      glUniform4fv(glGetUniformLocation(id, name.data()), 1, glm::value_ptr(value));
     }
     glUseProgram(0);
   }

@@ -214,6 +214,16 @@ auto UILayer::Inspector() -> void {
       ImGui::TreePop();
     }
   }
+  {
+    auto c_light = selected_entity_.GetComponenet<LightCompoenent>();
+    if (c_light.get()) {
+      if (ImGui::TreeNodeEx("Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::ColorEdit3("Color", glm::value_ptr(c_light->light->GetColor()));
+        ImGui::DragFloat("Intensity", &c_light->light->GetIntensity());
+        ImGui::TreePop();
+      }
+    }
+  }
   ImGui::End();
 }
 

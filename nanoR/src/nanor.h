@@ -5,6 +5,7 @@
 #include "layer/layer.h"
 #include "layer/layer_stack.h"
 #include "layer/ui_layer.h"
+#include "light/light.h"
 #include "platform/application_opengl.h"
 #include "platform/opengl/render_resource_opengl.h"
 #include "platform/opengl/rhi_opengl.h"
