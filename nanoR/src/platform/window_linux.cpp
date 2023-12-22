@@ -29,7 +29,7 @@ auto WindowLinux::Init(WindowProp window_prop) -> void {
     LOG_FATAL("Window initialize failed!\n");
     throw std::runtime_error("Window initialize failed!");
   }
-  LOG_INFO(
+  LOG_TRACE(
       "Window initialize with width {} height {} title \"{}\"\n", window_prop.width, window_prop.height,
       window_prop.title
   );

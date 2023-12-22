@@ -11,6 +11,7 @@ class UILayer;
 template <Platform T>
 class InputSystem;
 class PrespCamera;
+class ResourceManager;
 
 class GlobalContext {
  public:
@@ -23,6 +24,7 @@ class GlobalContext {
   std::shared_ptr<Scene> scene;
   std::shared_ptr<RHI> rhi;
   std::shared_ptr<PrespCamera> main_camera;
+  std::shared_ptr<ResourceManager> resource_manager;
 };
 
 }  // namespace nanoR

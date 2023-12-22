@@ -8,17 +8,18 @@ namespace nanoR {
 
 class ResourceManager {
  public:
+  ResourceManager();
+  auto Init() -> void;
+  auto GetShader(std::string_view name) -> std::shared_ptr<RHIShaderProgram>;
   static auto LoadMeshData() -> MeshData;
-  static auto LoadShaderData(char const *vs_path, char const *fs_path) -> ShaderData;
-  // TODO: not create like this
-  static auto GetUnlitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
-  static auto GetLitShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
-  static auto GetUiShader(RHI *rhi) -> std::shared_ptr<RHIShaderProgram>;
   static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int;
   static auto GetQuadMeshData() -> MeshData;
 
  private:
   static auto ReadFromFile(char const *file_path) -> std::string;
+  auto LoadShader(std::string_view name, char const *vs_path, char const *fs_path) -> void;
+  std::unordered_map<std::string, std::shared_ptr<RHIShaderProgram>> shaders_;
+  std::shared_ptr<RHI> rhi_;
 };
 
 class Model {

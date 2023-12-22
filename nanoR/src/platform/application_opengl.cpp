@@ -17,6 +17,7 @@ auto ApplicationOpenGL::Init() -> void {
   GlobalContext::Instance().rhi = std::make_shared<RHIOpenGL>();
   GlobalContext::Instance().ui_layer = std::make_shared<UILayer>("UILayer");
   PushOverlayLayer(GlobalContext::Instance().ui_layer);
+  GlobalContext::Instance().resource_manager = std::make_shared<ResourceManager>();
 
   is_running_ = true;
 }

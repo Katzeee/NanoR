@@ -37,8 +37,8 @@ class EditorLayer : public nanoR::Layer {
     c_trans->position = {6, -5, 4};
     c_light->light.reset(point_light);
 
-    ui_shader_ = nanoR::ResourceManager::GetUiShader(&rhi_);
-    lit_shader_ = nanoR::ResourceManager::GetLitShader(&rhi_);
+    ui_shader_ = nanoR::GlobalContext::Instance().resource_manager->GetShader("ui");
+    lit_shader_ = nanoR::GlobalContext::Instance().resource_manager->GetShader("lit");
     t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
     t_point_light_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
 
