@@ -133,8 +133,9 @@ struct RHITextureOpenGL : public RHITexture {
   GLuint id;
 };
 
-struct RHIAttachColorAttachmentInfoOpenGL : public RHIAttachColorAttachmentInfo {
+struct RHIAttachTextureInfoOpenGL : public RHIAttachTextureInfo {
   GLint level;
+  GLenum attachment;
 };
 
 struct RHIAttachDepthAttachmentInfoOpenGL : public RHIAttachDepthAttachmentInfo {};

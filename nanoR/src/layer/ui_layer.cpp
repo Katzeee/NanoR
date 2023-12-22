@@ -31,21 +31,25 @@ auto UILayer::OnAttach() -> void {
 auto UILayer::CreateSceneFramebuffer() -> void {
   rhi_->CreateFramebuffer({}, scene_framebuffer_);
   scene_color_attachment_create_info_.internal_format = GL_RGBA8;
-  scene_color_attachment_create_info_.format = GL_RGB;
   scene_color_attachment_create_info_.levels = 1;
   scene_color_attachment_create_info_.target = GL_TEXTURE_2D;
-  scene_color_attachment_create_info_.type = GL_UNSIGNED_BYTE;
   scene_color_attachment_create_info_.data = nullptr;
   scene_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_MIN_FILTER, GL_LINEAR});
   scene_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_MAG_FILTER, GL_LINEAR});
   scene_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_WRAP_S, GL_REPEAT});
   scene_color_attachment_create_info_.parameteri.push_back({GL_TEXTURE_WRAP_T, GL_REPEAT});
-  scene_color_attachment_create_info_.width = 1600;
-  scene_color_attachment_create_info_.height = 900;
+  scene_color_attachment_create_info_.width = GlobalContext::Instance().window->window_prop_.width;
+  scene_color_attachment_create_info_.height = GlobalContext::Instance().window->window_prop_.height;
   rhi_->CreateTexture(scene_color_attachment_create_info_, scene_color_attachment_);
-  auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
-  attach_color_attachment_info.level = 0;
-  rhi_->AttachColorAttachment(attach_color_attachment_info, scene_framebuffer_.get(), scene_color_attachment_.get());
+  scene_depth_attachment_create_info_ = scene_color_attachment_create_info_;
+  scene_depth_attachment_create_info_.internal_format = GL_DEPTH_COMPONENT24;
+  rhi_->CreateTexture(scene_depth_attachment_create_info_, scene_depth_attachment_);
+  auto attach_info = nanoR::RHIAttachTextureInfoOpenGL{};
+  attach_info.level = 0;
+  attach_info.attachment = GL_COLOR_ATTACHMENT0;
+  rhi_->AttachTexture(attach_info, scene_framebuffer_.get(), scene_color_attachment_.get());
+  attach_info.attachment = GL_DEPTH_ATTACHMENT;
+  rhi_->AttachTexture(attach_info, scene_framebuffer_.get(), scene_depth_attachment_.get());
 }
 
 auto UILayer::GetSceneFramebuffer() -> RHIFramebuffer* {
@@ -130,10 +134,16 @@ auto UILayer::Scene() -> void {
       scene_size.y != scene_color_attachment_create_info_.height) {
     scene_color_attachment_create_info_.width = scene_size.x;
     scene_color_attachment_create_info_.height = scene_size.y;
+    scene_depth_attachment_create_info_.width = scene_size.x;
+    scene_depth_attachment_create_info_.height = scene_size.y;
     rhi_->CreateTexture(scene_color_attachment_create_info_, scene_color_attachment_);
-    auto attach_color_attachment_info = nanoR::RHIAttachColorAttachmentInfoOpenGL{};
-    attach_color_attachment_info.level = 0;
-    rhi_->AttachColorAttachment(attach_color_attachment_info, scene_framebuffer_.get(), scene_color_attachment_.get());
+    rhi_->CreateTexture(scene_depth_attachment_create_info_, scene_depth_attachment_);
+    auto attach_info = nanoR::RHIAttachTextureInfoOpenGL{};
+    attach_info.level = 0;
+    attach_info.attachment = GL_COLOR_ATTACHMENT0;
+    rhi_->AttachTexture(attach_info, scene_framebuffer_.get(), scene_color_attachment_.get());
+    attach_info.attachment = GL_DEPTH_ATTACHMENT;
+    rhi_->AttachTexture(attach_info, scene_framebuffer_.get(), scene_depth_attachment_.get());
     LOG_TRACE("scene size: {} {}\n", scene_size.x, scene_size.y);
     glViewport(0, 0, scene_size.x, scene_size.y);
     GlobalContext::Instance().main_camera->SetAspect(scene_size.x / scene_size.y);

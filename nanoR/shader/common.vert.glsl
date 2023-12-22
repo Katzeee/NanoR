@@ -19,7 +19,7 @@ vs_out;
 
 void main() {
   gl_Position = proj * view * model * vec4(position, 1);
-  // vs_out.P = (Model * vec4(position, 1)).xyz;
+  vs_out.P = (model * vec4(position, 1)).xyz;
   vs_out.uv = texcoord;
   vs_out.N = normal;
 }

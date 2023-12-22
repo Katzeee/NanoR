@@ -155,13 +155,13 @@ auto RHIOpenGL::CreateTexture(const RHITextureCreateInfo &texture_create_info, s
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::AttachColorAttachment(
-    const RHIAttachColorAttachmentInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
+auto RHIOpenGL::AttachTexture(
+    const RHIAttachTextureInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
     RHITexture const *texture
 ) -> bool {
   const auto &[fbo] = *dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer);
-  const auto &[level] = dynamic_cast<const RHIAttachColorAttachmentInfoOpenGL &>(attach_color_attachment_info);
-  glNamedFramebufferTexture(fbo, GL_COLOR_ATTACHMENT0, dynamic_cast<RHITextureOpenGL const *>(texture)->id, level);
+  const auto &[level, attachment] = dynamic_cast<const RHIAttachTextureInfoOpenGL &>(attach_color_attachment_info);
+  glNamedFramebufferTexture(fbo, attachment, dynamic_cast<RHITextureOpenGL const *>(texture)->id, level);
   if (glCheckNamedFramebufferStatus(fbo, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     throw std::runtime_error("frame buffer not complete");
   }

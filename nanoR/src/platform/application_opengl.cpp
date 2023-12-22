@@ -13,6 +13,7 @@ auto ApplicationOpenGL::Init() -> void {
   glViewport(
       0, 0, GlobalContext::Instance().window->window_prop_.width, GlobalContext::Instance().window->window_prop_.height
   );
+  glEnable(GL_DEPTH_TEST);
   GlobalContext::Instance().rhi = std::make_shared<RHIOpenGL>();
   GlobalContext::Instance().ui_layer = std::make_shared<UILayer>("UILayer");
   PushOverlayLayer(GlobalContext::Instance().ui_layer);

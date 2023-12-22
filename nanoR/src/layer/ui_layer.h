@@ -25,7 +25,9 @@ class UILayer final : public Layer {
   bool passthough_event_ = true;
   std::shared_ptr<RHIFramebuffer> scene_framebuffer_;
   RHITextureCreateInfoOpenGL scene_color_attachment_create_info_;
+  RHITextureCreateInfoOpenGL scene_depth_attachment_create_info_;
   std::shared_ptr<nanoR::RHITexture> scene_color_attachment_;
+  std::shared_ptr<nanoR::RHITexture> scene_depth_attachment_;
   std::shared_ptr<RHI> rhi_;
   Entity selected_entity_;
 

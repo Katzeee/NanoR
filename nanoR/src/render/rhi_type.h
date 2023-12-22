@@ -60,8 +60,8 @@ struct RHIFramebuffer {
   virtual ~RHIFramebuffer() = default;
 };
 
-struct RHIAttachColorAttachmentInfo {
-  virtual ~RHIAttachColorAttachmentInfo() = default;
+struct RHIAttachTextureInfo {
+  virtual ~RHIAttachTextureInfo() = default;
 };
 
 struct RHIAttachDepthAttachmentInfo {

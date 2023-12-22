@@ -32,8 +32,8 @@ class RHI {
   virtual auto CreateFramebuffer(
       const RHIFramebufferCreateInfo &framebuffer_create_info, std::shared_ptr<RHIFramebuffer> &framebuffer
   ) -> bool = 0;
-  virtual auto AttachColorAttachment(
-      const RHIAttachColorAttachmentInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
+  virtual auto AttachTexture(
+      const RHIAttachTextureInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
       RHITexture const *texture
   ) -> bool = 0;
   virtual bool Draw(

@@ -28,7 +28,7 @@ uniform vec3 ws_cam_pos;
 uniform PointLight p_lights[5];
 uniform DirectLight d_lights[1];
 uniform vec3 Ka;
-uniform vec3 Kd;
+uniform vec3 Kd = vec3(0.5);
 uniform vec3 Ks;
 
 out vec4 FragColor;
@@ -37,7 +37,7 @@ float near = 0.1;
 float far = 150;
 
 float LinearizeDepth(float depth) {
-  float z = depth * 2 - 1; // to NDC
+  float z = depth * 2 - 1;  // to NDC
   return (2 * near * far) / (far + near - z * (far - near));
 }
 
@@ -55,16 +55,14 @@ float PCF(int size) {
   float shadow = 0;
   for (int i = -size; i <= size; i++) {
     for (int j = -size; j <= size; j++) {
-      float closet_depth =
-          texture(depth_map, ls_P.xy + vec2(texel_size.x * i, texel_size.y * j))
-              .r;
+      float closet_depth = texture(depth_map, ls_P.xy + vec2(texel_size.x * i, texel_size.y * j)).r;
       shadow += cur_depth - bias > closet_depth ? 0 : 1.0;
     }
   }
-  if (ls_P.z > 1) { // exceed light's far plain
+  if (ls_P.z > 1) {  // exceed light's far plain
     shadow = kernel_area;
   }
-  return shadow / kernel_area; // make cur_depth closer to light
+  return shadow / kernel_area;  // make cur_depth closer to light
 }
 
 float PCSS(int size) {
@@ -77,26 +75,23 @@ float PCSS(int size) {
   float mean_blocker_depth = 0.0;
   for (int i = -size; i <= size; i++) {
     for (int j = -size; j <= size; j++) {
-      mean_blocker_depth +=
-          texture(depth_map, ls_P.xy + vec2(i, j) * texel_size).r;
+      mean_blocker_depth += texture(depth_map, ls_P.xy + vec2(i, j) * texel_size).r;
     }
   }
   mean_blocker_depth /= kernel_area;
   float light_size = 20000.0;
-  float pcf_size =
-      (cur_depth - mean_blocker_depth) / mean_blocker_depth * light_size;
+  float pcf_size = (cur_depth - mean_blocker_depth) / mean_blocker_depth * light_size;
   return PCF(int(pcf_size));
 }
 
 void main() {
   // vec4 color = texture(texture_diffuse0, fs_in.uv);
-  // FragColor = vec4(vec3(1.0, 0.0, 0.0), color.a);
-  FragColor = vec4(1.0, 1.0, 1.0, 0.3);
-  return;
+  // FragColor = vec4(color.rgb, 1.0);
+  // return;
   vec3 diffuse = vec3(0);
   vec3 specular = vec3(0);
   // PointLight
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 1; i++) {
     PointLight p_light = p_lights[i];
     vec3 L = p_light.ws_position - fs_in.P;
     float distance_square = dot(L, L);
@@ -104,17 +99,16 @@ void main() {
     vec3 V = normalize(ws_cam_pos - fs_in.P);
     vec3 H = normalize(L + V);
     vec3 R = reflect(-L, fs_in.N);
-    diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) *
-               texture(texture_diffuse0, fs_in.uv).rgb * p_light.color /
-               distance_square;
-    specular +=
-        Ks * clamp(dot(fs_in.N, L), 0, 1) * p_light.intensity * p_light.color *
+    diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) * texture(texture_diffuse0, fs_in.uv).rgb *
+               p_light.color / distance_square;
+    // diffuse += texture(texture_diffuse0, fs_in.uv).rgb * p_light.color * max(dot(L, fs_in.N), 0) * p_light.intensity;
+    specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * p_light.intensity * p_light.color *
 #ifdef BLINN_PHONG
-        pow(max(dot(H, fs_in.N), 0), texture(texture_specular0, fs_in.uv).a) *
+                pow(max(dot(H, fs_in.N), 0), texture(texture_specular0, fs_in.uv).a) *
 #else
-        pow(max(dot(V, R), 0), texture(texture_specular0, fs_in.uv).a) *
+                pow(max(dot(V, R), 0), texture(texture_specular0, fs_in.uv).a) *
 #endif
-        texture(texture_specular0, fs_in.uv).rgb / distance_square;
+                texture(texture_specular0, fs_in.uv).rgb / distance_square;
   }
   // DirectLight
   for (int i = 0; i < 1; i++) {
@@ -123,14 +117,15 @@ void main() {
     L = normalize(L);
     vec3 V = normalize(ws_cam_pos - fs_in.P);
     vec3 R = reflect(-L, fs_in.N);
-    diffuse += Kd * d_light.intensity * max(dot(L, fs_in.N), 0) *
-               texture(texture_diffuse0, fs_in.uv).rgb * d_light.color;
-    specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * d_light.intensity *
-                d_light.color *
+    diffuse +=
+        Kd * d_light.intensity * max(dot(L, fs_in.N), 0) * texture(texture_diffuse0, fs_in.uv).rgb * d_light.color;
+    specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * d_light.intensity * d_light.color *
                 pow(max(dot(R, V), 0), texture(texture_specular0, fs_in.uv).a) *
                 texture(texture_specular0, fs_in.uv).rgb;
   }
   vec3 ambient = Ka * texture(texture_diffuse0, fs_in.uv).rgb;
+  FragColor = vec4(diffuse, 1);
+  return;
 #ifdef DEBUG_DEPTH
   FragColor = vec4(vec3(LinearizeDepth(gl_FragCoord.z)) / far, 1);
 #elif defined(DEBUG_NORMAL)

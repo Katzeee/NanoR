@@ -32,8 +32,8 @@ class RHIOpenGL final : public RHI {
   auto CreateFramebuffer(
       const RHIFramebufferCreateInfo &framebuffer_create_info, std::shared_ptr<RHIFramebuffer> &framebuffer
   ) -> bool override;
-  auto AttachColorAttachment(
-      const RHIAttachColorAttachmentInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
+  auto AttachTexture(
+      const RHIAttachTextureInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
       RHITexture const *texture
   ) -> bool override;
   auto Draw(
