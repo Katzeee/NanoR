@@ -47,9 +47,8 @@ class EditorLayer : public nanoR::Layer {
     buffer_create_info.size = 2 * sizeof(glm::mat4);
     buffer_create_info.flags = GL_DYNAMIC_STORAGE_BIT;
     rhi_.CreateBuffer(buffer_create_info, ubo_);
-    glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   }
 
   auto Tick(uint64_t delta_time) -> void override {
@@ -74,6 +73,14 @@ class EditorLayer : public nanoR::Layer {
     rhi_.BindUniformBuffer(bind_uniform_buffer_info, lit_shader_.get(), ubo_.get());
 
     glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, t_white_);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("texture_diffuse0", 0);
+    for (auto&& [c_transform, c_mesh] : scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent>()) {
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue("model", c_transform.GetModelMatrix());
+      rhi_.Draw(c_mesh.mesh->vao.get(), lit_shader_.get(), fbo);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_point_light_);
     for (auto&& [c_transform, c_light] : scene_->View<nanoR::TransformComponent, const nanoR::LightCompoenent>()) {
       c_transform.scale = glm::vec3{0.5};
@@ -90,13 +97,6 @@ class EditorLayer : public nanoR::Layer {
       dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())
           ->SetValue("p_lights[0].ws_position", c_transform.position);
       rhi_.Draw(quad_mesh_->vao.get(), ui_shader_.get(), fbo);
-    }
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_white_);
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("texture_diffuse0", 0);
-    for (auto&& [c_transform, c_mesh] : scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent>()) {
-      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue("model", c_transform.GetModelMatrix());
-      rhi_.Draw(c_mesh.mesh->vao.get(), lit_shader_.get(), fbo);
     }
   }
 
