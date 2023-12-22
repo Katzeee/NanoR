@@ -91,7 +91,7 @@ void main() {
   vec3 diffuse = vec3(0);
   vec3 specular = vec3(0);
   // PointLight
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 5; i++) {
     PointLight p_light = p_lights[i];
     vec3 L = p_light.ws_position - fs_in.P;
     float distance_square = dot(L, L);
