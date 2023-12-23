@@ -14,16 +14,7 @@ class EditorLayer : public nanoR::Layer {
 
   auto OnAttach() -> void override {
     auto cube = scene_->CreateCube();
-
-    auto* point_light = new nanoR::Light{glm::vec3{1, 1, 1}, 100};
-    auto light = scene_->CreateEntity();
-    auto c_light = light.AddComponent<nanoR::LightCompoenent>();
-    auto c_trans = light.GetComponenet<nanoR::TransformComponent>();
-    c_trans->position = {6, -5, 4};
-    c_light->light.reset(point_light);
-
-    ui_shader_ = nanoR::GlobalContext::Instance().resource_manager->GetShader("ui");
-    lit_shader_ = nanoR::GlobalContext::Instance().resource_manager->GetShader("lit");
+    auto p_light = scene_->CreatePointLight();
 
     nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
     buffer_create_info.data = nullptr;
@@ -36,21 +27,8 @@ class EditorLayer : public nanoR::Layer {
 
   auto Tick(uint64_t delta_time) -> void override {
     main_camera_->Tick(delta_time);
-
     auto* fbo = nanoR::GlobalContext::Instance().ui_layer->GetSceneFramebuffer();
-    nanoR::Renderer::Render(&rhi_, scene_.get(), main_camera_, fbo);
-
-    // dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("albedo", 0);
-    // for (auto&& [c_transform, c_mesh, c_mesh_renderer] :
-    //      scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent, const
-    //      nanoR::MeshRendererCompoenent>(
-    //      )) {
-    //   auto shader =
-    //       nanoR::GlobalContext::Instance().resource_manager->GetShader(c_mesh_renderer.materials[0]->GetName());
-    //   dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader.get())->SetValue("model", c_transform.GetModelMatrix());
-    //   c_mesh_renderer.materials[0]->PrepareUniforms(&rhi_);
-    //   rhi_.Draw(c_mesh.mesh->vao.get(), lit_shader_.get(), fbo);
-    // }
+    nanoR::GlobalContext::Instance().renderer->Render(&rhi_, scene_.get(), main_camera_, fbo);
   }
 
   auto OnEvent(const std::shared_ptr<nanoR::Event>& event) -> bool override {

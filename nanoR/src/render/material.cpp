@@ -12,6 +12,12 @@ Material::Material() {
   texture_storage_["albedo"] = GlobalContext::Instance().resource_manager->GetTexture("white");
 }
 
+Material::Material(std::string_view shader_name) : shader_name_(shader_name) {}
+
+auto Material::SetVec4(std::string_view name, glm::vec4 const& value) -> void {
+  vec4_storage_[name.data()] = value;
+}
+
 auto Material::GetName() -> std::string_view {
   return shader_name_;
 }
@@ -22,6 +28,10 @@ auto Material::GetVec4(std::string_view name) -> glm::vec4& {
   }
   LOG_ERROR("No vec4 named {}\n", name);
   throw std::runtime_error("invalid vec4 name");
+}
+
+auto Material::SetTexture(std::string_view name, std::shared_ptr<RHITexture> const& texture) -> void {
+  texture_storage_[name.data()] = texture;
 }
 
 auto Material::GetTexture(std::string_view name) -> RHITexture* {

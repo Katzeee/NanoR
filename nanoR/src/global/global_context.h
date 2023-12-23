@@ -12,6 +12,7 @@ template <Platform T>
 class InputSystem;
 class PrespCamera;
 class ResourceManager;
+class Renderer;
 
 class GlobalContext {
  public:
@@ -25,6 +26,7 @@ class GlobalContext {
   std::shared_ptr<RHI> rhi;
   std::shared_ptr<PrespCamera> main_camera;
   std::shared_ptr<ResourceManager> resource_manager;
+  std::shared_ptr<Renderer> renderer;
 };
 
 }  // namespace nanoR

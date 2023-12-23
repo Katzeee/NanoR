@@ -1,6 +1,7 @@
 #include "application_opengl.h"
 
 #include "layer/ui_layer.h"
+#include "platform/opengl/renderer_opengl.h"
 #include "platform/opengl/rhi_opengl.h"
 
 namespace nanoR {
@@ -14,10 +15,12 @@ auto ApplicationOpenGL::Init() -> void {
       0, 0, GlobalContext::Instance().window->window_prop_.width, GlobalContext::Instance().window->window_prop_.height
   );
   glEnable(GL_DEPTH_TEST);
-  GlobalContext::Instance().rhi = std::make_shared<RHIOpenGL>();
+  auto *rhi = new RHIOpenGL();
+  GlobalContext::Instance().rhi.reset(rhi);
   GlobalContext::Instance().ui_layer = std::make_shared<UILayer>("UILayer");
   PushOverlayLayer(GlobalContext::Instance().ui_layer);
   GlobalContext::Instance().resource_manager = std::make_shared<ResourceManager>();
+  GlobalContext::Instance().renderer = std::make_shared<RendererOpenGL>(rhi);
 
   is_running_ = true;
 }

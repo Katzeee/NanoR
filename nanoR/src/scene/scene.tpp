@@ -14,16 +14,28 @@ inline auto Scene::CreateEntity() -> Entity {
 }
 
 inline auto Scene::CreateCube() -> Entity {
-  auto cube_mesh_data = nanoR::Model("../resources/models/Cube/cube.obj");
-  auto cube_mesh = nanoR::CreateMesh(cube_mesh_data.meshes_.at(0));
+  auto cube_mesh_data = Model("../resources/models/Cube/cube.obj");
   auto cube = CreateEntity();
-  auto cube_name = GetComponent<nanoR::NameComponent>(cube);
-  cube_name->name = "cube";
-  auto c_mesh = cube.AddComponent<nanoR::MeshComponent>();
+  auto cube_mesh = CreateMesh(cube_mesh_data.meshes_.at(0));
+  auto c_name = GetComponent<NameComponent>(cube);
+  c_name->name = "Cube";
+  auto c_mesh = cube.AddComponent<MeshComponent>();
   c_mesh->mesh = cube_mesh;
-  auto c_mesh_renderer = cube.AddComponent<nanoR::MeshRendererCompoenent>();
-  c_mesh_renderer->materials.emplace_back(std::make_shared<nanoR::Material>());
+  auto c_mesh_renderer = cube.AddComponent<MeshRendererCompoenent>();
+  c_mesh_renderer->materials.emplace_back(std::make_shared<Material>());
   return cube;
+}
+
+inline auto Scene::CreatePointLight() -> Entity {
+  auto* light = new Light{glm::vec3{1, 1, 1}, 100};
+  auto point_light = CreateEntity();
+  auto c_trans = point_light.GetComponenet<TransformComponent>();
+  c_trans->position = {6, -5, 4};
+  auto c_name = point_light.GetComponenet<NameComponent>();
+  c_name->name = "Pointlight";
+  auto c_light = point_light.AddComponent<LightCompoenent>();
+  c_light->light.reset(light);
+  return point_light;
 }
 
 template <typename T>

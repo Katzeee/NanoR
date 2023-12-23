@@ -5,20 +5,24 @@
 namespace nanoR {
 class Camera {
  public:
+  explicit Camera(glm::vec3 position) : position_(position) {}
   virtual auto GetProjectionMatrix() -> glm::mat4 = 0;
   virtual auto GetViewMatrix() -> glm::mat4 = 0;
+  auto GetPosition() -> glm::vec3 {
+    return position_;
+  }
+
+ protected:
+  glm::vec3 position_;
 };
 
 class PrespCamera : public Camera {
  public:
-  PrespCamera(glm::vec3 position, glm::vec3 target) : position_(position) {
+  PrespCamera(glm::vec3 position, glm::vec3 target) : Camera(position) {
     auto front = glm::normalize(target - position);
     pitch_ = std::asin(-front.y);
     yaw_ = atan2(-front.x, front.z);
     UpdateQuat();
-  }
-  auto GetPosition() -> glm::vec3 {
-    return position_;
   }
 
   auto GetProjectionMatrix() -> glm::mat4 override {
@@ -100,7 +104,6 @@ class PrespCamera : public Camera {
   float yaw_;
   // rotation around x
   float pitch_;
-  glm::vec3 position_;
   inline static float speed_ = 1.5f;
   inline static float translate_sensitivity_ = 0.15;
   inline static float rotate_sensitivity_ = 0.0002;

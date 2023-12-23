@@ -6,9 +6,12 @@ class RHITexture;
 class Material {
  public:
   Material();
+  Material(std::string_view shader_name);
 
   auto GetName() -> std::string_view;
+  auto SetVec4(std::string_view name, glm::vec4 const &value) -> void;
   auto GetVec4(std::string_view name) -> glm::vec4 &;
+  auto SetTexture(std::string_view name, std::shared_ptr<RHITexture> const &texture) -> void;
   auto GetTexture(std::string_view name) -> RHITexture *;
   auto PrepareUniforms(RHI *rhi) -> void;
 
