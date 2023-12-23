@@ -38,6 +38,9 @@ class InputSystem<Platform::Linux> {
         case GLFW_KEY_D:
           control_commad |= static_cast<uint32_t>(ControlCommand::kRight);
           break;
+        case GLFW_KEY_LEFT_ALT:
+          control_commad |= static_cast<uint32_t>(ControlCommand::kLeftAlt);
+          break;
         default:
           break;
       }
@@ -55,6 +58,9 @@ class InputSystem<Platform::Linux> {
           break;
         case GLFW_KEY_D:
           control_commad &= ~static_cast<uint32_t>(ControlCommand::kRight);
+          break;
+        case GLFW_KEY_LEFT_ALT:
+          control_commad &= ~static_cast<uint32_t>(ControlCommand::kLeftAlt);
           break;
         default:
           break;

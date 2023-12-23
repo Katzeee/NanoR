@@ -49,23 +49,27 @@ class PrespCamera : public Camera {
     float cursor_y_offset = GlobalContext::Instance().input_system->cursor_y_offset;
     float scroll_y_offset = GlobalContext::Instance().input_system->scroll_y_offset;
     position_ += front * scroll_y_offset * distance * 10.0f;
-    if (ReceiveCommand(ControlCommand::kLeftButtonDown)) {
-      position_ += cursor_x_offset * distance * right * translate_sensitivity_;
-      position_ += cursor_y_offset * distance * -up * translate_sensitivity_;
-    }
-    if (ReceiveCommand(ControlCommand::kLeftAlt)) {
-      // yaw_ += cursor_x_offset * view_sensitivity_ * delta_time * fov_;
-      // pitch_ += cursor_y_offset * view_sensitivity_ * delta_time * fov_;
-    }
-    if (ReceiveCommand(ControlCommand::kRightButtonDown)) {
-      glm::vec3 rotate_origin = position_ + 5.0F * glm::normalize(front);
-      auto rotate_matrix = glm::rotate(glm::mat4{1}, cursor_x_offset * rotate_sensitivity_ * delta_time, up);
-      position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
-      rotate_matrix = glm::rotate(glm::mat4{1}, cursor_y_offset * rotate_sensitivity_ * delta_time, right);
-      position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
-      front = glm::normalize(rotate_origin - position_);
-      pitch_ = std::asin(-front.y);
-      yaw_ = atan2(-front.x, front.z);
+    auto control_commad = GlobalContext::Instance().input_system->control_commad;
+    switch (control_commad) {
+      case static_cast<uint32_t>(ControlCommand::kLeftButtonDown):
+        position_ += cursor_x_offset * distance * right * translate_sensitivity_;
+        position_ += cursor_y_offset * distance * -up * translate_sensitivity_;
+        break;
+      case static_cast<uint32_t>(ControlCommand::kLeftButtonDown) | static_cast<uint32_t>(ControlCommand::kLeftAlt): {
+        glm::vec3 rotate_origin = position_ + 5.0F * glm::normalize(front);
+        auto rotate_matrix = glm::rotate(glm::mat4{1}, cursor_x_offset * rotate_sensitivity_ * delta_time, up);
+        position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
+        rotate_matrix = glm::rotate(glm::mat4{1}, cursor_y_offset * rotate_sensitivity_ * delta_time, right);
+        position_ = glm::vec3{rotate_matrix * glm::vec4{position_ - rotate_origin, 1.0}} + rotate_origin;
+        front = glm::normalize(rotate_origin - position_);
+        pitch_ = std::asin(-front.y);
+        yaw_ = atan2(-front.x, front.z);
+        break;
+      }
+      case static_cast<uint32_t>(ControlCommand::kRightButtonDown):
+        yaw_ += cursor_x_offset * rotate_sensitivity_ * delta_time * fov_ / 100;
+        pitch_ += cursor_y_offset * rotate_sensitivity_ * delta_time * fov_ / 100;
+        break;
     }
     UpdateQuat();
   }
@@ -94,13 +98,13 @@ class PrespCamera : public Camera {
   float pitch_;
   glm::vec3 position_;
   inline static float speed_ = 1.5f;
-  inline static float translate_sensitivity_ = 0.25;
-  inline static float rotate_sensitivity_ = 0.0006;
+  inline static float translate_sensitivity_ = 0.15;
+  inline static float rotate_sensitivity_ = 0.0002;
 
   float fov_ = 43.0f;
   float aspect_ = 0.5f;
   float near_ = 0.1f;
-  float far_ = 150.0f;
+  float far_ = 1000.0f;
 };
 
 }  // namespace nanoR
