@@ -20,11 +20,10 @@ struct TransformComponent {
 
   auto GetModelMatrix() const -> glm::mat4 {
     auto model = glm::mat4{1};
-    model = glm::scale(model, scale);
-    auto quat = glm::quat(rotation);
-    // model = glm::rotate(model, rotation);
-    model = glm::toMat4(quat) * model;
     model = glm::translate(model, position);
+    auto quat = glm::quat(rotation);
+    model *= glm::toMat4(quat);
+    model = glm::scale(model, scale);
     return model;
   }
 };

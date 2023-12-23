@@ -86,7 +86,7 @@ float PCSS(int size) {
 
 void main() {
   // vec4 color = texture(texture_diffuse0, fs_in.uv);
-  // FragColor = vec4(color.rgb, 1.0);
+  // FragColor = vec4(fs_in.N, 1.0);
   // return;
   vec3 diffuse = vec3(0);
   vec3 specular = vec3(0);
