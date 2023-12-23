@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include "../3rdparty/stb_image.h"

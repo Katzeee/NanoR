@@ -39,6 +39,14 @@ struct RHIShaderProgramCreateInfo {
 struct RHIShaderProgram {
   virtual ~RHIShaderProgram() = default;
 };
+struct RHISetShaderUniformInfo {
+  struct Uniform {
+    std::string_view name;
+    std::variant<bool, int, float, glm::mat4, glm::vec3, glm::vec4> value;
+  };
+  std::vector<Uniform> uniforms;
+  virtual ~RHISetShaderUniformInfo() = default;
+};
 
 struct RHIBindUniformBufferInfo {
   virtual ~RHIBindUniformBufferInfo() = default;

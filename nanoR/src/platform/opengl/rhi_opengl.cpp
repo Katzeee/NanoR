@@ -111,6 +111,22 @@ auto RHIOpenGL::CreateShaderProgram(
   return OpenGLCheckError();
 }
 
+auto RHIOpenGL::SetShaderUniform(
+    RHISetShaderUniformInfo const &set_shader_uniform_info, RHIShaderProgram *shader_program
+) -> bool {
+  const auto &[uniforms] = set_shader_uniform_info;
+  for (auto &&uniform : uniforms) {
+    std::visit(
+        [&](auto &&value) {
+          using T = std::decay_t<decltype(value)>;
+          dynamic_cast<RHIShaderProgramOpenGL *>(shader_program)->SetValue<T>(uniform.name, static_cast<T>(value));
+        },
+        uniform.value
+    );
+  }
+  return OpenGLCheckError();
+}
+
 auto RHIOpenGL::BindUniformBuffer(
     const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIShaderProgram *shader_program, RHIBuffer *buffer
 ) -> bool {

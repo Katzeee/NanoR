@@ -103,6 +103,8 @@ struct RHIShaderProgramOpenGL : public RHIShaderProgram {
   GLuint id;
 };
 
+struct RHISetShaderUniformInfoOpenGL : public RHISetShaderUniformInfo {};
+
 struct RHIBindUniformBufferInfoOpenGL : RHIBindUniformBufferInfo {
   GLenum target;
   GLuint index;  // binding index

@@ -4,6 +4,7 @@
 #include "light/light.h"
 #include "nanorpch.h"
 #include "platform/opengl/render_resource_opengl.h"
+#include "render/material.h"
 #include "render/rhi_type.h"
 
 namespace nanoR {
@@ -40,12 +41,12 @@ struct LightCompoenent {
   std::shared_ptr<Light> light;
 };
 
-struct MaterialCompoenent {
-  std::shared_ptr<RHIShaderProgram> shader;
+struct MeshRendererCompoenent {
+  std::vector<std::shared_ptr<Material>> materials;
 };
 
 using Components =
-    xac::mpl::type_list<NameComponent, TransformComponent, SpriteComponent, MeshComponent, LightCompoenent>;
+    xac::mpl::type_list<NameComponent, TransformComponent, MeshComponent, LightCompoenent, MeshRendererCompoenent>;
 using Settings = xac::ecs::Settings<Components>;
 
 }  // namespace nanoR

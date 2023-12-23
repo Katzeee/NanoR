@@ -234,6 +234,22 @@ auto UILayer::Inspector() -> void {
       }
     }
   }
+  {
+    auto c_mesh_renderer = selected_entity_.GetComponenet<MeshRendererCompoenent>();
+    if (c_mesh_renderer.get()) {
+      auto& c_materials = c_mesh_renderer->materials;
+      if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::TreeNodeEx("Material", ImGuiTreeNodeFlags_DefaultOpen)) {
+          for (auto&& it : c_materials) {
+            ImGui::Text("%s", it->GetName().data());
+            ImGui::ColorEdit4("base_color", glm::value_ptr(it->GetVec4("base_color")));
+          }
+          ImGui::TreePop();
+        }
+        ImGui::TreePop();
+      }
+    }
+  }
   ImGui::End();
 }
 

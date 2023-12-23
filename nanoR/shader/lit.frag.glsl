@@ -86,7 +86,7 @@ float PCSS(int size) {
 
 void main() {
   // vec4 color = texture(albedo, fs_in.uv);
-  // FragColor = vec4(fs_in.N, 1.0);
+  // FragColor = vec4(base_color);
   // return;
   vec3 diffuse = vec3(0);
   vec3 specular = vec3(0);
@@ -99,8 +99,8 @@ void main() {
     vec3 V = normalize(ws_cam_pos - fs_in.P);
     vec3 H = normalize(L + V);
     vec3 R = reflect(-L, fs_in.N);
-    diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) * texture(albedo, fs_in.uv).rgb *
-               p_light.color / distance_square;
+    diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) * texture(albedo, fs_in.uv).rgb * p_light.color /
+               distance_square;
     // diffuse += texture(albedo, fs_in.uv).rgb * p_light.color * max(dot(L, fs_in.N), 0) * p_light.intensity;
     specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * p_light.intensity * p_light.color *
 #ifdef BLINN_PHONG
@@ -117,15 +117,12 @@ void main() {
     L = normalize(L);
     vec3 V = normalize(ws_cam_pos - fs_in.P);
     vec3 R = reflect(-L, fs_in.N);
-    diffuse +=
-        Kd * d_light.intensity * max(dot(L, fs_in.N), 0) * texture(albedo, fs_in.uv).rgb * d_light.color;
+    diffuse += Kd * d_light.intensity * max(dot(L, fs_in.N), 0) * texture(albedo, fs_in.uv).rgb * d_light.color;
     specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * d_light.intensity * d_light.color *
                 pow(max(dot(R, V), 0), texture(texture_specular0, fs_in.uv).a) *
                 texture(texture_specular0, fs_in.uv).rgb;
   }
   vec3 ambient = Ka * texture(albedo, fs_in.uv).rgb;
-  FragColor = vec4(diffuse, 1);
-  return;
 #ifdef DEBUG_DEPTH
   FragColor = vec4(vec3(LinearizeDepth(gl_FragCoord.z)) / far, 1);
 #elif defined(DEBUG_NORMAL)

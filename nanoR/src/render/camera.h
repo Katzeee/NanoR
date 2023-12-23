@@ -67,8 +67,8 @@ class PrespCamera : public Camera {
         break;
       }
       case static_cast<uint32_t>(ControlCommand::kRightButtonDown):
-        yaw_ += cursor_x_offset * rotate_sensitivity_ * delta_time * fov_ / 100;
-        pitch_ += cursor_y_offset * rotate_sensitivity_ * delta_time * fov_ / 100;
+        yaw_ -= cursor_x_offset * rotate_sensitivity_ * delta_time * fov_ / 100;
+        pitch_ -= cursor_y_offset * rotate_sensitivity_ * delta_time * fov_ / 100;
         break;
     }
     UpdateQuat();

@@ -23,6 +23,8 @@ class EditorLayer : public nanoR::Layer {
     cube_name->name = "cube";
     auto c_mesh = cube_.AddComponent<nanoR::MeshComponent>();
     c_mesh->mesh = std::shared_ptr<nanoR::OpenGLMesh>(cube_mesh);
+    auto c_mesh_renderer = cube_.AddComponent<nanoR::MeshRendererCompoenent>();
+    c_mesh_renderer->materials.emplace_back(std::make_shared<nanoR::Material>());
 
     auto quad = scene_->CreateEntity();
     c_mesh = quad.AddComponent<nanoR::MeshComponent>();
@@ -75,8 +77,13 @@ class EditorLayer : public nanoR::Layer {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_white_);
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("albedo", 0);
-    for (auto&& [c_transform, c_mesh] : scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent>()) {
-      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue("model", c_transform.GetModelMatrix());
+    for (auto&& [c_transform, c_mesh, c_mesh_renderer] :
+         scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent, const nanoR::MeshRendererCompoenent>(
+         )) {
+      auto shader =
+          nanoR::GlobalContext::Instance().resource_manager->GetShader(c_mesh_renderer.materials[0]->GetName());
+      dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(shader.get())->SetValue("model", c_transform.GetModelMatrix());
+      c_mesh_renderer.materials[0]->PrepareUniforms(&rhi_);
       rhi_.Draw(c_mesh.mesh->vao.get(), lit_shader_.get(), fbo);
     }
 
