@@ -86,8 +86,8 @@ float PCSS(int size) {
 
 void main() {
   // vec4 color = texture(albedo, fs_in.uv);
-  // FragColor = vec4(base_color);
-  // return;
+  FragColor = vec4(base_color);
+  return;
   vec3 diffuse = vec3(0);
   vec3 specular = vec3(0);
   // PointLight

@@ -12,6 +12,20 @@ inline auto Scene::CreateEntity() -> Entity {
   auto c_n = world_.assign<NameComponent>(e);
   return Entity{e, this};
 }
+
+inline auto Scene::CreateCube() -> Entity {
+  auto cube_mesh_data = nanoR::Model("../resources/models/Cube/cube.obj");
+  auto cube_mesh = nanoR::CreateMesh(cube_mesh_data.meshes_.at(0));
+  auto cube = CreateEntity();
+  auto cube_name = GetComponent<nanoR::NameComponent>(cube);
+  cube_name->name = "cube";
+  auto c_mesh = cube.AddComponent<nanoR::MeshComponent>();
+  c_mesh->mesh = cube_mesh;
+  auto c_mesh_renderer = cube.AddComponent<nanoR::MeshRendererCompoenent>();
+  c_mesh_renderer->materials.emplace_back(std::make_shared<nanoR::Material>());
+  return cube;
+}
+
 template <typename T>
 auto Scene::GetComponent(const Entity& e) -> xac::ecs::ComponentHandle<Settings, T> {
   return world_.get<T>(e.id_);

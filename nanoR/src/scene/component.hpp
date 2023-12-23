@@ -34,7 +34,7 @@ struct SpriteComponent {
 };
 
 struct MeshComponent {
-  std::shared_ptr<OpenGLMesh> mesh;
+  std::shared_ptr<RHIVertexArray> mesh;
 };
 
 struct LightCompoenent {

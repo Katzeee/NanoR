@@ -127,15 +127,10 @@ auto RHIOpenGL::SetShaderUniform(
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::BindUniformBuffer(
-    const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIShaderProgram *shader_program, RHIBuffer *buffer
-) -> bool {
+auto RHIOpenGL::BindUniformBuffer(const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIBuffer *buffer) -> bool {
   const auto &[target, index] = dynamic_cast<const RHIBindUniformBufferInfoOpenGL &>(bind_uniform_buffer_info);
   auto buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(buffer);
-  auto shader_program_opengl = dynamic_cast<RHIShaderProgramOpenGL *>(shader_program);
-  glUseProgram(shader_program_opengl->id);
   glBindBufferBase(target, index, buffer_opengl->id);
-  glUseProgram(0);
   return OpenGLCheckError();
 }
 

@@ -8,6 +8,7 @@
 #include "light/light.h"
 #include "platform/application_opengl.h"
 #include "platform/opengl/render_resource_opengl.h"
+#include "platform/opengl/renderer_opengl.h"
 #include "platform/opengl/rhi_opengl.h"
 #include "render/camera.h"
 #include "render/resource_manager.h"

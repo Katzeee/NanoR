@@ -26,9 +26,7 @@ class RHIOpenGL final : public RHI {
   ) -> bool override;
   auto SetShaderUniform(RHISetShaderUniformInfo const &set_shader_uniform_info, RHIShaderProgram *shader_program)
       -> bool override;
-  auto BindUniformBuffer(
-      const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIShaderProgram *shader_program, RHIBuffer *buffer
-  ) -> bool override;
+  auto BindUniformBuffer(RHIBindUniformBufferInfo const &bind_uniform_buffer_info, RHIBuffer *buffer) -> bool override;
   auto CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)
       -> bool override;
   auto CreateFramebuffer(
