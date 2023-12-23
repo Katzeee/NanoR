@@ -132,6 +132,7 @@ struct RHITextureOpenGL : public RHITexture {
   ~RHITextureOpenGL() {
     glDeleteTextures(1, &id);
   }
+  GLenum target;
   GLuint id;
 };
 

@@ -243,6 +243,11 @@ auto UILayer::Inspector() -> void {
           for (auto&& it : c_materials) {
             ImGui::Text("%s", it->GetName().data());
             ImGui::ColorEdit4("base_color", glm::value_ptr(it->GetVec4("base_color")));
+            // TODO: opengl
+            ImGui::Text("albedo");
+            ImGui::Image(
+                reinterpret_cast<void*>(dynamic_cast<RHITextureOpenGL*>(it->GetTexture("albedo"))->id), ImVec2{64, 64}
+            );
           }
           ImGui::TreePop();
         }

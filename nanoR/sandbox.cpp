@@ -41,8 +41,6 @@ class EditorLayer : public nanoR::Layer {
 
     ui_shader_ = nanoR::GlobalContext::Instance().resource_manager->GetShader("ui");
     lit_shader_ = nanoR::GlobalContext::Instance().resource_manager->GetShader("lit");
-    t_white_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/white.png");
-    t_point_light_ = nanoR::ResourceManager::LoadTextureFromFile("../resources/textures/point-light.png");
 
     nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
     buffer_create_info.data = nullptr;
@@ -75,7 +73,9 @@ class EditorLayer : public nanoR::Layer {
     rhi_.BindUniformBuffer(bind_uniform_buffer_info, lit_shader_.get(), ubo_.get());
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_white_);
+    // glBindTexture(GL_TEXTURE_2D, t_white_);
+    auto white = nanoR::GlobalContext::Instance().resource_manager->GetTexture("white");
+    auto point_light = nanoR::GlobalContext::Instance().resource_manager->GetTexture("point-light");
     dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("albedo", 0);
     for (auto&& [c_transform, c_mesh, c_mesh_renderer] :
          scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent, const nanoR::MeshRendererCompoenent>(
@@ -88,7 +88,7 @@ class EditorLayer : public nanoR::Layer {
     }
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, t_point_light_);
+    // glBindTexture(GL_TEXTURE_2D, t_point_light_);
     for (auto&& [c_transform, c_light] : scene_->View<nanoR::TransformComponent, const nanoR::LightCompoenent>()) {
       c_transform.scale = glm::vec3{0.5};
       dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(ui_shader_.get())->SetValue("model", c_transform.GetModelMatrix());
@@ -116,8 +116,6 @@ class EditorLayer : public nanoR::Layer {
   std::shared_ptr<nanoR::RHIShaderProgram> ui_shader_;
   std::shared_ptr<nanoR::Scene> scene_;
   nanoR::OpenGLMesh* quad_mesh_;
-  GLuint t_point_light_ = 0;
-  GLuint t_white_ = 0;
   std::shared_ptr<nanoR::RHIBuffer> ubo_;
   nanoR::RHIOpenGL rhi_;
   nanoR::PrespCamera* main_camera_;

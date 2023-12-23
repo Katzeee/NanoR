@@ -11,14 +11,17 @@ class ResourceManager {
   ResourceManager();
   auto Init() -> void;
   auto GetShader(std::string_view name) -> std::shared_ptr<RHIShaderProgram>;
+  auto GetTexture(std::string_view name) -> std::shared_ptr<RHITexture>;
   static auto LoadMeshData() -> MeshData;
-  static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int;
   static auto GetQuadMeshData() -> MeshData;
 
  private:
+  static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int;
   static auto ReadFromFile(char const *file_path) -> std::string;
   auto LoadShader(std::string_view name, char const *vs_path, char const *fs_path) -> void;
+  auto LoadTexture(std::string_view name, std::string_view file_path) -> void;
   std::unordered_map<std::string, std::shared_ptr<RHIShaderProgram>> shaders_;
+  std::unordered_map<std::string, std::shared_ptr<RHITexture>> textures_;
   std::shared_ptr<RHI> rhi_;
 };
 

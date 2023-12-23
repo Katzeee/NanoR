@@ -84,7 +84,7 @@ auto RHIOpenGL::CreateShaderModule(
   glGetShaderiv(shader_module_opengl->id, GL_COMPILE_STATUS, &success);
   if (!static_cast<bool>(success)) {
     glGetShaderInfoLog(shader_module_opengl->id, 512, nullptr, info);
-    LOG_FATAL("ERROR::SHADER::VERTEX::COMPILATION_FAILED: {}", info);
+    LOG_FATAL("ERROR::SHADER::{}::COMPILATION_FAILED: {}", type, info);
   }
   shader_module.reset(shader_module_opengl);
   return OpenGLCheckError();
@@ -154,6 +154,7 @@ auto RHIOpenGL::CreateTexture(const RHITextureCreateInfo &texture_create_info, s
   const auto &[target, levels, internal_format, width, height, format, type, data, parameteri] =
       dynamic_cast<const RHITextureCreateInfoOpenGL &>(texture_create_info);
   glCreateTextures(target, 1, &texture_opengl->id);
+  texture_opengl->target = target;
   if (target == GL_TEXTURE_2D) {
     glTextureStorage2D(texture_opengl->id, levels, internal_format, width, height);
     if (data) {
@@ -165,7 +166,6 @@ auto RHIOpenGL::CreateTexture(const RHITextureCreateInfo &texture_create_info, s
   }
   for (auto &&[pname, param] : parameteri) {
     glTextureParameteri(texture_opengl->id, pname, param);
-    OpenGLCheckError();
   }
   texture.reset(texture_opengl);
   return OpenGLCheckError();
@@ -181,7 +181,6 @@ auto RHIOpenGL::AttachTexture(
   if (glCheckNamedFramebufferStatus(fbo, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     throw std::runtime_error("frame buffer not complete");
   }
-  // glNamedFramebufferRenderbuffer(
   return OpenGLCheckError();
 }
 // auto RHIOpenGL::AttachDepthAttachment();

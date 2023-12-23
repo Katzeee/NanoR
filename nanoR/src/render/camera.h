@@ -3,7 +3,11 @@
 #include "platform/input_system_glfw.h"
 
 namespace nanoR {
-class Camera {};
+class Camera {
+ public:
+  virtual auto GetProjectionMatrix() -> glm::mat4 = 0;
+  virtual auto GetViewMatrix() -> glm::mat4 = 0;
+};
 
 class PrespCamera : public Camera {
  public:
@@ -17,11 +21,11 @@ class PrespCamera : public Camera {
     return position_;
   }
 
-  auto GetProjectionMatrix() -> glm::mat4 {
+  auto GetProjectionMatrix() -> glm::mat4 override {
     return glm::perspective(fov_, aspect_, near_, far_);
   }
 
-  auto GetViewMatrix() -> glm::mat4 {
+  auto GetViewMatrix() -> glm::mat4 override {
     auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
     auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
     return glm::lookAt(position_, position_ + front, up);

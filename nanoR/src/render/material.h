@@ -8,9 +8,8 @@ class Material {
   Material();
 
   auto GetName() -> std::string_view;
-
   auto GetVec4(std::string_view name) -> glm::vec4 &;
-
+  auto GetTexture(std::string_view name) -> RHITexture *;
   auto PrepareUniforms(RHI *rhi) -> void;
 
  private:

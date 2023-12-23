@@ -14,6 +14,9 @@ auto ResourceManager::Init() -> void {
   LoadShader("unlit", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
   LoadShader("lit", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/lit.frag.glsl");
   LoadShader("ui", "../nanoR/shader/ui.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
+  LoadShader("pbr", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/pbr.frag.glsl");
+  LoadTexture("white", "../resources/textures/white.png");
+  LoadTexture("point-light", "../resources/textures/point-light.png");
 }
 
 auto ResourceManager::LoadShader(std::string_view name, char const *vs_path, char const *fs_path) -> void {
@@ -23,6 +26,7 @@ auto ResourceManager::LoadShader(std::string_view name, char const *vs_path, cha
   std::shared_ptr<RHIShaderModule> vert_shader;
   std::shared_ptr<RHIShaderModule> frag_shader;
   std::shared_ptr<RHIShaderProgram> shader_program;
+  // TODO: no opengl
   auto shader_module_create_info = RHIShaderModuleCreateInfoOpenGL{};
   shader_module_create_info.type = GL_VERTEX_SHADER;
   shader_module_create_info.src = shader_data.vs_src.c_str();
@@ -44,7 +48,14 @@ auto ResourceManager::GetShader(std::string_view name) -> std::shared_ptr<RHISha
   }
   LOG_FATAL("No shader named {}\n", name);
   throw std::runtime_error("cannot find shader");
-  // return shaders_;
+}
+
+auto ResourceManager::GetTexture(std::string_view name) -> std::shared_ptr<RHITexture> {
+  if (auto it = textures_.find(name.data()); it != textures_.end()) {
+    return it->second;
+  }
+  LOG_ERROR("No texture named {}\n", name);
+  throw std::runtime_error("cannot find texture");
 }
 
 auto ResourceManager::ReadFromFile(char const *file_path) -> std::string {
@@ -60,6 +71,31 @@ auto ResourceManager::ReadFromFile(char const *file_path) -> std::string {
     exit(3);
   }
   return ss.str();
+}
+
+auto ResourceManager::LoadTexture(std::string_view name, std::string_view file_path) -> void {
+  static std::unordered_map<int, GLenum> ch_map{{1, GL_RED}, {3, GL_RGB}, {4, GL_RGBA}};
+  int width, height, nchs;
+  std::shared_ptr<RHITexture> texture;
+  auto *image_data = stbi_load(file_path.data(), &width, &height, &nchs, 0);
+  // TODO: no opengl
+  RHITextureCreateInfoOpenGL texture_create_info;
+  texture_create_info.target = GL_TEXTURE_2D;
+  texture_create_info.levels = 1;
+  texture_create_info.internal_format = GL_RGBA16;
+  texture_create_info.width = width;
+  texture_create_info.height = height;
+  texture_create_info.format = ch_map[nchs];
+  texture_create_info.type = GL_UNSIGNED_BYTE;
+  texture_create_info.data = image_data;
+  texture_create_info.parameteri.emplace_back(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  texture_create_info.parameteri.emplace_back(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  texture_create_info.parameteri.emplace_back(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  texture_create_info.parameteri.emplace_back(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  rhi_->CreateTexture(texture_create_info, texture);
+  stbi_image_free(image_data);
+  textures_[name.data()] = texture;
+  LOG_TRACE("Load texture: {}, channels: {}\n", file_path, nchs);
 }
 
 auto ResourceManager::LoadTextureFromFile(std::string_view file_path) -> unsigned int {
