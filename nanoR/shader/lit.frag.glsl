@@ -21,7 +21,7 @@ fs_in;
 
 uniform vec4 base_color = vec4(1, 1, 1, 1);
 uniform mat4 world_to_light_space_matrix;
-uniform sampler2D texture_diffuse0;
+uniform sampler2D albedo;
 uniform sampler2D texture_specular0;
 uniform sampler2D depth_map;
 uniform vec3 ws_cam_pos;
@@ -85,7 +85,7 @@ float PCSS(int size) {
 }
 
 void main() {
-  // vec4 color = texture(texture_diffuse0, fs_in.uv);
+  // vec4 color = texture(albedo, fs_in.uv);
   // FragColor = vec4(fs_in.N, 1.0);
   // return;
   vec3 diffuse = vec3(0);
@@ -99,9 +99,9 @@ void main() {
     vec3 V = normalize(ws_cam_pos - fs_in.P);
     vec3 H = normalize(L + V);
     vec3 R = reflect(-L, fs_in.N);
-    diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) * texture(texture_diffuse0, fs_in.uv).rgb *
+    diffuse += Kd * p_light.intensity * max(dot(L, fs_in.N), 0) * texture(albedo, fs_in.uv).rgb *
                p_light.color / distance_square;
-    // diffuse += texture(texture_diffuse0, fs_in.uv).rgb * p_light.color * max(dot(L, fs_in.N), 0) * p_light.intensity;
+    // diffuse += texture(albedo, fs_in.uv).rgb * p_light.color * max(dot(L, fs_in.N), 0) * p_light.intensity;
     specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * p_light.intensity * p_light.color *
 #ifdef BLINN_PHONG
                 pow(max(dot(H, fs_in.N), 0), texture(texture_specular0, fs_in.uv).a) *
@@ -118,12 +118,12 @@ void main() {
     vec3 V = normalize(ws_cam_pos - fs_in.P);
     vec3 R = reflect(-L, fs_in.N);
     diffuse +=
-        Kd * d_light.intensity * max(dot(L, fs_in.N), 0) * texture(texture_diffuse0, fs_in.uv).rgb * d_light.color;
+        Kd * d_light.intensity * max(dot(L, fs_in.N), 0) * texture(albedo, fs_in.uv).rgb * d_light.color;
     specular += Ks * clamp(dot(fs_in.N, L), 0, 1) * d_light.intensity * d_light.color *
                 pow(max(dot(R, V), 0), texture(texture_specular0, fs_in.uv).a) *
                 texture(texture_specular0, fs_in.uv).rgb;
   }
-  vec3 ambient = Ka * texture(texture_diffuse0, fs_in.uv).rgb;
+  vec3 ambient = Ka * texture(albedo, fs_in.uv).rgb;
   FragColor = vec4(diffuse, 1);
   return;
 #ifdef DEBUG_DEPTH
@@ -140,6 +140,6 @@ void main() {
                                      1.0
 #endif
                                  + ambient),
-                                texture(texture_diffuse0, fs_in.uv).a);
+                                texture(albedo, fs_in.uv).a);
 #endif
 }

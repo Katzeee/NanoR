@@ -40,7 +40,9 @@ struct LightCompoenent {
   std::shared_ptr<Light> light;
 };
 
-struct MaterialCompoenent {};
+struct MaterialCompoenent {
+  std::shared_ptr<RHIShaderProgram> shader;
+};
 
 using Components =
     xac::mpl::type_list<NameComponent, TransformComponent, SpriteComponent, MeshComponent, LightCompoenent>;

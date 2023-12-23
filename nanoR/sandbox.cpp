@@ -74,7 +74,7 @@ class EditorLayer : public nanoR::Layer {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, t_white_);
-    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("texture_diffuse0", 0);
+    dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue<int>("albedo", 0);
     for (auto&& [c_transform, c_mesh] : scene_->View<const nanoR::TransformComponent, const nanoR::MeshComponent>()) {
       dynamic_cast<nanoR::RHIShaderProgramOpenGL*>(lit_shader_.get())->SetValue("model", c_transform.GetModelMatrix());
       rhi_.Draw(c_mesh.mesh->vao.get(), lit_shader_.get(), fbo);

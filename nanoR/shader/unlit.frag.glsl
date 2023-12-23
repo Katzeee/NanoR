@@ -8,8 +8,8 @@ in VS_OUT {
 fs_in;
 
 uniform vec4 color;
-uniform sampler2D tex;
+uniform sampler2D albedo;
 
 out vec4 FragColor;
 
-void main() { FragColor = vec4(color.rgb, texture(tex, fs_in.uv).a); }
+void main() { FragColor = vec4(color.rgb, texture(albedo, fs_in.uv).a); }
