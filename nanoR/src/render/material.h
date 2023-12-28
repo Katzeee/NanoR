@@ -1,7 +1,7 @@
 #pragma once
+#include "render/rhi.h"
+
 namespace nanoR {
-class RHI;
-class RHITexture;
 
 class Material {
  public:

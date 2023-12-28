@@ -1,4 +1,3 @@
-#include "render/rhi.h"
 #include "material.h"
 
 #include "global/global_context.h"
