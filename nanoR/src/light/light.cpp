@@ -2,7 +2,7 @@
 
 #include "global/global_context.h"
 #include "render/resource_manager.h"
-#include "render/rhi_type.h"
+#include "render/rhi.h"
 
 namespace nanoR {
 

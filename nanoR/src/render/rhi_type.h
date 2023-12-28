@@ -39,6 +39,7 @@ struct RHIShaderProgramCreateInfo {
 struct RHIShaderProgram {
   virtual ~RHIShaderProgram() = default;
 };
+
 struct RHISetShaderUniformInfo {
   struct Uniform {
     std::string_view name;
