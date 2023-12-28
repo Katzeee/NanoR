@@ -172,7 +172,11 @@ auto RHIOpenGL::AttachTexture(
 ) -> bool {
   const auto &[fbo] = *dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer);
   const auto &[level, attachment] = dynamic_cast<const RHIAttachTextureInfoOpenGL &>(attach_color_attachment_info);
-  glNamedFramebufferTexture(fbo, attachment, dynamic_cast<RHITextureOpenGL const *>(texture)->id, level);
+  if (texture) {
+    glNamedFramebufferTexture(fbo, attachment, dynamic_cast<RHITextureOpenGL const *>(texture)->id, level);
+  } else {
+    glNamedFramebufferTexture(fbo, attachment, 0, level);
+  }
   if (glCheckNamedFramebufferStatus(fbo, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     throw std::runtime_error("frame buffer not complete");
   }

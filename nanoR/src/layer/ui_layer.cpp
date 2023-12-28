@@ -140,6 +140,9 @@ auto UILayer::Scene() -> void {
     rhi_->CreateTexture(scene_depth_attachment_create_info_, scene_depth_attachment_);
     auto attach_info = nanoR::RHIAttachTextureInfoOpenGL{};
     attach_info.level = 0;
+    attach_info.attachment = GL_DEPTH_ATTACHMENT;
+    // detach depth buffer first, or the frame buffer is not complete, then cause runtime_error
+    rhi_->AttachTexture(attach_info, scene_framebuffer_.get(), nullptr);
     attach_info.attachment = GL_COLOR_ATTACHMENT0;
     rhi_->AttachTexture(attach_info, scene_framebuffer_.get(), scene_color_attachment_.get());
     attach_info.attachment = GL_DEPTH_ATTACHMENT;
