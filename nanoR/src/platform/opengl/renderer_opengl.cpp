@@ -57,22 +57,25 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
     rhi->Draw(c_mesh.mesh.get(), shader.get(), framebuffer);
   }
 
+  // SECTION: Render lights
+  auto ui_shader = GlobalContext::Instance().resource_manager->GetShader("ui");
+  auto lit_shader = GlobalContext::Instance().resource_manager->GetShader("lit");
+  auto point_light_tex = GlobalContext::Instance().resource_manager->GetTexture("point-light");
+  // TODO: not get quad data here
+  auto quad_data = GlobalContext::Instance().resource_manager->GetQuadMeshData();
   for (auto &&[c_transform, c_light] : scene->View<TransformComponent, const LightCompoenent>()) {
     c_transform.scale = glm::vec3{0.5};
-    auto ui_shader = GlobalContext::Instance().resource_manager->GetShader("ui");
-    auto quad_data = GlobalContext::Instance().resource_manager->GetQuadMeshData();
     // std::shared_ptr<RHIVertexArray> vao;
     auto quad_mesh = CreateMesh(quad_data);
     dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader.get())->SetValue("model", c_transform.GetModelMatrix());
-    dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader.get())->SetValue("ws_cam_pos", camera->GetPosition());
     c_light.light->PrepareUniforms(rhi, 0);
-    //   dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader_.get())->SetValue("tex", 0);
-    //   dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader_.get())
-    //       ->SetValue("p_lights[0].color", c_light.light->GetColor());
-    //   dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader_.get())
-    //       ->SetValue("p_lights[0].intensity", c_light.light->GetIntensity());
-    //   dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader_.get())
-    //       ->SetValue("p_lights[0].ws_position", c_transform.position);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, dynamic_cast<RHITextureOpenGL *>(point_light_tex.get())->id);
+    dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader.get())->SetValue("albedo", 0);
+    dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())->SetValue("p_lights[0].color", c_light.light->GetColor());
+    dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())
+        ->SetValue("p_lights[0].intensity", c_light.light->GetIntensity());
+    dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())->SetValue("p_lights[0].ws_position", c_transform.position);
     rhi->Draw(quad_mesh.get(), ui_shader.get(), framebuffer);
   }
 

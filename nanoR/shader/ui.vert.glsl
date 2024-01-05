@@ -3,7 +3,6 @@
 layout(location = 0) in vec3 ls_pos;
 layout(location = 2) in vec2 texcoord;
 
-// uniform vec3 ws_cam_pos;
 uniform mat4 model;
 
 layout(std140, binding = 0) uniform matrices {
@@ -11,7 +10,7 @@ layout(std140, binding = 0) uniform matrices {
   mat4 proj;
 };
 
-layout(std140, binding = 1) uniform vectors{
+layout(std140, binding = 1) uniform vectors {
   uniform vec3 ws_cam_pos;
 };
 

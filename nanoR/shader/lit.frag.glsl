@@ -19,15 +19,21 @@ in VS_OUT {
 }
 fs_in;
 
+layout(std140, binding = 1) uniform vectors {
+  uniform vec3 ws_cam_pos;
+};
+
 uniform vec4 base_color = vec4(1, 1, 1, 1);
 uniform mat4 world_to_light_space_matrix;
 uniform sampler2D albedo;
 uniform sampler2D texture_specular0;
 uniform sampler2D depth_map;
-uniform vec3 ws_cam_pos;
+
+
+
 uniform PointLight p_lights[5];
 uniform DirectLight d_lights[1];
-uniform vec3 Ka;
+uniform vec3 Ka = vec3(0.1);
 uniform vec3 Kd = vec3(0.5);
 uniform vec3 Ks;
 
@@ -86,8 +92,8 @@ float PCSS(int size) {
 
 void main() {
   // vec4 color = texture(albedo, fs_in.uv);
-  FragColor = vec4(base_color);
-  return;
+  // FragColor = vec4(base_color);
+  // return;
   vec3 diffuse = vec3(0);
   vec3 specular = vec3(0);
   // PointLight
