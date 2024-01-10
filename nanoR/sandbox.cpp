@@ -13,8 +13,9 @@ class EditorLayer : public nanoR::Layer {
   }
 
   auto OnAttach() -> void override {
-    auto cube = scene_->CreateCube();
-    auto p_light = scene_->CreatePointLight();
+    // auto cube = scene_->CreateCube();
+    // auto p_light = scene_->CreatePointLight();
+    auto herta = scene_->LoadSampleScene();
 
     nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
     buffer_create_info.data = nullptr;

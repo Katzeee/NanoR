@@ -12,7 +12,7 @@ class ResourceManager {
   auto Init() -> void;
   auto GetShader(std::string_view name) -> std::shared_ptr<RHIShaderProgram>;
   auto GetTexture(std::string_view name) -> std::shared_ptr<RHITexture>;
-  static auto LoadMeshData() -> MeshData;
+  // static auto LoadMeshData() -> MeshData;
   static auto GetQuadMeshData() -> MeshData;
 
  private:
@@ -25,6 +25,7 @@ class ResourceManager {
  private:
   std::unordered_map<std::string, std::shared_ptr<RHIShaderProgram>> shaders_;
   std::unordered_map<std::string, std::shared_ptr<RHITexture>> textures_;
+  // std::unordered_map<std::string, >
   std::shared_ptr<RHI> rhi_;
 };
 

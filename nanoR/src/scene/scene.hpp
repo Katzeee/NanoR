@@ -15,6 +15,7 @@ class Scene {
   auto CreateEntity() -> Entity;
   auto CreateCube() -> Entity;
   auto CreatePointLight() -> Entity;
+  auto LoadSampleScene() -> Entity;
 
   template <typename T>
   auto GetComponent(const Entity &e) -> xac::ecs::ComponentHandle<Settings, T>;

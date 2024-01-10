@@ -31,7 +31,7 @@ class PrespCamera : public Camera {
 
   auto GetViewMatrix() -> glm::mat4 override {
     auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
-    auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
+    auto up = glm::rotate(rotation_, glm::vec3(0.0f, -1.0f, 0.0f));
     return glm::lookAt(position_, position_ + front, up);
   }
 
@@ -39,7 +39,7 @@ class PrespCamera : public Camera {
   auto Tick(uint64_t delta_time) -> void {
     float distance = speed_ * delta_time / 100;
     auto front = glm::rotate(rotation_, glm::vec3(0.0f, 0.0f, 1.0f));
-    auto up = glm::rotate(rotation_, glm::vec3(0.0f, 1.0f, 0.0f));
+    auto up = glm::rotate(rotation_, glm::vec3(0.0f, -1.0f, 0.0f));
     auto right = glm::normalize(glm::cross(front, up));
     if (ReceiveCommand(ControlCommand::kForward)) {
       position_ += front * distance;
