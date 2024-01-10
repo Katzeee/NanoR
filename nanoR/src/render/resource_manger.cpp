@@ -21,8 +21,8 @@ auto ResourceManager::Init() -> void {
 
 auto ResourceManager::LoadShader(std::string_view name, char const *vs_path, char const *fs_path) -> void {
   ShaderData shader_data;
-  shader_data.vs_src = ReadFromFile(vs_path);
-  shader_data.fs_src = ReadFromFile(fs_path);
+  shader_data.vs_src = ReadTextFromFile(vs_path);
+  shader_data.fs_src = ReadTextFromFile(fs_path);
   std::shared_ptr<RHIShaderModule> vert_shader;
   std::shared_ptr<RHIShaderModule> frag_shader;
   std::shared_ptr<RHIShaderProgram> shader_program;
@@ -58,7 +58,7 @@ auto ResourceManager::GetTexture(std::string_view name) -> std::shared_ptr<RHITe
   throw std::runtime_error("cannot find texture");
 }
 
-auto ResourceManager::ReadFromFile(char const *file_path) -> std::string {
+auto ResourceManager::ReadTextFromFile(char const *file_path) -> std::string {
   std::ifstream fs;
   std::stringstream ss;
   fs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -96,43 +96,6 @@ auto ResourceManager::LoadTexture(std::string_view name, std::string_view file_p
   stbi_image_free(image_data);
   textures_[name.data()] = texture;
   LOG_TRACE("Load texture: {}, channels: {}\n", file_path, nchs);
-}
-
-auto ResourceManager::LoadTextureFromFile(std::string_view file_path) -> unsigned int {
-  unsigned int texture_id;
-  glGenTextures(1, &texture_id);
-  int x;
-  int y;
-  int nchs;
-  auto *image_data = stbi_load(file_path.data(), &x, &y, &nchs, 0);
-  GLenum format = 0;
-  if (image_data) {
-    switch (nchs) {
-      case 1:
-        format = GL_RED;
-        break;
-      case 3:
-        format = GL_RGB;
-        break;
-      case 4:
-        format = GL_RGBA;
-        break;
-      default:
-        break;
-    }
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, x, y, 0, format, GL_UNSIGNED_BYTE, image_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    stbi_image_free(image_data);
-    LOG_TRACE("Load texture: {}, channels: {}\n", file_path, nchs);
-  } else {
-    LOG_ERROR("Load texture: {}\n", file_path);
-  }
-  return texture_id;
 }
 
 auto ResourceManager::GetQuadMeshData() -> MeshData {

@@ -6,12 +6,6 @@
 
 namespace nanoR {
 
-// struct OpenGLMesh {
-//   std::shared_ptr<RHIBuffer> vbo;
-//   std::shared_ptr<RHIBuffer> ebo;
-//   std::shared_ptr<RHIVertexArray> vao;
-// };
-
 static auto CreateMesh(const MeshData& mesh_data) -> std::shared_ptr<RHIVertexArray> {
   auto& rhi = GlobalContext::Instance().rhi;
   std::shared_ptr<RHIVertexArray> vao;

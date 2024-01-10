@@ -16,10 +16,13 @@ class ResourceManager {
   static auto GetQuadMeshData() -> MeshData;
 
  private:
-  static auto LoadTextureFromFile(std::string_view file_path) -> unsigned int;
-  static auto ReadFromFile(char const *file_path) -> std::string;
+  static auto ReadTextFromFile(char const *file_path) -> std::string;
+  // Load shader from file
   auto LoadShader(std::string_view name, char const *vs_path, char const *fs_path) -> void;
+  // Load texture from file
   auto LoadTexture(std::string_view name, std::string_view file_path) -> void;
+
+ private:
   std::unordered_map<std::string, std::shared_ptr<RHIShaderProgram>> shaders_;
   std::unordered_map<std::string, std::shared_ptr<RHITexture>> textures_;
   std::shared_ptr<RHI> rhi_;
