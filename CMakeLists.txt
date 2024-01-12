@@ -69,13 +69,17 @@ FetchContent_Declare(shaderc
 option(SHADERC_SKIP_TESTS ON)
 option(SHADERC_SKIP_EXAMPLES ON)
 
+FetchContent_Declare(spirv-cross
+                     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+                     GIT_TAG        sdk-1.3.261.1
+)
 
 FetchContent_Declare(pico_libs
                      GIT_REPOSITORY https://github.com/Katzeee/pico_libs
                      GIT_TAG        v0.0.1
 )
 
-FetchContent_MakeAvailable(glfw assimp fmt glad pico_libs shaderc)
+FetchContent_MakeAvailable(glfw assimp fmt glad pico_libs shaderc spirv-cross)
 include(3rdparty/imgui.cmake)
 include(3rdparty/glm.cmake)
 

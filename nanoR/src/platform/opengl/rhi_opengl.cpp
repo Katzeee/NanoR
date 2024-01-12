@@ -4,6 +4,8 @@
 #include <libshaderc_util/file_finder.h>
 
 #include <shaderc/shaderc.hpp>
+#include <spirv_cross.hpp>
+#include <spirv_glsl.hpp>
 
 #include "nanorpch.h"
 #include "rhi_type_opengl.h"
@@ -87,7 +89,7 @@ auto RHIOpenGL::CreateShaderModule(
   shaderc_util::FileFinder fileFinder;
   options.SetIncluder(std::make_unique<glslc::FileIncluder>(&fileFinder));
   options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
-  const bool optimize = true;
+  const bool optimize = false;
   if (optimize) {
     options.SetOptimizationLevel(shaderc_optimization_level_performance);
   }
@@ -100,6 +102,36 @@ auto RHIOpenGL::CreateShaderModule(
     return false;
   }
   std::vector<uint32_t> spirv_code(result.cbegin(), result.cend());
+  // SECTION: reflect
+  // spirv_cross::Compiler spirv_compiler(spirv_code);
+  // spirv_cross::ShaderResources resources = spirv_compiler.get_shader_resources();
+  // for (const auto &resource : resources.uniform_buffers) {
+  //   const auto &buffer_type = spirv_compiler.get_type(resource.base_type_id);
+  //   unsigned set = spirv_compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+  //   unsigned binding = spirv_compiler.get_decoration(resource.id, spv::DecorationBinding);
+
+  //   std::cout << "Uniform buffer '" << resource.name << "' at set = " << set << ", binding = " << binding << "\n";
+  //   for (uint32_t i = 0; i < buffer_type.member_types.size(); ++i) {
+  //     const auto &member_type = spirv_compiler.get_type(buffer_type.member_types[i]);
+  //     std::string member_name = spirv_compiler.get_member_name(buffer_type.self, i);
+
+  //     size_t offset = spirv_compiler.type_struct_member_offset(buffer_type, i);
+  //     std::cout << "  Member name: " << member_name << ", Offset: " << offset << "\n";
+  //     if (member_type.columns > 1) {
+  //       std::cout << ", Matrix: " << member_type.vecsize << "x" << member_type.columns;
+  //     } else if (member_type.vecsize > 1) {
+  //       std::cout << ", Vector size: " << member_type.vecsize;
+  //     }
+
+  //     // 如果成员是数组，打印数组的尺寸
+  //     if (!member_type.array.empty()) {
+  //       std::cout << ", Array size: " << member_type.array[0];
+  //       for (size_t j = 1; j < member_type.array.size(); ++j) {
+  //         std::cout << "[" << member_type.array[j] << "]";
+  //       }
+  //     }
+  //   }
+  // }
   // SECTION:
 
   shader_module_opengl->id = glCreateShader(type);

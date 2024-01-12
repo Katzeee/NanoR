@@ -15,10 +15,11 @@ class EditorLayer : public nanoR::Layer {
   auto OnAttach() -> void override {
     auto cube = scene_->CreateCube();
     auto p_light = scene_->CreatePointLight();
-    auto plane = scene_->CreateCube();
-    auto c_transform = plane.GetComponenet<nanoR::TransformComponent>();
-    c_transform->scale = {50, 0.001, 50};
-    c_transform->position = {0, -1, 0};
+    // auto plane = scene_->CreateCube();
+    // plane.GetComponenet<nanoR::NameComponent>()->name = "plane";
+    // auto c_transform = plane.GetComponenet<nanoR::TransformComponent>();
+    // c_transform->scale = {50, 0.001, 50};
+    // c_transform->position = {0, -1, 0};
     // auto herta = scene_->LoadSampleScene();
 
     glEnable(GL_BLEND);
