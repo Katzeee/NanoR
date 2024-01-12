@@ -49,31 +49,4 @@ class RHIOpenGL final : public RHI {
   auto ShaderToSpirv();
 };
 
-class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface {
- public:
-  shaderc_include_result *GetInclude(
-      const char *requested_source, shaderc_include_type type, const char *requesting_source, size_t include_depth
-  ) override {
-    LOG_TRACE("{}, {}, {}\n", requesting_source, requested_source, include_depth);
-    std::filesystem::path p(requesting_source);
-    p = p.parent_path() / requested_source;
-    auto *content = new std::string(ResourceManager::ReadTextFromFile(p.c_str()));
-    auto *res = new shaderc_include_result();
-    res->user_data = content;
-    res->content = content->c_str();
-    res->content_length = content->length();
-    // auto source_name = new std::string(requested_source);
-    res->source_name = requested_source;
-    return res;
-  }
-
-  void ReleaseInclude(shaderc_include_result *data) override {
-    if (!data) return;
-    delete static_cast<std::string *>(data->user_data);
-    delete data;
-  }
-
-  virtual ~ShaderIncluder() = default;
-};
-
 }  // namespace nanoR

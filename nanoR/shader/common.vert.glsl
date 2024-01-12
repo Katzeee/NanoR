@@ -3,23 +3,18 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texcoord;
 
-// layout(std140, binding = 0) uniform matrices {
-//   mat4 view;
-//   mat4 proj;
-// };
 #include "uniforms.h"
 
-uniform mat4 model;
-
-out VS_OUT {
+struct VS_OUT {
   vec3 P;
   vec3 N;
   vec2 uv;
-}
-vs_out;
+};
+
+layout(location = 0) out VS_OUT vs_out;
 
 void main() {
-  gl_Position = proj * view * model * vec4(position, 1);
+  gl_Position = proj * view * model * vec4(position, 1.0);
   vs_out.P = (model * vec4(position, 1)).xyz;
   vs_out.uv = texcoord;
   vs_out.N = normalize(mat3(transpose(inverse(model))) * normal);

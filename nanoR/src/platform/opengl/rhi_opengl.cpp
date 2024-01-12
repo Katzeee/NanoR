@@ -81,31 +81,44 @@ auto RHIOpenGL::CreateShaderModule(
   // const auto &shader_module_create_info_opengl
   const auto &[type, file, src, count, length] =
       dynamic_cast<const RHIShaderModuleCreateInfoOpenGL &>(shader_module_create_info);
+  // SECTION: compile to spirv
+  shaderc::Compiler compiler;
+  shaderc::CompileOptions options;
+  shaderc_util::FileFinder fileFinder;
+  options.SetIncluder(std::make_unique<glslc::FileIncluder>(&fileFinder));
+  options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
+  const bool optimize = true;
+  if (optimize) {
+    options.SetOptimizationLevel(shaderc_optimization_level_performance);
+  }
+  // TODO: support other kind of shaders
+  auto kind = type == GL_VERTEX_SHADER ? shaderc_shader_kind::shaderc_glsl_vertex_shader
+                                       : shaderc_shader_kind::shaderc_glsl_fragment_shader;
+  auto result = compiler.CompileGlslToSpv(src, kind, file, options);
+  if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+    LOG_ERROR("{}\n", result.GetErrorMessage());
+    return false;
+  }
+  std::vector<uint32_t> spirv_code(result.cbegin(), result.cend());
+  // SECTION:
+
   shader_module_opengl->id = glCreateShader(type);
-  glShaderSource(shader_module_opengl->id, count, &src, length);
-  glCompileShader(shader_module_opengl->id);
+  glShaderBinary(
+      1, &shader_module_opengl->id, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv_code.data(),
+      spirv_code.size() * sizeof(uint32_t)
+  );
+  glSpecializeShader(shader_module_opengl->id, "main", 0, nullptr, nullptr);
+  // glShaderSource(shader_module_opengl->id, count, &src, length);
+  // glCompileShader(shader_module_opengl->id);
   int success;
   char info[512];
   glGetShaderiv(shader_module_opengl->id, GL_COMPILE_STATUS, &success);
   if (!static_cast<bool>(success)) {
     glGetShaderInfoLog(shader_module_opengl->id, 512, nullptr, info);
-    LOG_FATAL("ERROR::SHADER::{}::COMPILATION_FAILED: {}", type, info);
+    LOG_ERROR("ERROR::SHADER::{}::COMPILATION_FAILED: {}\n", type, info);
   }
   shader_module.reset(shader_module_opengl);
-  {
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    shaderc_util::FileFinder fileFinder;
-    options.SetIncluder(std::make_unique<glslc::FileIncluder>(&fileFinder));
-    auto kind = type == GL_VERTEX_SHADER ? shaderc_shader_kind::shaderc_glsl_vertex_shader
-                                         : shaderc_shader_kind::shaderc_glsl_fragment_shader;
-    auto result = compiler.PreprocessGlsl(src, kind, file, options);
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-      LOG_ERROR("{}\n", result.GetErrorMessage());
-      return false;
-    }
-    std::cout << std::string{result.cbegin(), result.cend()};
-  }
+
   return OpenGLCheckError();
 }
 

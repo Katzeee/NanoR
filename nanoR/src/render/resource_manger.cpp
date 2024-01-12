@@ -11,10 +11,12 @@ ResourceManager::ResourceManager() {
 }
 
 auto ResourceManager::Init() -> void {
-  LoadShader("unlit", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
-  LoadShader("lit", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/lit.frag.glsl");
-  LoadShader("ui", "../nanoR/shader/ui.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
-  LoadShader("pbr", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/pbr.frag.glsl");
+  // LoadShader("unlit", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
+  // LoadShader("lit", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/lit.frag.glsl");
+  // LoadShader("ui", "../nanoR/shader/ui.vert.glsl", "../nanoR/shader/unlit.frag.glsl");
+  // LoadShader("pbr", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/pbr.frag.glsl");
+  LoadShader("ui", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/test.frag.glsl");
+  LoadShader("lit", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/test.frag.glsl");
   LoadTexture("white", "../resources/textures/white.png");
   LoadTexture("point-light", "../resources/textures/point-light.png");
 }
