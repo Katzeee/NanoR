@@ -8,18 +8,23 @@ namespace nanoR {
 
 RendererOpenGL::RendererOpenGL(RHI *rhi) {
   RHIBufferCreateInfoOpenGL buffer_create_info;
+  RHIBindUniformBufferInfoOpenGL bind_uniform_buffer_info;
+  bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
   // create matrices ubo
   buffer_create_info.data = nullptr;
   buffer_create_info.size = 2 * sizeof(glm::mat4);
   buffer_create_info.flags = GL_DYNAMIC_STORAGE_BIT;
   rhi->CreateBuffer(buffer_create_info, ubo_matrices_);
+  bind_uniform_buffer_info.index = 0;
+  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_matrices_.get());
   // create vectors ubo
   buffer_create_info.size = sizeof(glm::vec3);
   rhi->CreateBuffer(buffer_create_info, ubo_vectors_);
+  bind_uniform_buffer_info.index = 1;
+  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_vectors_.get());
   // create per obj ubo
   buffer_create_info.size = sizeof(glm::mat4);
   rhi->CreateBuffer(buffer_create_info, ubo_per_objs_);
-  RHIBindUniformBufferInfoOpenGL bind_uniform_buffer_info;
   bind_uniform_buffer_info.index = 2;
   bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
   rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_per_objs_.get());
@@ -35,17 +40,11 @@ auto RendererOpenGL::PrepareUniforms(RHI *rhi, Camera *camera) -> void {
   set_buffer_data_info.size = 2 * sizeof(glm::mat4);
   set_buffer_data_info.data = &matrices;
   rhi->SetBufferData(set_buffer_data_info, ubo_matrices_.get());
-  RHIBindUniformBufferInfoOpenGL bind_uniform_buffer_info;
-  bind_uniform_buffer_info.index = 0;
-  bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
-  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_matrices_.get());
   // set camera ubo
   auto cam_pos = camera->GetPosition();
   set_buffer_data_info.size = 1 * sizeof(glm::vec3);
   set_buffer_data_info.data = &cam_pos;
   rhi->SetBufferData(set_buffer_data_info, ubo_vectors_.get());
-  bind_uniform_buffer_info.index = 1;
-  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_vectors_.get());
 }
 
 auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuffer *framebuffer) -> void {
@@ -60,7 +59,6 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
        scene->View<const TransformComponent, const MeshComponent, const MeshRendererCompoenent>()) {
     // TODO: multiple materials
     auto shader = GlobalContext::Instance().resource_manager->GetShader(c_mesh_renderer.materials[0]->GetName());
-    // dynamic_cast<RHIShaderProgramOpenGL *>(shader.get())->SetValue("model", c_transform.GetModelMatrix());
     auto model = c_transform.GetModelMatrix();
     set_buffer_data_info.data = &model;
     set_buffer_data_info.offset = 0;
@@ -78,9 +76,7 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
   auto quad_data = GlobalContext::Instance().resource_manager->GetQuadMeshData();
   for (auto &&[c_transform, c_light] : scene->View<TransformComponent, const LightCompoenent>()) {
     c_transform.scale = glm::vec3{0.5};
-    // std::shared_ptr<RHIVertexArray> vao;
     auto quad_mesh = CreateMesh(quad_data);
-    // dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader.get())->SetValue("model", c_transform.GetModelMatrix());
     auto model = c_transform.GetModelMatrix();
     set_buffer_data_info.data = &model;
     set_buffer_data_info.offset = 0;
