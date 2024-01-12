@@ -1,5 +1,10 @@
 #include "rhi_opengl.h"
 
+#include <glslc/src/file_includer.h>
+#include <libshaderc_util/file_finder.h>
+
+#include <shaderc/shaderc.hpp>
+
 #include "nanorpch.h"
 #include "rhi_type_opengl.h"
 
@@ -74,7 +79,7 @@ auto RHIOpenGL::CreateShaderModule(
 ) -> bool {
   auto *shader_module_opengl = new RHIShaderModuleOpenGL{};
   // const auto &shader_module_create_info_opengl
-  const auto &[type, src, count, length] =
+  const auto &[type, file, src, count, length] =
       dynamic_cast<const RHIShaderModuleCreateInfoOpenGL &>(shader_module_create_info);
   shader_module_opengl->id = glCreateShader(type);
   glShaderSource(shader_module_opengl->id, count, &src, length);
@@ -87,6 +92,20 @@ auto RHIOpenGL::CreateShaderModule(
     LOG_FATAL("ERROR::SHADER::{}::COMPILATION_FAILED: {}", type, info);
   }
   shader_module.reset(shader_module_opengl);
+  {
+    shaderc::Compiler compiler;
+    shaderc::CompileOptions options;
+    shaderc_util::FileFinder fileFinder;
+    options.SetIncluder(std::make_unique<glslc::FileIncluder>(&fileFinder));
+    auto kind = type == GL_VERTEX_SHADER ? shaderc_shader_kind::shaderc_glsl_vertex_shader
+                                         : shaderc_shader_kind::shaderc_glsl_fragment_shader;
+    auto result = compiler.PreprocessGlsl(src, kind, file, options);
+    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+      LOG_ERROR("{}\n", result.GetErrorMessage());
+      return false;
+    }
+    std::cout << std::string{result.cbegin(), result.cend()};
+  }
   return OpenGLCheckError();
 }
 

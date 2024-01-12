@@ -3,10 +3,11 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texcoord;
 
-layout(std140, binding = 0) uniform matrices {
-  mat4 view;
-  mat4 proj;
-};
+// layout(std140, binding = 0) uniform matrices {
+//   mat4 view;
+//   mat4 proj;
+// };
+#include "uniforms.h"
 
 uniform mat4 model;
 

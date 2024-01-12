@@ -29,9 +29,11 @@ auto ResourceManager::LoadShader(std::string_view name, char const *vs_path, cha
   // TODO: no opengl
   auto shader_module_create_info = RHIShaderModuleCreateInfoOpenGL{};
   shader_module_create_info.type = GL_VERTEX_SHADER;
+  shader_module_create_info.file = vs_path;
   shader_module_create_info.src = shader_data.vs_src.c_str();
   rhi_->CreateShaderModule(shader_module_create_info, vert_shader);
   shader_module_create_info.type = GL_FRAGMENT_SHADER;
+  shader_module_create_info.file = fs_path;
   shader_module_create_info.src = shader_data.fs_src.c_str();
   rhi_->CreateShaderModule(shader_module_create_info, frag_shader);
   auto shader_program_create_info = RHIShaderProgramCreateInfoOpenGL{};
@@ -67,7 +69,7 @@ auto ResourceManager::ReadTextFromFile(char const *file_path) -> std::string {
     ss << fs.rdbuf();
     fs.close();
   } catch (std::exception &e) {
-    std::cout << "ERROR::SHADER::READ_FAILED\n" << file_path << std::endl;
+    LOG_ERROR("ERROR::SHADER::READ_FAILED: {}\n", file_path);
     exit(3);
   }
   return ss.str();

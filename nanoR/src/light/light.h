@@ -26,4 +26,6 @@ class Light {
 class PointLight : public Light {
  public:
 };
+
+class DirectionLight : public Light {};
 }  // namespace nanoR

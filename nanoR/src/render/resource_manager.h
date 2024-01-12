@@ -15,7 +15,7 @@ class ResourceManager {
   // static auto LoadMeshData() -> MeshData;
   static auto GetQuadMeshData() -> MeshData;
 
- private:
+//  private:
   static auto ReadTextFromFile(char const *file_path) -> std::string;
   // Load shader from file
   auto LoadShader(std::string_view name, char const *vs_path, char const *fs_path) -> void;

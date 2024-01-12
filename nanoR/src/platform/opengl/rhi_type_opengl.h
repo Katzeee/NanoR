@@ -59,6 +59,7 @@ struct RHIBindIndexBufferInfoOpenGL : public RHIBindIndexBufferInfo {
 
 struct RHIShaderModuleCreateInfoOpenGL : public RHIShaderModuleCreateInfo {
   GLenum type;
+  const char *file;
   const GLchar *src;
   GLint count = 1;
   GLint *length = nullptr;
