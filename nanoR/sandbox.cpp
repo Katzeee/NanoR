@@ -13,15 +13,14 @@ class EditorLayer : public nanoR::Layer {
   }
 
   auto OnAttach() -> void override {
-    // auto cube = scene_->CreateCube();
-    // auto p_light = scene_->CreatePointLight();
-    auto herta = scene_->LoadSampleScene();
+    auto cube = scene_->CreateCube();
+    auto p_light = scene_->CreatePointLight();
+    auto plane = scene_->CreateCube();
+    auto c_transform = plane.GetComponenet<nanoR::TransformComponent>();
+    c_transform->scale = {50, 0.001, 50};
+    c_transform->position = {0, -1, 0};
+    // auto herta = scene_->LoadSampleScene();
 
-    nanoR::RHIBufferCreateInfoOpenGL buffer_create_info;
-    buffer_create_info.data = nullptr;
-    buffer_create_info.size = 2 * sizeof(glm::mat4);
-    buffer_create_info.flags = GL_DYNAMIC_STORAGE_BIT;
-    rhi_.CreateBuffer(buffer_create_info, ubo_);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   }
@@ -37,13 +36,9 @@ class EditorLayer : public nanoR::Layer {
   }
 
  private:
-  std::shared_ptr<nanoR::RHIShaderProgram> lit_shader_;
-  std::shared_ptr<nanoR::RHIShaderProgram> ui_shader_;
   std::shared_ptr<nanoR::Scene> scene_;
-  std::shared_ptr<nanoR::RHIBuffer> ubo_;
   nanoR::RHIOpenGL rhi_;
   nanoR::PrespCamera* main_camera_;
-  nanoR::Entity cube_;
 };
 
 class Sandbox : public nanoR::ApplicationOpenGL {

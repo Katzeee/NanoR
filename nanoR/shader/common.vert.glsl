@@ -21,5 +21,5 @@ void main() {
   gl_Position = proj * view * model * vec4(position, 1);
   vs_out.P = (model * vec4(position, 1)).xyz;
   vs_out.uv = texcoord;
-  vs_out.N = mat3(transpose(inverse(model))) * normal;
+  vs_out.N = normalize(mat3(transpose(inverse(model))) * normal);
 }

@@ -30,7 +30,7 @@ inline auto Scene::CreatePointLight() -> Entity {
   auto* light = new Light{glm::vec3{1, 1, 1}, 100};
   auto point_light = CreateEntity();
   auto c_trans = point_light.GetComponenet<TransformComponent>();
-  c_trans->position = {6, -5, 4};
+  c_trans->position = {6, 5, 4};
   auto c_name = point_light.GetComponenet<NameComponent>();
   c_name->name = "Pointlight";
   auto c_light = point_light.AddComponent<LightCompoenent>();
