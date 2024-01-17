@@ -10,7 +10,7 @@ RendererOpenGL::RendererOpenGL(RHI *rhi) {
   RHIBufferCreateInfoOpenGL buffer_create_info;
   RHIBindUniformBufferInfoOpenGL bind_uniform_buffer_info;
   bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
-  // create matrices ubo
+  // create engine ubo
   buffer_create_info.data = nullptr;
   buffer_create_info.size = 3 * sizeof(glm::mat4) + sizeof(glm::vec3);
   buffer_create_info.flags = GL_DYNAMIC_STORAGE_BIT;

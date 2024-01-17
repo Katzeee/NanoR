@@ -245,7 +245,7 @@ auto UILayer::Inspector() -> void {
         if (ImGui::TreeNodeEx("Material", ImGuiTreeNodeFlags_DefaultOpen)) {
           for (auto i = 0; i < c_materials.size(); ++i) {
             ImGui::Text("%d. %s", i + 1, c_materials[i]->GetName().data());
-            for (auto& ubo_desc : c_materials[i]->GetUniforms()) {
+            for (auto& ubo_desc : c_materials[i]->GetUniformDescs()) {
               for (auto& var : ubo_desc.second.vars) {
                 std::visit(
                     [&](auto&& arg) {

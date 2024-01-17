@@ -81,29 +81,8 @@ struct RHIShaderProgramOpenGL : public RHIShaderProgram {
   ~RHIShaderProgramOpenGL() override {
     glDeleteProgram(id);
   }
-
-  // template <typename T>
-  // void SetValue(std::string_view name, T &&value) const {
-  //   glUseProgram(id);
-  //   if constexpr (std::is_same_v<std::decay_t<T>, bool>) {
-  //     glUniform1i(glGetUniformLocation(id, name.data()), static_cast<int>(value));
-  //   } else if constexpr (std::is_same_v<std::decay_t<T>, int>) {
-  //     glUniform1i(glGetUniformLocation(id, name.data()), value);
-  //   } else if constexpr (std::is_same_v<std::decay_t<T>, float>) {
-  //     glUniform1f(glGetUniformLocation(id, name.data()), value);
-  //   } else if constexpr (std::is_same_v<std::decay_t<T>, glm::mat4>) {
-  //     glUniformMatrix4fv(glGetUniformLocation(id, name.data()), 1, GL_FALSE, glm::value_ptr(value));
-  //   } else if constexpr (std::is_same_v<std::decay_t<T>, glm::vec3>) {
-  //     glUniform3fv(glGetUniformLocation(id, name.data()), 1, glm::value_ptr(value));
-  //   } else if constexpr (std::is_same_v<std::decay_t<T>, glm::vec4>) {
-  //     glUniform4fv(glGetUniformLocation(id, name.data()), 1, glm::value_ptr(value));
-  //   }
-  //   glUseProgram(0);
-  // }
   GLuint id;
 };
-
-// struct RHISetShaderUniformInfoOpenGL : public RHISetShaderUniformInfo {};
 
 struct RHIBindUniformBufferInfoOpenGL : RHIBindUniformBufferInfo {
   GLenum target;
