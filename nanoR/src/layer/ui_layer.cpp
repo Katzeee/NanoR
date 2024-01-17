@@ -253,6 +253,7 @@ auto UILayer::Inspector() -> void {
                       // auto* arg_p = std::get_if<T>(&uniform.second.value);
                       if constexpr (std::is_same_v<T, int>) {
                       } else if constexpr (std::is_same_v<T, float>) {
+                        ImGui::InputFloat(var.name.c_str(), &arg);
                       } else if constexpr (std::is_same_v<T, glm::vec3>) {
                         ImGui::ColorEdit3(var.name.c_str(), glm::value_ptr(arg));
                       } else if constexpr (std::is_same_v<T, glm::vec4>) {

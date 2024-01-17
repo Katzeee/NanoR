@@ -17,6 +17,11 @@ RendererOpenGL::RendererOpenGL(RHI *rhi) {
   rhi->CreateBuffer(buffer_create_info, ubo_engine_);
   bind_uniform_buffer_info.index = 0;
   rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_engine_.get());
+  // create light ubo
+  buffer_create_info.size = 2 * sizeof(glm::vec3) + sizeof(float);
+  rhi->CreateBuffer(buffer_create_info, ubo_light_);
+  bind_uniform_buffer_info.index = 1;
+  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_light_.get());
 }
 
 auto RendererOpenGL::PrepareUniforms(RHI *rhi, Camera *camera) -> void {
@@ -73,7 +78,13 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
     set_buffer_data_info.size = sizeof(glm::mat4);
     rhi->SetBufferData(set_buffer_data_info, ubo_engine_.get());
 
-    c_light.light->PrepareUniforms(rhi, 0);
+    auto light_data = c_light.light->GetUniforms();
+    PointLight::PointLightType data = {std::get<0>(light_data), std::get<1>(light_data), c_transform.position};
+    set_buffer_data_info.data = &data;
+    set_buffer_data_info.offset = 0;
+    set_buffer_data_info.size = sizeof(data);
+    rhi->SetBufferData(set_buffer_data_info, ubo_light_.get());
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, dynamic_cast<RHITextureOpenGL *>(point_light_tex.get())->id);
     // dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader.get())->SetValue("albedo", 0);

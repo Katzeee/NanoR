@@ -14,6 +14,7 @@ class Renderer {
 
  protected:
   std::shared_ptr<RHIBuffer> ubo_engine_;
+  std::shared_ptr<RHIBuffer> ubo_light_;
 };
 
 }  // namespace nanoR

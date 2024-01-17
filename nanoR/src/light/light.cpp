@@ -14,11 +14,14 @@ auto Light::GetIntensity() -> float& {
   return intensity_;
 }
 
-auto Light::PrepareUniforms(RHI* rhi, uint8_t number) -> void {
-  // auto shader = GlobalContext::Instance().resource_manager->GetShader("ui");
-  // RHISetShaderUniformInfo set_shader_uniform_info;
-  // set_shader_uniform_info.uniforms.emplace_back("color", glm::vec4{color_, 1.0});
-  // rhi->SetShaderUniform(set_shader_uniform_info, shader.get());
+struct DirectLight {
+  float intensity;
+  glm::vec3 direction;
+  glm::vec3 color;
+};
+
+auto Light::GetUniforms() -> std::tuple<glm::vec3, float> {
+  return std::make_tuple(color_, intensity_);
 }
 
 }  // namespace nanoR

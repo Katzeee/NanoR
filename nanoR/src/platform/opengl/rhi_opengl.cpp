@@ -158,14 +158,17 @@ auto RHIOpenGL::CreateShaderProgram(
 
         size_t offset = spirv_compiler.type_struct_member_offset(buffer_type, i);
         // std::cout << "  Member name: " << member_name << ", Offset: " << offset << "\n";
-        if (member_type.columns > 1) {
-          // std::cout << "  Matrix: " << member_type.vecsize << "x" << member_type.columns;
-        } else if (member_type.vecsize == 3) {
+        if (member_type.vecsize == 3) {
           // std::cout << "  Vector size: " << member_type.vecsize;
           value = glm::vec3{1};
         } else if (member_type.vecsize == 4) {
           // std::cout << "  Vector size: " << member_type.vecsize;
           value = glm::vec4{1};
+        } else if (member_type.basetype == spirv_cross::SPIRType::Float) {
+          LOG_TRACE("Member name: {}, {}\n", member_name, member_type.basetype == spirv_cross::SPIRType::Float);
+          value = 0.5F;
+        } else if (member_type.basetype == spirv_cross::SPIRType::Int) {
+          value = 0;
         }
 
         // 如果成员是数组，打印数组的尺寸

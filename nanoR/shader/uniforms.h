@@ -1,13 +1,15 @@
 struct PointLight {
+  vec3 color;
   float intensity;
   vec3 ws_position;
-  vec3 color;
+  float _padding;
 };
 
 struct DirectLight {
+  vec3 color;
   float intensity;
   vec3 direction;
-  vec3 color;
+  float _padding;
 };
 
 layout(std140, binding = 0) uniform _engine {
@@ -17,8 +19,13 @@ layout(std140, binding = 0) uniform _engine {
   vec3 ws_cam_pos;
 };
 
+layout(std140, binding = 1) uniform _light {
+  PointLight p_light;
+  // DirectLight d_light;
+};
+
 layout(std140, binding = 3) uniform pbr {
   vec4 base_color;
-  vec4 test;
-  vec3 test2;
+  float metallic;
+  float roughness;
 };

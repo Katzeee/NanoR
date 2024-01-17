@@ -14,6 +14,7 @@ class ResourceManager {
   auto GetTexture(std::string_view name) -> std::shared_ptr<RHITexture>;
   // static auto LoadMeshData() -> MeshData;
   static auto GetQuadMeshData() -> MeshData;
+  static auto GetSpereMeshData() -> MeshData;
 
 //  private:
   static auto ReadTextFromFile(char const *file_path) -> std::string;
