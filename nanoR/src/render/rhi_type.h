@@ -29,6 +29,7 @@ struct RHIShaderModuleCreateInfo {
 };
 
 struct RHIShaderModule {
+  std::vector<uint32_t> spirv_code;
   virtual ~RHIShaderModule() = default;
 };
 
@@ -36,17 +37,20 @@ struct RHIShaderProgramCreateInfo {
   virtual ~RHIShaderProgramCreateInfo() = default;
 };
 
-struct RHIShaderProgram {
-  virtual ~RHIShaderProgram() = default;
+struct UniformBufferDesc {
+  struct UniformVariable {
+    size_t offset;
+    std::string name;
+    std::variant<int, float, glm::vec3, glm::vec4> value;
+  };
+  uint32_t binding;
+  std::shared_ptr<RHIBuffer> ubo;
+  std::vector<UniformVariable> vars;
 };
 
-struct RHISetShaderUniformInfo {
-  struct Uniform {
-    std::string_view name;
-    std::variant<bool, int, float, glm::mat4, glm::vec3, glm::vec4> value;
-  };
-  std::vector<Uniform> uniforms;
-  virtual ~RHISetShaderUniformInfo() = default;
+struct RHIShaderProgram {
+  virtual ~RHIShaderProgram() = default;
+  std::map<std::string, UniformBufferDesc> ubo_descs;
 };
 
 struct RHIBindUniformBufferInfo {

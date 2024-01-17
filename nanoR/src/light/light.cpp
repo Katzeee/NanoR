@@ -15,10 +15,10 @@ auto Light::GetIntensity() -> float& {
 }
 
 auto Light::PrepareUniforms(RHI* rhi, uint8_t number) -> void {
-  auto shader = GlobalContext::Instance().resource_manager->GetShader("ui");
-  RHISetShaderUniformInfo set_shader_uniform_info;
-  set_shader_uniform_info.uniforms.emplace_back("color", glm::vec4{color_, 1.0});
-  rhi->SetShaderUniform(set_shader_uniform_info, shader.get());
+  // auto shader = GlobalContext::Instance().resource_manager->GetShader("ui");
+  // RHISetShaderUniformInfo set_shader_uniform_info;
+  // set_shader_uniform_info.uniforms.emplace_back("color", glm::vec4{color_, 1.0});
+  // rhi->SetShaderUniform(set_shader_uniform_info, shader.get());
 }
 
 }  // namespace nanoR

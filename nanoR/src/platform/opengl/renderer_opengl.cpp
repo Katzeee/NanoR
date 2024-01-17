@@ -12,22 +12,11 @@ RendererOpenGL::RendererOpenGL(RHI *rhi) {
   bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
   // create matrices ubo
   buffer_create_info.data = nullptr;
-  buffer_create_info.size = 2 * sizeof(glm::mat4);
+  buffer_create_info.size = 3 * sizeof(glm::mat4) + sizeof(glm::vec3);
   buffer_create_info.flags = GL_DYNAMIC_STORAGE_BIT;
-  rhi->CreateBuffer(buffer_create_info, ubo_matrices_);
+  rhi->CreateBuffer(buffer_create_info, ubo_engine_);
   bind_uniform_buffer_info.index = 0;
-  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_matrices_.get());
-  // create vectors ubo
-  buffer_create_info.size = sizeof(glm::vec3);
-  rhi->CreateBuffer(buffer_create_info, ubo_vectors_);
-  bind_uniform_buffer_info.index = 1;
-  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_vectors_.get());
-  // create per obj ubo
-  buffer_create_info.size = sizeof(glm::mat4);
-  rhi->CreateBuffer(buffer_create_info, ubo_per_objs_);
-  bind_uniform_buffer_info.index = 2;
-  bind_uniform_buffer_info.target = GL_UNIFORM_BUFFER;
-  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_per_objs_.get());
+  rhi->BindUniformBuffer(bind_uniform_buffer_info, ubo_engine_.get());
 }
 
 auto RendererOpenGL::PrepareUniforms(RHI *rhi, Camera *camera) -> void {
@@ -39,12 +28,13 @@ auto RendererOpenGL::PrepareUniforms(RHI *rhi, Camera *camera) -> void {
   set_buffer_data_info.offset = 0;
   set_buffer_data_info.size = 2 * sizeof(glm::mat4);
   set_buffer_data_info.data = &matrices;
-  rhi->SetBufferData(set_buffer_data_info, ubo_matrices_.get());
+  rhi->SetBufferData(set_buffer_data_info, ubo_engine_.get());
   // set camera ubo
   auto cam_pos = camera->GetPosition();
+  set_buffer_data_info.offset = 3 * sizeof(glm::mat4);
   set_buffer_data_info.size = 1 * sizeof(glm::vec3);
   set_buffer_data_info.data = &cam_pos;
-  rhi->SetBufferData(set_buffer_data_info, ubo_vectors_.get());
+  rhi->SetBufferData(set_buffer_data_info, ubo_engine_.get());
 }
 
 auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuffer *framebuffer) -> void {
@@ -61,9 +51,9 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
     auto shader = GlobalContext::Instance().resource_manager->GetShader(c_mesh_renderer.materials[0]->GetName());
     auto model = c_transform.GetModelMatrix();
     set_buffer_data_info.data = &model;
-    set_buffer_data_info.offset = 0;
+    set_buffer_data_info.offset = 2 * sizeof(glm::mat4);
     set_buffer_data_info.size = sizeof(glm::mat4);
-    rhi->SetBufferData(set_buffer_data_info, ubo_per_objs_.get());
+    rhi->SetBufferData(set_buffer_data_info, ubo_engine_.get());
     c_mesh_renderer.materials[0]->PrepareUniforms(rhi);
     rhi->Draw(c_mesh.mesh.get(), shader.get(), framebuffer);
   }
@@ -79,18 +69,19 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
     auto quad_mesh = CreateMesh(quad_data);
     auto model = c_transform.GetModelMatrix();
     set_buffer_data_info.data = &model;
-    set_buffer_data_info.offset = 0;
+    set_buffer_data_info.offset = 2 * sizeof(glm::mat4);
     set_buffer_data_info.size = sizeof(glm::mat4);
-    rhi->SetBufferData(set_buffer_data_info, ubo_per_objs_.get());
+    rhi->SetBufferData(set_buffer_data_info, ubo_engine_.get());
 
     c_light.light->PrepareUniforms(rhi, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, dynamic_cast<RHITextureOpenGL *>(point_light_tex.get())->id);
-    dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader.get())->SetValue("albedo", 0);
-    dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())->SetValue("p_lights[0].color", c_light.light->GetColor());
-    dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())
-        ->SetValue("p_lights[0].intensity", c_light.light->GetIntensity());
-    dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())->SetValue("p_lights[0].ws_position", c_transform.position);
+    // dynamic_cast<RHIShaderProgramOpenGL *>(ui_shader.get())->SetValue("albedo", 0);
+    // dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())->SetValue("p_lights[0].color",
+    // c_light.light->GetColor()); dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())
+    //     ->SetValue("p_lights[0].intensity", c_light.light->GetIntensity());
+    // dynamic_cast<RHIShaderProgramOpenGL *>(lit_shader.get())->SetValue("p_lights[0].ws_position",
+    // c_transform.position);
     rhi->Draw(quad_mesh.get(), ui_shader.get(), framebuffer);
   }
 

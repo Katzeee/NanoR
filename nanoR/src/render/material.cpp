@@ -7,8 +7,35 @@
 namespace nanoR {
 Material::Material() {
   shader_name_ = "lit";
-  vec4_storage_["base_color"] = {1, 1, 1, 1};
-  texture_storage_["albedo"] = GlobalContext::Instance().resource_manager->GetTexture("white");
+  auto shader = GlobalContext::Instance().resource_manager->GetShader(shader_name_);
+  uniforms = shader->ubo_descs;
+  // for (auto uniform : uniforms) {
+  //   std::visit(
+  //       [&](auto&& arg) {
+  //         using T = std::decay_t<decltype(arg)>;
+  //         // auto* arg_p = std::get_if<T>(&uniform.second.value);
+  //         if constexpr (std::is_same_v<T, int>) {
+  //         } else if constexpr (std::is_same_v<T, float>) {
+  //         } else if constexpr (std::is_same_v<T, glm::vec3>) {
+  //           LOG_TRACE("x: {}, y: {}, z: {}\n", arg.x, arg.y, arg.z);
+  //           arg = {0, 0, 1};
+  //           LOG_TRACE("x: {}, y: {}, z: {}\n", arg.x, arg.y, arg.z);
+  //         } else if constexpr (std::is_same_v<T, glm::vec4>) {
+  //           LOG_TRACE("x: {}, y: {}, z: {}, a: {}\n", arg.x, arg.y, arg.z, arg.a);
+  //           arg = {1, 0, 0, 1};
+  //           LOG_TRACE("x: {}, y: {}, z: {}, a: {}\n", arg.x, arg.y, arg.z, arg.a);
+  //         }
+  //       },
+  //       uniform.second.value
+  //   );
+  // }
+
+  // vec4_storage_["base_color"] = {1, 1, 1, 1};
+  // texture_storage_["albedo"] = GlobalContext::Instance().resource_manager->GetTexture("white");
+}
+
+auto Material::GetUniforms() -> std::map<std::string, UniformBufferDesc>& {
+  return uniforms;
 }
 
 Material::Material(std::string_view shader_name) : shader_name_(shader_name) {}
@@ -42,19 +69,21 @@ auto Material::GetTexture(std::string_view name) -> RHITexture* {
 }
 
 auto Material::PrepareUniforms(RHI* rhi) -> void {
-  auto shader = GlobalContext::Instance().resource_manager->GetShader(shader_name_);
-  RHISetShaderUniformInfo set_shader_uniform_info;
-  for (auto&& it : vec4_storage_) {
-    set_shader_uniform_info.uniforms.emplace_back(it.first, it.second);
+  RHISetBufferDataInfoOpenGL set_buffer_data_info;
+  for (auto const& ubo_desc : uniforms) {
+    for (auto const& var : ubo_desc.second.vars) {
+      std::visit(
+          [&](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            set_buffer_data_info.size = sizeof(T);
+            set_buffer_data_info.data = &arg;
+            set_buffer_data_info.offset = var.offset;
+          },
+          var.value
+      );
+      rhi->SetBufferData(set_buffer_data_info, ubo_desc.second.ubo.get());
+    }
   }
-  int i = 0;
-  for (auto&& it : texture_storage_) {
-    auto texture = dynamic_cast<RHITextureOpenGL*>(it.second.get());
-    glActiveTexture(GL_TEXTURE0 + i);
-    glBindTexture(texture->target, texture->id);
-    set_shader_uniform_info.uniforms.emplace_back(it.first, i);
-  }
-  rhi->SetShaderUniform(set_shader_uniform_info, shader.get());
 }
 
 }  // namespace nanoR

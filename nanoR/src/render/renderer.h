@@ -13,9 +13,7 @@ class Renderer {
   virtual ~Renderer() = default;
 
  protected:
-  std::shared_ptr<RHIBuffer> ubo_matrices_;
-  std::shared_ptr<RHIBuffer> ubo_vectors_;
-  std::shared_ptr<RHIBuffer> ubo_per_objs_;
+  std::shared_ptr<RHIBuffer> ubo_engine_;
 };
 
 }  // namespace nanoR

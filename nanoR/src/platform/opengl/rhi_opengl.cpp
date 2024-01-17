@@ -89,7 +89,7 @@ auto RHIOpenGL::CreateShaderModule(
   shaderc_util::FileFinder fileFinder;
   options.SetIncluder(std::make_unique<glslc::FileIncluder>(&fileFinder));
   options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
-  const bool optimize = false;
+  const bool optimize = false;  // for debug info
   if (optimize) {
     options.SetOptimizationLevel(shaderc_optimization_level_performance);
   }
@@ -101,37 +101,9 @@ auto RHIOpenGL::CreateShaderModule(
     LOG_ERROR("{}\n", result.GetErrorMessage());
     return false;
   }
-  std::vector<uint32_t> spirv_code(result.cbegin(), result.cend());
-  // SECTION: reflect
-  // spirv_cross::Compiler spirv_compiler(spirv_code);
-  // spirv_cross::ShaderResources resources = spirv_compiler.get_shader_resources();
-  // for (const auto &resource : resources.uniform_buffers) {
-  //   const auto &buffer_type = spirv_compiler.get_type(resource.base_type_id);
-  //   unsigned set = spirv_compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
-  //   unsigned binding = spirv_compiler.get_decoration(resource.id, spv::DecorationBinding);
+  auto &spirv_code = shader_module_opengl->spirv_code;
+  spirv_code = {result.cbegin(), result.cend()};
 
-  //   std::cout << "Uniform buffer '" << resource.name << "' at set = " << set << ", binding = " << binding << "\n";
-  //   for (uint32_t i = 0; i < buffer_type.member_types.size(); ++i) {
-  //     const auto &member_type = spirv_compiler.get_type(buffer_type.member_types[i]);
-  //     std::string member_name = spirv_compiler.get_member_name(buffer_type.self, i);
-
-  //     size_t offset = spirv_compiler.type_struct_member_offset(buffer_type, i);
-  //     std::cout << "  Member name: " << member_name << ", Offset: " << offset << "\n";
-  //     if (member_type.columns > 1) {
-  //       std::cout << ", Matrix: " << member_type.vecsize << "x" << member_type.columns;
-  //     } else if (member_type.vecsize > 1) {
-  //       std::cout << ", Vector size: " << member_type.vecsize;
-  //     }
-
-  //     // 如果成员是数组，打印数组的尺寸
-  //     if (!member_type.array.empty()) {
-  //       std::cout << ", Array size: " << member_type.array[0];
-  //       for (size_t j = 1; j < member_type.array.size(); ++j) {
-  //         std::cout << "[" << member_type.array[j] << "]";
-  //       }
-  //     }
-  //   }
-  // }
   // SECTION:
 
   shader_module_opengl->id = glCreateShader(type);
@@ -162,7 +134,54 @@ auto RHIOpenGL::CreateShaderProgram(
   shader_program_opengl->id = glCreateProgram();
   for (auto &&shader : shaders) {
     glAttachShader(shader_program_opengl->id, dynamic_cast<RHIShaderModuleOpenGL *>(shader.get())->id);
+
+    // SECTION: reflect
+    const auto &spirv_code = shader->spirv_code;
+    spirv_cross::Compiler spirv_compiler(spirv_code);
+    spirv_cross::ShaderResources resources = spirv_compiler.get_shader_resources();
+    for (const auto &resource : resources.uniform_buffers) {
+      const auto &buffer_type = spirv_compiler.get_type(resource.base_type_id);
+      unsigned set = spirv_compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+      unsigned binding = spirv_compiler.get_decoration(resource.id, spv::DecorationBinding);
+      // ignore all ubo starts_with _
+      if (resource.name.starts_with('_')) {
+        continue;
+      }
+
+      // std::cout << "Uniform buffer '" << resource.name << "' at set = " << set << ", binding = " << binding << "\n";
+
+      std::vector<UniformBufferDesc::UniformVariable> vars;
+      for (uint32_t i = 0; i < buffer_type.member_types.size(); ++i) {
+        std::variant<int, float, glm::vec3, glm::vec4> value;
+        const auto &member_type = spirv_compiler.get_type(buffer_type.member_types[i]);
+        std::string member_name = spirv_compiler.get_member_name(buffer_type.self, i);
+
+        size_t offset = spirv_compiler.type_struct_member_offset(buffer_type, i);
+        // std::cout << "  Member name: " << member_name << ", Offset: " << offset << "\n";
+        if (member_type.columns > 1) {
+          // std::cout << "  Matrix: " << member_type.vecsize << "x" << member_type.columns;
+        } else if (member_type.vecsize == 3) {
+          // std::cout << "  Vector size: " << member_type.vecsize;
+          value = glm::vec3{1};
+        } else if (member_type.vecsize == 4) {
+          // std::cout << "  Vector size: " << member_type.vecsize;
+          value = glm::vec4{1};
+        }
+
+        // 如果成员是数组，打印数组的尺寸
+        if (!member_type.array.empty()) {
+          // std::cout << ", Array size: " << member_type.array[0];
+          for (size_t j = 1; j < member_type.array.size(); ++j) {
+            // std::cout << "[" << member_type.array[j] << "]";
+          }
+        }
+        vars.emplace_back(offset, member_name, value);
+      }
+      shader_program_opengl->ubo_descs[resource.name] = {binding, nullptr, std::move(vars)};
+    }
   }
+
+  // SECTION: create program
   glLinkProgram(shader_program_opengl->id);
   int success;
   char info[512];
@@ -171,25 +190,39 @@ auto RHIOpenGL::CreateShaderProgram(
     glGetProgramInfoLog(shader_program_opengl->id, 512, nullptr, info);
     LOG_FATAL("ERROR::SHADER::PROGRAM::LINKING_FAILED: {}\n", info);
   }
+  // SECTION: create ubo
+  for (auto &ubo_desc : shader_program_opengl->ubo_descs) {
+    auto size = 0;
+    for (auto const &var : ubo_desc.second.vars) {
+      std::visit([&](auto &&arg) { size += sizeof(decltype(arg)); }, var.value);
+    }
+    LOG_TRACE("size: {}\n", size);
+    auto *buffer_opengl = new RHIBufferOpenGL{};
+    glCreateBuffers(1, &buffer_opengl->id);
+    glNamedBufferStorage(buffer_opengl->id, size, nullptr, GL_DYNAMIC_STORAGE_BIT);
+    glBindBufferBase(GL_UNIFORM_BUFFER, ubo_desc.second.binding, buffer_opengl->id);
+    ubo_desc.second.ubo.reset(buffer_opengl);
+  }
+
   shader_program.reset(shader_program_opengl);
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::SetShaderUniform(
-    RHISetShaderUniformInfo const &set_shader_uniform_info, RHIShaderProgram *shader_program
-) -> bool {
-  const auto &[uniforms] = set_shader_uniform_info;
-  for (auto &&uniform : uniforms) {
-    std::visit(
-        [&](auto &&value) {
-          using T = std::decay_t<decltype(value)>;
-          dynamic_cast<RHIShaderProgramOpenGL *>(shader_program)->SetValue<T>(uniform.name, static_cast<T>(value));
-        },
-        uniform.value
-    );
-  }
-  return OpenGLCheckError();
-}
+// auto RHIOpenGL::SetShaderUniform(
+//     RHISetShaderUniformInfo const &set_shader_uniform_info, RHIShaderProgram *shader_program
+// ) -> bool {
+//   const auto &[uniforms] = set_shader_uniform_info;
+//   for (auto &&uniform : uniforms) {
+//     std::visit(
+//         [&](auto &&value) {
+//           using T = std::decay_t<decltype(value)>;
+//           dynamic_cast<RHIShaderProgramOpenGL *>(shader_program)->SetValue<T>(uniform.name, static_cast<T>(value));
+//         },
+//         uniform.value
+//     );
+//   }
+//   return OpenGLCheckError();
+// }
 
 auto RHIOpenGL::BindUniformBuffer(const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIBuffer *buffer) -> bool {
   const auto &[target, index] = dynamic_cast<const RHIBindUniformBufferInfoOpenGL &>(bind_uniform_buffer_info);

@@ -24,9 +24,9 @@ class RHI {
   virtual auto CreateShaderProgram(
       const RHIShaderProgramCreateInfo &shader_program_create_info, std::shared_ptr<RHIShaderProgram> &shader_program
   ) -> bool = 0;
-  virtual auto SetShaderUniform(
-      RHISetShaderUniformInfo const &set_shader_uniform_info, RHIShaderProgram *shader_program
-  ) -> bool = 0;
+  //   virtual auto SetShaderUniform(
+  //   RHISetShaderUniformInfo const &set_shader_uniform_info, RHIShaderProgram *shader_program
+  //   ) -> bool = 0;
   virtual auto BindUniformBuffer(const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIBuffer *buffer)
       -> bool = 0;
   virtual auto CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)

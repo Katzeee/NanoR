@@ -36,7 +36,7 @@ class Logger {
   void Log(LogLevel level, SourceLocationHelper<fmt::format_string<T...>> fmt, T &&...args) {
     if (level >= level_) {
       std::cout << fmt::format(
-                       "[{:^9}] {:<30}:{:<30}:{:>4}|| ", LevelToString(level) + 1, fmt.location_.file_name(),
+                       "[{:^9}] {:<80}:{:<30}:{:>4}|| ", LevelToString(level) + 1, fmt.location_.file_name(),
                        fmt.location_.function_name(), fmt.location_.line()
                    ) + fmt::vformat(fmt.fmt_, fmt::make_format_args(args...));
     }

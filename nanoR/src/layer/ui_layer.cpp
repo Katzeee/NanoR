@@ -243,14 +243,31 @@ auto UILayer::Inspector() -> void {
       auto& c_materials = c_mesh_renderer->materials;
       if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::TreeNodeEx("Material", ImGuiTreeNodeFlags_DefaultOpen)) {
-          for (auto&& it : c_materials) {
-            ImGui::Text("%s", it->GetName().data());
-            ImGui::ColorEdit4("base_color", glm::value_ptr(it->GetVec4("base_color")));
+          for (auto i = 0; i < c_materials.size(); ++i) {
+            ImGui::Text("%d. %s", i + 1, c_materials[i]->GetName().data());
+            for (auto& ubo_desc : c_materials[i]->GetUniforms()) {
+              for (auto& var : ubo_desc.second.vars) {
+                std::visit(
+                    [&](auto&& arg) {
+                      using T = std::decay_t<decltype(arg)>;
+                      // auto* arg_p = std::get_if<T>(&uniform.second.value);
+                      if constexpr (std::is_same_v<T, int>) {
+                      } else if constexpr (std::is_same_v<T, float>) {
+                      } else if constexpr (std::is_same_v<T, glm::vec3>) {
+                        ImGui::ColorEdit3(var.name.c_str(), glm::value_ptr(arg));
+                      } else if constexpr (std::is_same_v<T, glm::vec4>) {
+                        ImGui::ColorEdit4(var.name.c_str(), glm::value_ptr(arg));
+                      }
+                    },
+                    var.value
+                );
+              }
+            }
             // TODO: opengl
-            ImGui::Text("albedo");
-            ImGui::Image(
-                reinterpret_cast<void*>(dynamic_cast<RHITextureOpenGL*>(it->GetTexture("albedo"))->id), ImVec2{64, 64}
-            );
+            // ImGui::Text("albedo");
+            // ImGui::Image(
+            // reinterpret_cast<void*>(dynamic_cast<RHITextureOpenGL*>(it->GetTexture("albedo"))->id), ImVec2{64, 64}
+            // );
           }
           ImGui::TreePop();
         }
