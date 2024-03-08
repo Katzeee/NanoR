@@ -6,8 +6,6 @@
 #include "global/global_context.h"
 #include "nanorpch.h"
 #include "platform/input_system_glfw.h"
-#include "platform/opengl/rhi_opengl.h"
-#include "platform/window_linux.h"
 #include "render/camera.h"
 #include "scene/component.hpp"
 #include "scene/scene.hpp"
@@ -132,8 +130,8 @@ auto UILayer::Scene() -> void {
   ImVec2 scene_size = ImGui::GetContentRegionAvail();
   if (scene_size.x != scene_color_attachment_create_info_.width ||
       scene_size.y != scene_color_attachment_create_info_.height) {
-    scene_size.x = scene_size.x > 0? scene_size.x : 1;
-    scene_size.y = scene_size.y > 0? scene_size.y : 1;
+    scene_size.x = scene_size.x > 0 ? scene_size.x : 1;
+    scene_size.y = scene_size.y > 0 ? scene_size.y : 1;
     scene_color_attachment_create_info_.width = scene_size.x;
     scene_color_attachment_create_info_.height = scene_size.y;
     scene_depth_attachment_create_info_.width = scene_size.x;
@@ -255,14 +253,14 @@ auto UILayer::Inspector() -> void {
                       // auto* arg_p = std::get_if<T>(&uniform.second.value);
                       if constexpr (std::is_same_v<T, int>) {
                       } else if constexpr (std::is_same_v<T, float>) {
-                        ImGui::InputFloat(var.name.c_str(), &arg);
+                        ImGui::InputFloat(var.first.c_str(), &arg);
                       } else if constexpr (std::is_same_v<T, glm::vec3>) {
-                        ImGui::ColorEdit3(var.name.c_str(), glm::value_ptr(arg));
+                        ImGui::ColorEdit3(var.first.c_str(), glm::value_ptr(arg));
                       } else if constexpr (std::is_same_v<T, glm::vec4>) {
-                        ImGui::ColorEdit4(var.name.c_str(), glm::value_ptr(arg));
+                        ImGui::ColorEdit4(var.first.c_str(), glm::value_ptr(arg));
                       }
                     },
-                    var.value
+                    var.second.value
                 );
               }
             }

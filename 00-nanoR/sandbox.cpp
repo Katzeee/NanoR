@@ -13,7 +13,8 @@ class EditorLayer : public nanoR::Layer {
   }
 
   auto OnAttach() -> void override {
-    auto cube = scene_->CreateCube();
+    auto cube1 = scene_->CreateCube();
+    auto cube2 = scene_->CreateCube();
     auto p_light = scene_->CreatePointLight();
     // auto plane = scene_->CreateCube();
     // plane.GetComponenet<nanoR::NameComponent>()->name = "plane";

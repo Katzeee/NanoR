@@ -10,6 +10,9 @@ namespace nanoR {
 class ApplicationOpenGL : public Application {
  public:
   ApplicationOpenGL() {
+    // Init Window, Input, Scene, MainCam in Super::Init()
+
+    // Load gl functions, rhi
     Init();
   }
 

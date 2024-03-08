@@ -150,7 +150,7 @@ auto RHIOpenGL::CreateShaderProgram(
 
       // std::cout << "Uniform buffer '" << resource.name << "' at set = " << set << ", binding = " << binding << "\n";
 
-      std::vector<UniformBufferDesc::UniformVariable> vars;
+      std::unordered_map<std::string, UniformBufferDesc::UniformVariable> vars;
       for (uint32_t i = 0; i < buffer_type.member_types.size(); ++i) {
         std::variant<int, float, glm::vec3, glm::vec4> value;
         const auto &member_type = spirv_compiler.get_type(buffer_type.member_types[i]);
@@ -166,7 +166,7 @@ auto RHIOpenGL::CreateShaderProgram(
           value = glm::vec4{1};
         } else if (member_type.basetype == spirv_cross::SPIRType::Float) {
           LOG_TRACE("Member name: {}, {}\n", member_name, member_type.basetype == spirv_cross::SPIRType::Float);
-          value = 0.5F;
+          value = 1.0F;
         } else if (member_type.basetype == spirv_cross::SPIRType::Int) {
           value = 0;
         }
@@ -178,7 +178,8 @@ auto RHIOpenGL::CreateShaderProgram(
             // std::cout << "[" << member_type.array[j] << "]";
           }
         }
-        vars.emplace_back(offset, member_name, value);
+        // vars.emplace_back(offset, member_name, value);
+        vars[member_name] = {offset, value};
       }
       shader_program_opengl->ubo_descs[resource.name] = {binding, nullptr, std::move(vars)};
     }
@@ -197,7 +198,7 @@ auto RHIOpenGL::CreateShaderProgram(
   for (auto &ubo_desc : shader_program_opengl->ubo_descs) {
     auto size = 0;
     for (auto const &var : ubo_desc.second.vars) {
-      std::visit([&](auto &&arg) { size += sizeof(decltype(arg)); }, var.value);
+      std::visit([&](auto &&arg) { size += sizeof(decltype(arg)); }, var.second.value);
     }
     LOG_TRACE("size: {}\n", size);
     auto *buffer_opengl = new RHIBufferOpenGL{};

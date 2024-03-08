@@ -40,12 +40,12 @@ struct RHIShaderProgramCreateInfo {
 struct UniformBufferDesc {
   struct UniformVariable {
     size_t offset;
-    std::string name;
+    // std::string name;
     std::variant<int, float, glm::vec3, glm::vec4> value;
   };
   uint32_t binding;
   std::shared_ptr<RHIBuffer> ubo;
-  std::vector<UniformVariable> vars;
+  std::unordered_map<std::string, UniformVariable> vars;
 };
 
 struct RHIShaderProgram {
