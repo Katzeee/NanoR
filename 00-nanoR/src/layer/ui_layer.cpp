@@ -132,6 +132,8 @@ auto UILayer::Scene() -> void {
   ImVec2 scene_size = ImGui::GetContentRegionAvail();
   if (scene_size.x != scene_color_attachment_create_info_.width ||
       scene_size.y != scene_color_attachment_create_info_.height) {
+    scene_size.x = scene_size.x > 0? scene_size.x : 1;
+    scene_size.y = scene_size.y > 0? scene_size.y : 1;
     scene_color_attachment_create_info_.width = scene_size.x;
     scene_color_attachment_create_info_.height = scene_size.y;
     scene_depth_attachment_create_info_.width = scene_size.x;

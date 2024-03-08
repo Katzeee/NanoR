@@ -20,7 +20,7 @@ auto WindowLinux::Init(WindowProp window_prop) -> void {
     throw std::runtime_error("GLFW initialize failed!");
   }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHintString(GLFW_X11_CLASS_NAME, "opengl test");
   glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "opengl test");
