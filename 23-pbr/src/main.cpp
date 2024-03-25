@@ -286,7 +286,8 @@ auto main() -> int {
                                       // 顶面边
                                       4, 5, 5, 6, 6, 7, 7, 4,
                                       // 立方体的四个“侧面”边
-                                      0, 4, 1, 5, 2, 6, 3, 7};
+                                      0, 4, 1, 5, 2, 6, 3, 7
+    };
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);

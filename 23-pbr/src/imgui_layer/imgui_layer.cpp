@@ -5,7 +5,6 @@
 #include <imgui.h>
 
 #include <algorithm>
-#include <iostream>
 
 #include "camera/camera.hpp"
 #include "context/context.hpp"
