@@ -1,0 +1,7 @@
+get_filename_component(EXE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+string(REPLACE " " "_" EXE_NAME ${EXE_NAME})
+include_directories(./src)
+file(GLOB_RECURSE src COFIGURE_DEPENDS src/*.cpp)
+add_executable(${EXE_NAME} ${src})
+target_include_directories(${EXE_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${EXE_NAME} PRIVATE glfw ${Vulkan_LIBS})

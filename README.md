@@ -10,6 +10,8 @@
 
 Windows should use `amd64_x86` MSVC to compile.
 
+First build may consume lots of time, resulting of downloading and building dependencies.
+
 You may get an error when running cmake configure for shaderc, you should download its dependency manually:
 
 ```
