@@ -149,11 +149,13 @@ class Application {
       std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
       vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
       for (int i = 0; i < queue_family_count; i++) {
+        if (queue_families[i].queueCount > 0 && queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+          indices.graphics_family = i;
+        }
         VkBool32 present_support = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface_, &present_support);
-        if (queue_families[i].queueCount > 0 && queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
-            present_support) {
-          indices.graphics_family = i;
+        if (present_support) {
+          indices.present_family = i;
         }
         if (indices.IsComplete()) {
           break;
