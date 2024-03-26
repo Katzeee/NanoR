@@ -20,7 +20,7 @@ Window::Window() {
     glfwTerminate();
     throw std::runtime_error("Create window failed");
   }
-  glfwSwapInterval(0);  // disable vsync
+  // glfwSwapInterval(0);  // disable vsync
 }
 
 auto Window::GetRawWindow() -> GLFWwindow* {
