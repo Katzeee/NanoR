@@ -107,8 +107,8 @@ class Application {
       throw std::runtime_error("Failed to create vk instance");
     }
 #pragma endregion
-#pragma region SETUP DEBUG CALLBACK
 
+#pragma region SETUP DEBUG CALLBACK
     auto CreateDebugUtilsMessengerEXT = [&]() {
       auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
           vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT")
@@ -121,6 +121,89 @@ class Application {
     if (CreateDebugUtilsMessengerEXT() != VK_SUCCESS) {
       throw std::runtime_error("Failed to setup debug callback");
     }
+#pragma endregion
+
+#pragma region PHYSICAL DEVICE
+    VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+    uint32_t device_count = 0;
+    vkEnumeratePhysicalDevices(instance_, &device_count, nullptr);
+    if (device_count == 0) {
+      throw std::runtime_error("Failed to find GPUs with Vulkan support");
+    }
+    std::vector<VkPhysicalDevice> devices(device_count);
+    vkEnumeratePhysicalDevices(instance_, &device_count, devices.data());
+
+#pragma region QUEUE FAMILY
+    struct QueueFamilyIndices {
+      int graphics_family = -1;
+      bool IsComplete() {
+        return graphics_family >= 0;
+      }
+    };
+    auto FindQueueFamilies = [](VkPhysicalDevice device) {
+      QueueFamilyIndices indices;
+      uint32_t queue_family_count = 0;
+      vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+      std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+      vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+      for (int i = 0; i < queue_family_count; i++) {
+        if (queue_families[i].queueCount > 0 && queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+          indices.graphics_family = i;
+        }
+        if (indices.IsComplete()) {
+          break;
+        }
+      }
+      return indices;
+    };
+#pragma endregion
+
+    auto IsDeviceSuitable = [&FindQueueFamilies](VkPhysicalDevice device) {
+      VkPhysicalDeviceProperties device_properties;
+      VkPhysicalDeviceFeatures device_features;
+      vkGetPhysicalDeviceProperties(device, &device_properties);
+      vkGetPhysicalDeviceFeatures(device, &device_features);
+
+      return device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && device_features.geometryShader &&
+             FindQueueFamilies(device).IsComplete();
+    };
+    for (const auto& device : devices) {
+      if (IsDeviceSuitable(device)) {
+        physical_device = device;
+        break;
+      }
+    }
+    if (physical_device == VK_NULL_HANDLE) {
+      throw std::runtime_error("Failed to find a suitable GPU");
+    }
+#pragma endregion
+
+#pragma region LOGIC DEVICE
+    VkDeviceQueueCreateInfo queue_create_info{};
+    queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    auto indices = FindQueueFamilies(physical_device);
+    queue_create_info.queueFamilyIndex = indices.graphics_family;
+    queue_create_info.queueCount = 1;
+    float queue_priority = 1.0f;
+    queue_create_info.pQueuePriorities = &queue_priority;
+    VkPhysicalDeviceFeatures device_features{};
+    VkDeviceCreateInfo device_create_info{};
+    device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    device_create_info.pQueueCreateInfos = &queue_create_info;
+    device_create_info.queueCreateInfoCount = 1;
+    device_create_info.pEnabledFeatures = &device_features;
+    device_create_info.enabledExtensionCount = 0;
+    if (enable_validation_layers_) {
+      device_create_info.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
+      device_create_info.ppEnabledLayerNames = validation_layers.data();
+    } else {
+      device_create_info.enabledLayerCount = 0;
+    }
+    if (vkCreateDevice(physical_device, &device_create_info, nullptr, &device_) != VK_SUCCESS) {
+      throw std::runtime_error("Failed to create logical device");
+    }
+    VkQueue graphics_queue;
+    vkGetDeviceQueue(device_, indices.graphics_family, 0, &graphics_queue);
 #pragma endregion
   }
 
@@ -136,6 +219,7 @@ class Application {
     if (enable_validation_layers_) {
       DestroyDebugUtilsMessengerEXT();
     }
+    vkDestroyDevice(device_, nullptr);
     vkDestroyInstance(instance_, nullptr);
   }
 
@@ -143,6 +227,7 @@ class Application {
   bool enable_validation_layers_ = true;
   VkInstance instance_;
   VkDebugUtilsMessengerEXT debug_messenger_;
+  VkDevice device_;
 };
 
 using namespace xac;
