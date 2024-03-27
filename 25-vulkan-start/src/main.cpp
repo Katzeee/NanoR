@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "shader_compiler/shader_compiler.hpp"
 #include "window/window.hpp"
 
 const std::vector<const char*> validation_layers = {"VK_LAYER_KHRONOS_validation"};
@@ -363,6 +364,36 @@ class Application {
       }
     }
 #pragma endregion
+
+#pragma region CREATE GRAPHICS PIPELINE
+    auto vert_shader_code = CompileShader("../25-vulkan-start/shader/triangle.vert.glsl", 1);
+    auto frag_shader_code = CompileShader("../25-vulkan-start/shader/triangle.frag.glsl", 2);
+    auto CreateShaderModule = [&](const std::vector<uint32_t>& shader_code) {
+      VkShaderModuleCreateInfo shader_create_info{};
+      shader_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+      shader_create_info.codeSize = shader_code.size() * 4;
+      shader_create_info.pCode = shader_code.data();
+      VkShaderModule shader;
+      if (vkCreateShaderModule(device_, &shader_create_info, nullptr, &shader) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create shader module");
+      }
+      return shader;
+    };
+    vert_shader_ = CreateShaderModule(vert_shader_code);
+    frag_shader_ = CreateShaderModule(frag_shader_code);
+    VkPipelineShaderStageCreateInfo vert_shader_stage_create_info{};
+    vert_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vert_shader_stage_create_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vert_shader_stage_create_info.module = vert_shader_;
+    vert_shader_stage_create_info.pName = "main";
+    VkPipelineShaderStageCreateInfo frag_shader_stage_create_info{};
+    frag_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    frag_shader_stage_create_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    frag_shader_stage_create_info.module = frag_shader_;
+    frag_shader_stage_create_info.pName = "main";
+    VkPipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_create_info, frag_shader_stage_create_info};
+
+#pragma endregion
   }
 
   void Destroy() {
@@ -380,6 +411,8 @@ class Application {
     for (auto image_view : swapchain_image_views_) {
       vkDestroyImageView(device_, image_view, nullptr);
     }
+    vkDestroyShaderModule(device_, vert_shader_, nullptr);
+    vkDestroyShaderModule(device_, frag_shader_, nullptr);
     vkDestroySwapchainKHR(device_, swapchain_, nullptr);
     vkDestroyDevice(device_, nullptr);
     vkDestroySurfaceKHR(instance_, surface_, nullptr);
@@ -399,6 +432,8 @@ class Application {
   std::vector<VkImage> swapchain_images_;
   VkExtent2D swapchain_extent_;
   std::vector<VkImageView> swapchain_image_views_;
+  VkShaderModule vert_shader_;
+  VkShaderModule frag_shader_;
 };
 
 int main() {
