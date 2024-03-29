@@ -238,9 +238,9 @@ class Application {
 #pragma endregion
 
 #pragma region LOGICAL DEVICE
-    auto indices = FindQueueFamilies(physical_device_);
+    auto queue_indices = FindQueueFamilies(physical_device_);
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-    std::set<int> unique_queue_families = {indices.graphics_family, indices.present_family};
+    std::set<int> unique_queue_families = {queue_indices.graphics_family, queue_indices.present_family};
     float queue_priority = 1.0f;
     for (int queue_family : unique_queue_families) {
       VkDeviceQueueCreateInfo queue_create_info{};
@@ -267,8 +267,8 @@ class Application {
     if (vkCreateDevice(physical_device_, &device_create_info, nullptr, &device_) != VK_SUCCESS) {
       throw std::runtime_error("Failed to create logical device");
     }
-    vkGetDeviceQueue(device_, indices.graphics_family, 0, &graphics_queue_);
-    vkGetDeviceQueue(device_, indices.present_family, 0, &present_queue_);
+    vkGetDeviceQueue(device_, queue_indices.graphics_family, 0, &graphics_queue_);
+    vkGetDeviceQueue(device_, queue_indices.present_family, 0, &present_queue_);
 #pragma endregion
 
 #pragma region CREATE SWAPCHAIN
@@ -320,9 +320,9 @@ class Application {
     swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     uint32_t queue_family_indices[] = {
-        static_cast<uint32_t>(indices.graphics_family), static_cast<uint32_t>(indices.present_family)
+        static_cast<uint32_t>(queue_indices.graphics_family), static_cast<uint32_t>(queue_indices.present_family)
     };
-    if (indices.graphics_family != indices.present_family) {
+    if (queue_indices.graphics_family != queue_indices.present_family) {
       swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
       swapchain_create_info.queueFamilyIndexCount = 2;
       swapchain_create_info.pQueueFamilyIndices = queue_family_indices;
@@ -518,6 +518,47 @@ class Application {
       throw std::runtime_error("Failed to create graphics pipline");
     }
 #pragma endregion
+
+#pragma region CREATE FRAMEBUFFERS
+    swapchain_framebuffers_.resize(swapchain_image_views_.size());
+    for (size_t i = 0; i < swapchain_image_views_.size(); ++i) {
+      VkImageView attachments[] = {swapchain_image_views_[i]};
+      VkFramebufferCreateInfo framebuffer_create_info{};
+      framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+      framebuffer_create_info.renderPass = render_pass_;
+      framebuffer_create_info.attachmentCount = 1;
+      framebuffer_create_info.pAttachments = attachments;
+      framebuffer_create_info.width = swapchain_extent_.width;
+      framebuffer_create_info.height = swapchain_extent_.height;
+      framebuffer_create_info.layers = 1;
+      if (vkCreateFramebuffer(device_, &framebuffer_create_info, nullptr, &swapchain_framebuffers_[i]) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create framebuffer");
+      }
+    }
+#pragma endregion
+
+#pragma region CREATE COMMAND POOL
+    // queue_family_indices
+    VkCommandPoolCreateInfo command_pool_create_info{};
+    command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    command_pool_create_info.queueFamilyIndex = queue_indices.graphics_family;
+    command_pool_create_info.flags = 0;
+    if (vkCreateCommandPool(device_, &command_pool_create_info, nullptr, &command_pool_) != VK_SUCCESS) {
+      throw std::runtime_error("Failed to create command pool");
+    }
+#pragma endregion
+
+#pragma region CREATE COMMAND BUFFERS
+    command_buffers_.resize(swapchain_framebuffers_.size());
+    VkCommandBufferAllocateInfo allocate_info{};
+    allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocate_info.commandPool = command_pool_;
+    allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocate_info.commandBufferCount = command_buffers_.size();
+    if (vkAllocateCommandBuffers(device_, &allocate_info, command_buffers_.data()) != VK_SUCCESS) {
+      throw std::runtime_error("Failed to allocate command buffer");
+    }
+#pragma endregion
   }
 
   void Destroy() {
@@ -532,9 +573,13 @@ class Application {
     if (enable_validation_layers_) {
       DestroyDebugUtilsMessengerEXT();
     }
+    for (auto framebuffer : swapchain_framebuffers_) {
+      vkDestroyFramebuffer(device_, framebuffer, nullptr);
+    }
     for (auto image_view : swapchain_image_views_) {
       vkDestroyImageView(device_, image_view, nullptr);
     }
+    vkDestroyCommandPool(device_, command_pool_, nullptr);
     vkDestroyPipeline(device_, pipeline_, nullptr);
     vkDestroyPipelineLayout(device_, pipeline_layout_, nullptr);
     vkDestroyRenderPass(device_, render_pass_, nullptr);
@@ -564,6 +609,9 @@ class Application {
   VkRenderPass render_pass_;
   VkPipelineLayout pipeline_layout_;
   VkPipeline pipeline_;
+  std::vector<VkFramebuffer> swapchain_framebuffers_;
+  VkCommandPool command_pool_;
+  std::vector<VkCommandBuffer> command_buffers_;
 };
 
 int main() {
