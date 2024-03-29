@@ -393,6 +393,78 @@ class Application {
     frag_shader_stage_create_info.pName = "main";
     VkPipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_create_info, frag_shader_stage_create_info};
 
+    VkPipelineVertexInputStateCreateInfo vertex_input_info{};
+    vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertex_input_info.vertexBindingDescriptionCount = 0;
+    vertex_input_info.pVertexBindingDescriptions = nullptr;
+    vertex_input_info.vertexAttributeDescriptionCount = 0;
+    vertex_input_info.pVertexAttributeDescriptions = nullptr;
+
+    VkPipelineInputAssemblyStateCreateInfo input_assembly{};
+    input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    input_assembly.primitiveRestartEnable = VK_FALSE;
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = swapchain_extent_.width;
+    viewport.height = swapchain_extent_.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = swapchain_extent_;
+    VkPipelineViewportStateCreateInfo viewport_state{};
+    viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewport_state.viewportCount = 1;
+    viewport_state.pViewports = &viewport;
+    viewport_state.scissorCount = 1;
+    viewport_state.pScissors = &scissor;
+
+    VkPipelineRasterizationStateCreateInfo rasterizer_state{};
+    rasterizer_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer_state.depthClampEnable = VK_FALSE;
+    rasterizer_state.rasterizerDiscardEnable = VK_FALSE;
+    rasterizer_state.lineWidth = 1.0f;
+    rasterizer_state.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizer_state.depthBiasEnable = VK_FALSE;
+    rasterizer_state.depthBiasConstantFactor = 0.0f;
+    rasterizer_state.depthBiasClamp = 0.0f;
+    rasterizer_state.depthBiasSlopeFactor = 0.0f;
+
+    VkPipelineMultisampleStateCreateInfo multisampling_state{};
+    multisampling_state.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling_state.sampleShadingEnable = VK_FALSE;
+    multisampling_state.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    multisampling_state.minSampleShading = 1.0f;
+    multisampling_state.pSampleMask = nullptr;
+    multisampling_state.alphaToCoverageEnable = VK_FALSE;
+    multisampling_state.alphaToOneEnable = VK_FALSE;
+
+    VkPipelineColorBlendAttachmentState color_blend_attachment{};
+    color_blend_attachment.colorWriteMask =
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    color_blend_attachment.blendEnable = VK_FALSE;
+    VkPipelineColorBlendStateCreateInfo color_blend_state{};
+    color_blend_state.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    color_blend_state.logicOpEnable = VK_FALSE;
+    color_blend_state.attachmentCount = 1;
+    color_blend_state.pAttachments = &color_blend_attachment;
+
+    VkDynamicState dynamic_states[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH};
+    VkPipelineDynamicStateCreateInfo dynamic_state_create_info{};
+    dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamic_state_create_info.dynamicStateCount = 2;
+    dynamic_state_create_info.pDynamicStates = dynamic_states;
+
+    VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
+    pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipeline_layout_create_info.setLayoutCount = 0;
+    if (vkCreatePipelineLayout(device_, &pipeline_layout_create_info, nullptr, &pipeline_layout_) != VK_SUCCESS) {
+      throw std::runtime_error("Failed to create pipeline layout");
+    }
 #pragma endregion
   }
 
@@ -411,6 +483,7 @@ class Application {
     for (auto image_view : swapchain_image_views_) {
       vkDestroyImageView(device_, image_view, nullptr);
     }
+    vkDestroyPipelineLayout(device_, pipeline_layout_, nullptr);
     vkDestroyShaderModule(device_, vert_shader_, nullptr);
     vkDestroyShaderModule(device_, frag_shader_, nullptr);
     vkDestroySwapchainKHR(device_, swapchain_, nullptr);
@@ -434,6 +507,7 @@ class Application {
   std::vector<VkImageView> swapchain_image_views_;
   VkShaderModule vert_shader_;
   VkShaderModule frag_shader_;
+  VkPipelineLayout pipeline_layout_;
 };
 
 int main() {
