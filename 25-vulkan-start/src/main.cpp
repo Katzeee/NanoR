@@ -365,6 +365,36 @@ class Application {
     }
 #pragma endregion
 
+#pragma region CREATE RENDER PASS
+    VkAttachmentDescription color_attachment{};
+    color_attachment.format = surface_format.format;
+    color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    VkAttachmentReference color_attachment_reference{};
+    color_attachment_reference.attachment = 0;
+    color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkSubpassDescription subpass_desc{};
+    subpass_desc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass_desc.colorAttachmentCount = 1;
+    subpass_desc.pColorAttachments = &color_attachment_reference;
+
+    VkRenderPassCreateInfo render_pass_create_info{};
+    render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    render_pass_create_info.attachmentCount = 1;
+    render_pass_create_info.pAttachments = &color_attachment;
+    render_pass_create_info.subpassCount = 1;
+    render_pass_create_info.pSubpasses = &subpass_desc;
+    if (vkCreateRenderPass(device_, &render_pass_create_info, nullptr, &render_pass_) != VK_SUCCESS) {
+      throw std::runtime_error("Failed to create render pass");
+    }
+
+#pragma endregion
+
 #pragma region CREATE GRAPHICS PIPELINE
     auto vert_shader_code = CompileShader("../25-vulkan-start/shader/triangle.vert.glsl", 1);
     auto frag_shader_code = CompileShader("../25-vulkan-start/shader/triangle.frag.glsl", 2);
@@ -484,6 +514,7 @@ class Application {
       vkDestroyImageView(device_, image_view, nullptr);
     }
     vkDestroyPipelineLayout(device_, pipeline_layout_, nullptr);
+    vkDestroyRenderPass(device_, render_pass_, nullptr);
     vkDestroyShaderModule(device_, vert_shader_, nullptr);
     vkDestroyShaderModule(device_, frag_shader_, nullptr);
     vkDestroySwapchainKHR(device_, swapchain_, nullptr);
@@ -507,6 +538,7 @@ class Application {
   std::vector<VkImageView> swapchain_image_views_;
   VkShaderModule vert_shader_;
   VkShaderModule frag_shader_;
+  VkRenderPass render_pass_;
   VkPipelineLayout pipeline_layout_;
 };
 
