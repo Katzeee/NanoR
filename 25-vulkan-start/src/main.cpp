@@ -495,6 +495,28 @@ class Application {
     if (vkCreatePipelineLayout(device_, &pipeline_layout_create_info, nullptr, &pipeline_layout_) != VK_SUCCESS) {
       throw std::runtime_error("Failed to create pipeline layout");
     }
+
+    VkGraphicsPipelineCreateInfo pipeline_create_info{};
+    pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipeline_create_info.stageCount = 2;
+    pipeline_create_info.pStages = shader_stages;
+    pipeline_create_info.pVertexInputState = &vertex_input_info;
+    pipeline_create_info.pInputAssemblyState = &input_assembly;
+    pipeline_create_info.pViewportState = &viewport_state;
+    pipeline_create_info.pRasterizationState = &rasterizer_state;
+    pipeline_create_info.pMultisampleState = &multisampling_state;
+    pipeline_create_info.pDepthStencilState = nullptr;
+    pipeline_create_info.pColorBlendState = &color_blend_state;
+    pipeline_create_info.pDynamicState = nullptr;
+    pipeline_create_info.layout = pipeline_layout_;
+    pipeline_create_info.renderPass = render_pass_;
+    pipeline_create_info.subpass = 0;
+    pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
+    pipeline_create_info.basePipelineIndex = -1;
+    if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline_) !=
+        VK_SUCCESS) {
+      throw std::runtime_error("Failed to create graphics pipline");
+    }
 #pragma endregion
   }
 
@@ -513,6 +535,7 @@ class Application {
     for (auto image_view : swapchain_image_views_) {
       vkDestroyImageView(device_, image_view, nullptr);
     }
+    vkDestroyPipeline(device_, pipeline_, nullptr);
     vkDestroyPipelineLayout(device_, pipeline_layout_, nullptr);
     vkDestroyRenderPass(device_, render_pass_, nullptr);
     vkDestroyShaderModule(device_, vert_shader_, nullptr);
@@ -540,6 +563,7 @@ class Application {
   VkShaderModule frag_shader_;
   VkRenderPass render_pass_;
   VkPipelineLayout pipeline_layout_;
+  VkPipeline pipeline_;
 };
 
 int main() {
