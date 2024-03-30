@@ -39,10 +39,10 @@ class Application {
     VkApplicationInfo app_info{};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app_info.pApplicationName = "Vulkan";
-    app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.applicationVersion = VK_MAKE_VERSION(1, 3, 0);
     app_info.pEngineName = "No Engine";
-    app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    app_info.apiVersion = VK_API_VERSION_1_0;
+    app_info.engineVersion = VK_MAKE_VERSION(1, 3, 0);
+    app_info.apiVersion = VK_API_VERSION_1_3;
 
     auto ListAvaliableExtensions = []() {
       uint32_t extension_count = 0;
@@ -383,12 +383,6 @@ class Application {
     subpass_desc.colorAttachmentCount = 1;
     subpass_desc.pColorAttachments = &color_attachment_reference;
 
-    VkRenderPassCreateInfo render_pass_create_info{};
-    render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    render_pass_create_info.attachmentCount = 1;
-    render_pass_create_info.pAttachments = &color_attachment;
-    render_pass_create_info.subpassCount = 1;
-    render_pass_create_info.pSubpasses = &subpass_desc;
     VkSubpassDependency subpass_dependency{};
     subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     subpass_dependency.dstSubpass = 0;
@@ -396,6 +390,12 @@ class Application {
     subpass_dependency.srcAccessMask = 0;
     subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    VkRenderPassCreateInfo render_pass_create_info{};
+    render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    render_pass_create_info.attachmentCount = 1;
+    render_pass_create_info.pAttachments = &color_attachment;
+    render_pass_create_info.subpassCount = 1;
+    render_pass_create_info.pSubpasses = &subpass_desc;
     render_pass_create_info.dependencyCount = 1;
     render_pass_create_info.pDependencies = &subpass_dependency;
     if (vkCreateRenderPass(device_, &render_pass_create_info, nullptr, &render_pass_) != VK_SUCCESS) {
@@ -491,7 +491,7 @@ class Application {
     color_blend_state.attachmentCount = 1;
     color_blend_state.pAttachments = &color_blend_attachment;
 
-    VkDynamicState dynamic_states[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH};
+    VkDynamicState dynamic_states[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamic_state_create_info{};
     dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamic_state_create_info.dynamicStateCount = 2;
@@ -515,7 +515,7 @@ class Application {
     pipeline_create_info.pMultisampleState = &multisampling_state;
     pipeline_create_info.pDepthStencilState = nullptr;
     pipeline_create_info.pColorBlendState = &color_blend_state;
-    pipeline_create_info.pDynamicState = nullptr;
+    pipeline_create_info.pDynamicState = &dynamic_state_create_info;
     pipeline_create_info.layout = pipeline_layout_;
     pipeline_create_info.renderPass = render_pass_;
     pipeline_create_info.subpass = 0;
@@ -550,7 +550,7 @@ class Application {
     VkCommandPoolCreateInfo command_pool_create_info{};
     command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     command_pool_create_info.queueFamilyIndex = queue_indices.graphics_family;
-    command_pool_create_info.flags = 0;
+    command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     if (vkCreateCommandPool(device_, &command_pool_create_info, nullptr, &command_pool_) != VK_SUCCESS) {
       throw std::runtime_error("Failed to create command pool");
     }
@@ -579,6 +579,7 @@ class Application {
   }
 
   void Destroy() {
+    vkDeviceWaitIdle(device_);
     auto DestroyDebugUtilsMessengerEXT = [&]() {
       auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
           vkGetInstanceProcAddr(instance_, "vkDestroyDebugUtilsMessengerEXT")
@@ -635,8 +636,8 @@ class Application {
       VkViewport viewport{};
       viewport.x = 0.0f;
       viewport.y = 0.0f;
-      viewport.width = swapchain_extent_.width;
-      viewport.height = swapchain_extent_.height;
+      viewport.width = static_cast<float>(swapchain_extent_.width);
+      viewport.height = static_cast<float>(swapchain_extent_.height);
       viewport.minDepth = 0.0f;
       viewport.maxDepth = 1.0f;
       vkCmdSetViewport(command_buffer, 0, 1, &viewport);
@@ -656,7 +657,7 @@ class Application {
         device_, swapchain_, std::numeric_limits<uint64_t>::max(), image_available_semaphore_, VK_NULL_HANDLE,
         &image_index
     );
-    vkResetCommandBuffer(command_buffers_[image_index], /*VkCommandBufferResetFlagBits*/ 0);
+    vkResetCommandBuffer(command_buffers_[image_index], 0);
     RecordCommandBuffer(command_buffers_[image_index], image_index);
 
     VkSubmitInfo submit_info{};
@@ -689,6 +690,7 @@ class Application {
     present_info.pImageIndices = &image_index;
     present_info.pResults = nullptr;
     vkQueuePresentKHR(present_queue_, &present_info);
+    vkQueueWaitIdle(present_queue_);
   }
 
  private:
