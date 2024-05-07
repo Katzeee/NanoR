@@ -84,12 +84,11 @@ FetchContent_Declare(pico_libs
 )
 
 FetchContent_MakeAvailable(glfw assimp fmt glad pico_libs shaderc spirv-cross)
-find_package(Vulkan REQUIRED)
+find_package(Vulkan)
 
 include(3rdparty/imgui.cmake)
 include(3rdparty/glm.cmake)
 
-add_subdirectory(00-nanoR)
 add_subdirectory(01-create-window)
 add_subdirectory(02-simple-triangle)
 add_subdirectory(03-shader-class)
@@ -114,8 +113,6 @@ add_subdirectory(21-blinn-phong)
 add_subdirectory(22-shadow)
 add_subdirectory(23-pbr)
 add_subdirectory(24-ibl)
-add_subdirectory(25-vulkan-start)
-
-##################### demo
-# add_executable(imgui_demo 3rdparty/imgui/imgui_demo.cpp)
-# target_link_libraries(imgui_demo PRIVATE glfw glad::glad imgui)
+if (${Vulkan_LIBRARIES})
+  add_subdirectory(25-vulkan-start)
+endif()
