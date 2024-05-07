@@ -1,5 +1,0 @@
-get_filename_component(EXE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-string(REPLACE " " "_" EXE_NAME ${EXE_NAME})
-aux_source_directory(./src src)
-add_executable(${EXE_NAME} ${src})
-target_link_libraries(${EXE_NAME} PRIVATE glfw glad assimp::assimp)
