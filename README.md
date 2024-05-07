@@ -8,18 +8,6 @@
 
 ## Build
 
-Windows should use `amd64_x86` MSVC to compile.
+Windows should use `MSVC_2022_amd64_x86` MSVC to compile.
 
 First build may consume lots of time, resulting of downloading and building dependencies.
-
-You may get an error when running cmake configure for shaderc, you should download its dependency manually:
-
-```
-[cmake] CMake Error at build/_deps/shaderc-src/third_party/CMakeLists.txt:80 (message):
-[cmake]   SPIRV-Tools was not found - required for compilation
-```
-
-```bash
-cd ./build/_deps/shaderc-src
-python ./utils/git-sync-deps
-```
