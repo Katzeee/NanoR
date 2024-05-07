@@ -83,11 +83,12 @@ FetchContent_Declare(pico_libs
                      GIT_TAG        v0.0.1
 )
 
-FetchContent_MakeAvailable(glfw assimp fmt glad pico_libs shaderc spirv-cross)
-find_package(Vulkan REQUIRED)
+FetchContent_MakeAvailable(glfw assimp fmt glad pico_libs spirv-cross)
+find_package(Vulkan)
 
 include(3rdparty/imgui.cmake)
 include(3rdparty/glm.cmake)
+include(3rdparty/shaderc.cmake)
 
 add_subdirectory(00-nanoR)
 add_subdirectory(01-create-window)

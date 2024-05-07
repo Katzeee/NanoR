@@ -1,6 +1,5 @@
 FetchContent_Populate(imgui)
-MESSAGE(STATUS "Cannot find imgui, try compile from source.")
-
+MESSAGE(STATUS "Could NOT find imgui, try compile from source.")
 file(
   GLOB imgui_src CONFIGURE_DEPENDS ${imgui_src}
   ${imgui_SOURCE_DIR}/*.cpp
