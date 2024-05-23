@@ -2,7 +2,7 @@
 
 #include "global/global_context.h"
 #include "platform/opengl/rhi_type_opengl.h"
-#include "render/resource_manager.h"
+#include "resource/resource_manager.h"
 
 namespace nanoR {
 Material::Material() {

@@ -1,7 +1,7 @@
 #include "light.h"
 
 #include "global/global_context.h"
-#include "render/resource_manager.h"
+#include "resource/resource_manager.h"
 #include "render/rhi.h"
 
 namespace nanoR {

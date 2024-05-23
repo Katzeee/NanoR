@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <shaderc/shaderc.hpp>
 
-#include "render/resource_manager.h"
+#include "resource/resource_manager.h"
 #include "render/rhi.h"
 #include "rhi_type_opengl.h"
 

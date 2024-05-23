@@ -1,7 +1,7 @@
 #pragma once
 #include "global/global_context.h"
 #include "nanorpch.h"
-#include "render/resource_manager.h"
+#include "resource/resource_manager.h"
 #include "rhi_opengl.h"
 
 namespace nanoR {
