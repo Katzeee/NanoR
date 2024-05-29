@@ -39,7 +39,7 @@ class EditorLayer : public nanoR::Layer {
 
  private:
   std::shared_ptr<nanoR::Scene> scene_;
-  nanoR::RHIOpenGL rhi_;
+  nanoR::RHIOpenGL4 rhi_;
   nanoR::PrespCamera* main_camera_;
 };
 

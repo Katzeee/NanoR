@@ -1,6 +1,6 @@
 #pragma once
 #include "layer.h"
-#include "platform/opengl/rhi_type_opengl.h"
+#include "render/rhi_type_opengl.h"
 #include "render/rhi.h"
 #include "render/rhi_type.h"
 #include "scene/entity.hpp"

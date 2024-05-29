@@ -1,7 +1,7 @@
 #include "material.h"
 
 #include "global/global_context.h"
-#include "platform/opengl/rhi_type_opengl.h"
+#include "render/rhi_type_opengl.h"
 #include "resource/resource_manager.h"
 
 namespace nanoR {
@@ -13,11 +13,12 @@ Material::Material() {
   uniform_descs["pbr"].vars["roughness"].value = 1.0F;
 }
 
-auto Material::GetUniformDescs() -> std::map<std::string, UniformBufferDesc>& {
+auto Material::GetUniformDescs() -> std::map<std::string, UniformBufferDesc> & {
   return uniform_descs;
 }
 
-Material::Material(std::string_view shader_name) : shader_name_(shader_name) {
+Material::Material(std::string_view shader_name)
+    : shader_name_(shader_name) {
   auto shader = GlobalContext::Instance().resource_manager->GetShader(shader_name_);
   uniform_descs = shader->ubo_descs;
 }
@@ -26,22 +27,21 @@ auto Material::GetName() -> std::string_view {
   return shader_name_;
 }
 
-auto Material::PrepareUniforms(RHI* rhi) -> void {
-  RHISetBufferDataInfoOpenGL set_buffer_data_info;
-  for (auto const& ubo_desc : uniform_descs) {
-    for (auto const& var : ubo_desc.second.vars) {
+auto Material::PrepareUniforms(RHI *rhi) -> void {
+  RHIUpdateBufferDataInfo update_buffer_data_info;
+  for (auto const &ubo_desc : uniform_descs) {
+    for (auto const &var : ubo_desc.second.vars) {
       std::visit(
-          [&](auto&& arg) {
+          [&](auto &&arg) {
             using T = std::decay_t<decltype(arg)>;
-            set_buffer_data_info.size = sizeof(T);
-            set_buffer_data_info.data = &arg;
-            set_buffer_data_info.offset = var.second.offset;
+            update_buffer_data_info.size = sizeof(T);
+            update_buffer_data_info.data = &arg;
+            update_buffer_data_info.offset = var.second.offset;
           },
-          var.second.value
-      );
-      rhi->SetBufferData(set_buffer_data_info, ubo_desc.second.ubo.get());
+          var.second.value);
+      rhi->UpdateBufferData(update_buffer_data_info, ubo_desc.second.ubo);
     }
   }
 }
 
-}  // namespace nanoR
+} // namespace nanoR

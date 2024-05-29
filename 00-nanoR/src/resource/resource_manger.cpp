@@ -1,6 +1,6 @@
 #include "global/global_context.h"
 #include "nanorpch.h"
-#include "platform/opengl/rhi_type_opengl.h"
+#include "render/rhi_type_opengl.h"
 #include "resource_manager.h"
 
 namespace nanoR {
@@ -200,4 +200,4 @@ auto ResourceManager::GetQuadMeshData() -> MeshData {
 //   return sphereVAO;
 // }
 
-}  // namespace nanoR
+} // namespace nanoR

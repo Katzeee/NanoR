@@ -1,5 +1,6 @@
 #pragma once
 #include "glad/glad.h"
+#include "render/rhi_resource.h"
 #include "render/rhi_type.h"
 
 namespace nanoR {
@@ -15,18 +16,6 @@ struct RHIBufferOpenGL : public RHIBuffer {
   GLuint id;
 };
 
-struct RHISetBufferDataInfoOpenGL : public RHISetBufferDataInfo {
-  GLintptr offset;
-  GLsizeiptr size;
-  const void *data;
-};
-
-struct RHIBufferCreateInfoOpenGL : public RHIBufferCreateInfo {
-  GLsizeiptr size;
-  const void *data;  // initial data, can be nullptr
-  GLbitfield flags = 0;
-};
-
 struct RHIVertexArrayOpenGL : public RHIVertexArray {
   ~RHIVertexArrayOpenGL() override {
     if (id != 0) {
@@ -36,19 +25,19 @@ struct RHIVertexArrayOpenGL : public RHIVertexArray {
   }
 
   GLuint id;
-  GLsizei count;  // index size
+  GLsizei count; // index size
 };
 
 struct RHIBindVertexBufferInfoOpenGL : public RHIBindVertexBufferInfo {
   struct VertexFormat {
     GLuint attr_index;
     GLint attr_size;
-    GLuint reletive_offset;  // where to start interpereting the attr
+    GLuint reletive_offset; // where to start interpereting the attr
   };
   GLuint bind_index;
   GLenum type;
   GLboolean normalized;
-  GLintptr offset;  // where to start interpereting vbo
+  GLintptr offset; // where to start interpereting vbo
   GLsizei stride;
   std::vector<VertexFormat> vertex_format;
 };
@@ -84,9 +73,10 @@ struct RHIShaderProgramOpenGL : public RHIShaderProgram {
   GLuint id;
 };
 
-struct RHIBindUniformBufferInfoOpenGL : RHIBindUniformBufferInfo {
+// TODO: remove
+struct RHIBindUniformBufferInfoOpenGL {
   GLenum target;
-  GLuint index;  // binding index
+  GLuint index; // binding index
 };
 
 struct RHIFramebufferCreateInfoOpenGL : public RHIFramebufferCreateInfo {};
@@ -131,4 +121,4 @@ struct RHIFramebufferOpenGL : public RHIFramebuffer {
   GLuint id;
 };
 
-}  // namespace nanoR
+} // namespace nanoR

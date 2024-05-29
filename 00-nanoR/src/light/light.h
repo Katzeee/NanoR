@@ -1,6 +1,6 @@
 #pragma once
-#include "nanorpch.h"
-#include "platform/opengl/rhi_type_opengl.h"
+// #include "nanorpch.h"
+// #include "platform/opengl/rhi_type_opengl.h"
 
 namespace nanoR {
 

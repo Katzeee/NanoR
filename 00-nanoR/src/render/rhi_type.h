@@ -1,15 +1,30 @@
 #pragma once
 
 namespace nanoR {
-struct RHIBuffer {
-  virtual ~RHIBuffer() = default;
+
+class RHIBuffer;
+
+struct ResourceCreateInfo {
+  void *data;
 };
 
-struct RHIBufferCreateInfo {
-  virtual ~RHIBufferCreateInfo() = default;
+enum class EBufferUsage {
+  STATIC,
+  DYNAMIC,
+  UNIFORM,
+  VERTEX,
+  INDEX,
 };
-struct RHISetBufferDataInfo {
-  virtual ~RHISetBufferDataInfo() = default;
+
+struct RHIBufferDesc {
+  uint32_t size;
+  EBufferUsage usage;
+};
+
+struct RHIUpdateBufferDataInfo {
+  uint32_t size;
+  const void *data;
+  uint16_t offset;
 };
 
 struct RHIVertexArray {
@@ -53,10 +68,6 @@ struct RHIShaderProgram {
   std::map<std::string, UniformBufferDesc> ubo_descs;
 };
 
-struct RHIBindUniformBufferInfo {
-  virtual ~RHIBindUniformBufferInfo() = default;
-};
-
 struct RHIFramebufferCreateInfo {
   virtual ~RHIFramebufferCreateInfo() = default;
 };
@@ -89,4 +100,6 @@ struct RHIAttachDepthStencilAttachmentInfo {
   virtual ~RHIAttachDepthStencilAttachmentInfo() = default;
 };
 
-}  // namespace nanoR
+} // namespace nanoR
+
+namespace nanoR {} // end namespace nanoR

@@ -2,12 +2,12 @@
 #include "global/global_context.h"
 #include "nanorpch.h"
 #include "resource/resource_manager.h"
-#include "rhi_opengl.h"
+// #include "rhi_opengl4.h"
 
 namespace nanoR {
 
-static auto CreateMesh(const MeshData& mesh_data) -> std::shared_ptr<RHIVertexArray> {
-  auto& rhi = GlobalContext::Instance().rhi;
+static auto CreateMesh(const MeshData &mesh_data) -> std::shared_ptr<RHIVertexArray> {
+  auto &rhi = GlobalContext::Instance().rhi;
   std::shared_ptr<RHIVertexArray> vao;
   std::shared_ptr<RHIBuffer> vbo;
   std::shared_ptr<RHIBuffer> ebo;
@@ -45,4 +45,4 @@ static auto CreateMesh(const MeshData& mesh_data) -> std::shared_ptr<RHIVertexAr
 
 // static auto CreateShaderProgram(RHI* rhi, char const* vs_path, char const* fs_path) -> {}
 
-}  // namespace nanoR
+} // namespace nanoR

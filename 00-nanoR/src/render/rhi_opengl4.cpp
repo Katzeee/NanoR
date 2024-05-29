@@ -1,4 +1,4 @@
-#include "rhi_opengl.h"
+#include "rhi_opengl4.h"
 
 #include <glslc/src/file_includer.h>
 #include <libshaderc_util/file_finder.h>
@@ -12,7 +12,7 @@
 
 namespace nanoR {
 
-auto RHIOpenGL::OpenGLCheckError() -> bool {
+auto RHIOpenGL4::OpenGLCheckError() -> bool {
   if (auto res = glGetError(); res != GL_NO_ERROR) {
     LOG_FATAL("OpenGL API error {}\n", res);
     throw std::runtime_error("OpenGL API error");
@@ -20,34 +20,56 @@ auto RHIOpenGL::OpenGLCheckError() -> bool {
   return true;
 }
 
-auto RHIOpenGL::CreateBuffer(const RHIBufferCreateInfo &buffer_create_info, std::shared_ptr<RHIBuffer> &buffer)
-    -> bool {
-  auto *buffer_opengl = new RHIBufferOpenGL{};
-  glCreateBuffers(1, &buffer_opengl->id);
-  const auto &[size, data, flags] = dynamic_cast<const RHIBufferCreateInfoOpenGL &>(buffer_create_info);
-  glNamedBufferStorage(buffer_opengl->id, size, data, flags);
-  buffer.reset(buffer_opengl);
+auto RHIOpenGL4::CreateBuffer(const RHIBufferDesc &desc, const ResourceCreateInfo &info) -> std::shared_ptr<RHIBuffer> {
+  auto buffer = std::make_shared<RHIBufferOpenGL>();
+  OpenGLCheck(glCreateBuffers(1, &buffer->id));
+  switch (desc.usage) {
+  case EBufferUsage::STATIC:
+    // TODO: STATIC
+  case EBufferUsage::DYNAMIC:
+  case EBufferUsage::UNIFORM:
+  case EBufferUsage::INDEX:
+  case EBufferUsage::VERTEX:
+    OpenGLCheck(glNamedBufferStorage(buffer->id, desc.size, info.data, GL_DYNAMIC_STORAGE_BIT));
+    break;
+  default:
+    LOG_ERROR("Not implemented");
+    break;
+  }
+  buffer->desc = desc;
+  return buffer;
+}
+
+auto RHIOpenGL4::UpdateBufferData(const RHIUpdateBufferDataInfo &info, const std::shared_ptr<RHIBuffer> &buffer) -> void {
+  auto buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(buffer.get());
+  OpenGLCheck(glNamedBufferSubData(buffer_opengl->id, info.offset, info.size, info.data));
+}
+
+void RHIOpenGL4::DrawIndexed(const std::shared_ptr<RHIBuffer> &vertex_buffer, const std::shared_ptr<RHIBuffer> &index_buffer,
+    RHIShaderProgram const *shader_program, std::optional<RHIFramebuffer const *> framebuffer) {
+  unsigned int VAO;
+  OpenGLCheck(glCreateVertexArrays(1, &VAO));
+  // OpenGLCheck(glVertexArrayVertexBuffer(VAO, 0, dynamic_cast<RHIBufferOpenGL *>(vertex_buffer.get())->id, 0, ))
+  // OpenGLCheck(glEnableVertexArrayAttrib(VAO, ))
+}
+
+auto RHIOpenGL4::BindUniformBuffer(const RHIBindUniformBufferInfoOpenGL &bind_uniform_buffer_info, RHIBuffer *buffer) -> bool {
+  const auto &[target, index] = bind_uniform_buffer_info;
+  auto buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(buffer);
+  glBindBufferBase(target, index, buffer_opengl->id);
   return OpenGLCheckError();
 }
 
-bool RHIOpenGL::SetBufferData(const RHISetBufferDataInfo &set_buffer_data_info, RHIBuffer *buffer) {
-  auto *buffer_opengl = reinterpret_cast<RHIBufferOpenGL *>(buffer);
-  const auto &[offset, size, data] = dynamic_cast<const RHISetBufferDataInfoOpenGL &>(set_buffer_data_info);
-  glNamedBufferSubData(buffer_opengl->id, offset, size, data);
-  return OpenGLCheckError();
-}
-
-auto RHIOpenGL::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) -> bool {
+auto RHIOpenGL4::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) -> bool {
   auto *vertex_array_opengl = new RHIVertexArrayOpenGL{};
   glCreateVertexArrays(1, &vertex_array_opengl->id);
   vertex_array.reset(vertex_array_opengl);
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::BindVertexBuffer(
+auto RHIOpenGL4::BindVertexBuffer(
     const RHIBindVertexBufferInfo &bind_vertex_buffer_info, std::shared_ptr<RHIVertexArray> vertex_array,
-    std::shared_ptr<RHIBuffer> vertex_buffer
-) -> bool {
+    std::shared_ptr<RHIBuffer> vertex_buffer) -> bool {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(vertex_buffer.get());
   const auto &[bind_index, type, normalized, offset, stride, vertex_format] =
@@ -64,10 +86,9 @@ auto RHIOpenGL::BindVertexBuffer(
   }
   return OpenGLCheckError();
 }
-auto RHIOpenGL::BindIndexBuffer(
+auto RHIOpenGL4::BindIndexBuffer(
     const RHIBindIndexBufferInfo &bind_index_buffer_info, std::shared_ptr<RHIVertexArray> vertex_array,
-    std::shared_ptr<RHIBuffer> index_buffer
-) -> bool {
+    std::shared_ptr<RHIBuffer> index_buffer) -> bool {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(index_buffer.get());
   const auto &[count] = dynamic_cast<const RHIBindIndexBufferInfoOpenGL &>(bind_index_buffer_info);
@@ -76,9 +97,8 @@ auto RHIOpenGL::BindIndexBuffer(
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::CreateShaderModule(
-    const RHIShaderModuleCreateInfo &shader_module_create_info, std::shared_ptr<RHIShaderModule> &shader_module
-) -> bool {
+auto RHIOpenGL4::CreateShaderModule(
+    const RHIShaderModuleCreateInfo &shader_module_create_info, std::shared_ptr<RHIShaderModule> &shader_module) -> bool {
   auto *shader_module_opengl = new RHIShaderModuleOpenGL{};
   // const auto &shader_module_create_info_opengl
   const auto &[type, file, src, count, length] =
@@ -89,7 +109,7 @@ auto RHIOpenGL::CreateShaderModule(
   shaderc_util::FileFinder fileFinder;
   options.SetIncluder(std::make_unique<glslc::FileIncluder>(&fileFinder));
   options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
-  const bool optimize = false;  // for debug info
+  const bool optimize = false; // for debug info
   if (optimize) {
     options.SetOptimizationLevel(shaderc_optimization_level_performance);
   }
@@ -109,8 +129,7 @@ auto RHIOpenGL::CreateShaderModule(
   shader_module_opengl->id = glCreateShader(type);
   glShaderBinary(
       1, &shader_module_opengl->id, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv_code.data(),
-      spirv_code.size() * sizeof(uint32_t)
-  );
+      spirv_code.size() * sizeof(uint32_t));
   glSpecializeShader(shader_module_opengl->id, "main", 0, nullptr, nullptr);
   // glShaderSource(shader_module_opengl->id, count, &src, length);
   // glCompileShader(shader_module_opengl->id);
@@ -126,9 +145,8 @@ auto RHIOpenGL::CreateShaderModule(
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::CreateShaderProgram(
-    const RHIShaderProgramCreateInfo &shader_program_create_info, std::shared_ptr<RHIShaderProgram> &shader_program
-) -> bool {
+auto RHIOpenGL4::CreateShaderProgram(
+    const RHIShaderProgramCreateInfo &shader_program_create_info, std::shared_ptr<RHIShaderProgram> &shader_program) -> bool {
   const auto &[shaders] = dynamic_cast<const RHIShaderProgramCreateInfoOpenGL &>(shader_program_create_info);
   auto *shader_program_opengl = new RHIShaderProgramOpenGL{};
   shader_program_opengl->id = glCreateProgram();
@@ -227,24 +245,15 @@ auto RHIOpenGL::CreateShaderProgram(
 //   }
 //   return OpenGLCheckError();
 // }
-
-auto RHIOpenGL::BindUniformBuffer(const RHIBindUniformBufferInfo &bind_uniform_buffer_info, RHIBuffer *buffer) -> bool {
-  const auto &[target, index] = dynamic_cast<const RHIBindUniformBufferInfoOpenGL &>(bind_uniform_buffer_info);
-  auto buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(buffer);
-  glBindBufferBase(target, index, buffer_opengl->id);
-  return OpenGLCheckError();
-}
-
-auto RHIOpenGL::CreateFramebuffer(
-    const RHIFramebufferCreateInfo &framebuffer_create_info, std::shared_ptr<RHIFramebuffer> &framebuffer
-) -> bool {
+auto RHIOpenGL4::CreateFramebuffer(
+    const RHIFramebufferCreateInfo &framebuffer_create_info, std::shared_ptr<RHIFramebuffer> &framebuffer) -> bool {
   auto *framebuffer_opengl = new RHIFramebufferOpenGL{};
   glCreateFramebuffers(1, &framebuffer_opengl->id);
   framebuffer.reset(framebuffer_opengl);
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)
+auto RHIOpenGL4::CreateTexture(const RHITextureCreateInfo &texture_create_info, std::shared_ptr<RHITexture> &texture)
     -> bool {
   auto *texture_opengl = new RHITextureOpenGL();
   const auto &[target, levels, internal_format, width, height, format, type, data, parameteri] =
@@ -267,10 +276,9 @@ auto RHIOpenGL::CreateTexture(const RHITextureCreateInfo &texture_create_info, s
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL::AttachTexture(
+auto RHIOpenGL4::AttachTexture(
     const RHIAttachTextureInfo &attach_color_attachment_info, RHIFramebuffer const *framebuffer,
-    RHITexture const *texture
-) -> bool {
+    RHITexture const *texture) -> bool {
   const auto &[fbo] = *dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer);
   const auto &[level, attachment] = dynamic_cast<const RHIAttachTextureInfoOpenGL &>(attach_color_attachment_info);
   if (texture) {
@@ -287,10 +295,9 @@ auto RHIOpenGL::AttachTexture(
 // auto RHIOpenGL::AttachStencilAttachment();
 // auto RHIOpenGL::AttachDepthStencilAttachment();
 
-auto RHIOpenGL::Draw(
+auto RHIOpenGL4::Draw(
     RHIVertexArray const *vertex_array, RHIShaderProgram const *shader_program,
-    std::optional<RHIFramebuffer const *> framebuffer
-) -> bool {
+    std::optional<RHIFramebuffer const *> framebuffer) -> bool {
   OpenGLCheckError();
   if (framebuffer.has_value()) {
     auto fbo = dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer.value())->id;
@@ -307,4 +314,4 @@ auto RHIOpenGL::Draw(
   return OpenGLCheckError();
 }
 
-}  // namespace nanoR
+} // namespace nanoR

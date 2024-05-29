@@ -1,13 +1,17 @@
 #pragma once
+#include <pico_libs/ecs/component.hpp>
 #include <pico_libs/ecs/settings.hpp>
 
 #include "light/light.h"
 #include "nanorpch.h"
-#include "platform/opengl/render_resource_opengl.h"
 #include "render/material.h"
 #include "render/rhi_type.h"
 
 namespace nanoR {
+
+class Mesh;
+class Entity;
+class Resource;
 
 struct NameComponent {
   std::string name = "Object";
@@ -18,6 +22,10 @@ struct TransformComponent {
   // glm::quat rotation;
   glm::vec3 rotation;
   glm::vec3 scale{1.0f, 1.0f, 1.0f};
+
+  TransformComponent *parent;
+  std::vector<TransformComponent *> children;
+  std::variant<Entity *, Resource *> owner;
 
   auto GetModelMatrix() const -> glm::mat4 {
     auto model = glm::mat4{1};
@@ -34,7 +42,7 @@ struct SpriteComponent {
 };
 
 struct MeshComponent {
-  std::shared_ptr<RHIVertexArray> mesh;
+  std::shared_ptr<Mesh> mesh;
 };
 
 struct LightCompoenent {
@@ -49,4 +57,4 @@ using Components =
     xac::mpl::type_list<NameComponent, TransformComponent, MeshComponent, LightCompoenent, MeshRendererCompoenent>;
 using Settings = xac::ecs::Settings<Components>;
 
-}  // namespace nanoR
+} // namespace nanoR
