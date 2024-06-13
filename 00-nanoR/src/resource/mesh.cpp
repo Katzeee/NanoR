@@ -4,7 +4,7 @@
 
 namespace nanoR {
 
-auto Mesh::GetVertexBuffer() -> std::shared_ptr<RHIBuffer> {
+auto SubMesh::GetVertexBuffer() -> std::shared_ptr<RHIBuffer> {
   const auto &rhi = GlobalContext::Instance().rhi;
   // caculate the stride of vertex data
   auto stride = GetAttributesStride();
@@ -15,7 +15,7 @@ auto Mesh::GetVertexBuffer() -> std::shared_ptr<RHIBuffer> {
   return rhi->CreateBuffer(desc, info);
 }
 
-auto Mesh::GetIndexBuffer() -> std::shared_ptr<RHIBuffer> {
+auto SubMesh::GetIndexBuffer() -> std::shared_ptr<RHIBuffer> {
   const auto &rhi = GlobalContext::Instance().rhi;
   uint32_t size = sizeof(uint32_t) * indices_.size();
   RHIBufferDesc desc{.size = size, .usage = EBufferUsage::INDEX};
@@ -23,7 +23,7 @@ auto Mesh::GetIndexBuffer() -> std::shared_ptr<RHIBuffer> {
   return rhi->CreateBuffer(desc, info);
 }
 
-constexpr auto Mesh::GetAttributesStride() -> uint32_t {
+constexpr auto SubMesh::GetAttributesStride() -> uint32_t {
   return sizeof(Vertex);
 }
 } // namespace nanoR

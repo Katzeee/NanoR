@@ -1,7 +1,7 @@
 #pragma once
 #include "nanorpch.h"
+#include "resource/mesh.h"
 #include "resource/resource.h"
-#include "scene/entity.hpp"
 
 namespace nanoR {
 class AssetLoader {
@@ -10,7 +10,7 @@ public:
 
 private:
   static auto LoadModelInternal(const aiNode *ai_node, const aiScene *ai_scene, Resource &resource) -> void;
-  static auto ParseMeshNode(const aiMesh *ai_mesh, const aiScene *ai_scene) -> Mesh;
+  static auto ParseMeshNode(const aiMesh *ai_mesh, const aiScene *ai_scene) -> SubMesh;
 
   // template <typename T>
   // static auto FillMeshVertexAttr(Mesh &mesh, unsigned int count, T &attr_data, VertexAttributeType type) {

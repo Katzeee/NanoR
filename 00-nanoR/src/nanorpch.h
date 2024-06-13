@@ -23,6 +23,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <set>
 #include <sstream>
@@ -30,6 +31,7 @@
 #include <unordered_set>
 #include <variant>
 #include <vector>
+
 
 #include "../3rdparty/stb_image.h"
 #include "logger/logger.h"

@@ -20,10 +20,10 @@ struct NameComponent {
 struct TransformComponent {
   glm::vec3 position{0.0f, 0.0f, 0.0f};
   // glm::quat rotation;
-  glm::vec3 rotation;
+  glm::vec3 rotation{0.0f, 0.0f, 0.0f};
   glm::vec3 scale{1.0f, 1.0f, 1.0f};
 
-  TransformComponent *parent;
+  TransformComponent *parent = nullptr;
   std::vector<TransformComponent *> children;
   std::variant<Entity *, Resource *> owner;
 

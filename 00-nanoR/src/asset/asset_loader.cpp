@@ -24,12 +24,13 @@ auto AssetLoader::LoadModelFromFile(std::string_view path) -> Resource {
 
 auto AssetLoader::LoadModelInternal(const aiNode *ai_node, const aiScene *ai_scene, Resource &resource) -> void {
   if (ai_node->mNumMeshes > 0) {
-    resource.AddComponent<MeshComponent>();
+    auto &mesh = resource.AddComponent<MeshComponent>()->mesh;
+    mesh = std::make_shared<Mesh>();
     // Process sub meshes
     for (auto i = 0; i < ai_node->mNumMeshes; i++) {
       // scene->mMeshes stores real meshes, node->mMeshes stores indices to them
       aiMesh *ai_mesh = ai_scene->mMeshes[ai_node->mMeshes[i]];
-      // meshes.emplace_back(ParseMeshNode(mesh, ai_scene));
+      mesh->submeshes_.emplace_back(ParseMeshNode(ai_mesh, ai_scene));
     }
   }
 
@@ -42,12 +43,29 @@ auto AssetLoader::LoadModelInternal(const aiNode *ai_node, const aiScene *ai_sce
   }
 }
 
-// auto AssetLoader::ParseMeshNode(const aiMesh *ai_mesh, const aiScene *ai_scene) -> Mesh {
-// Mesh mesh;
-// FillMeshVertexAttr(mesh, ai_mesh->mNumVertices, ai_mesh->mVertices, VertexAttributeType::POSITION);
-// FillMeshVertexAttr(mesh, ai_mesh->mNumVertices, ai_mesh->mNormals, VertexAttributeType::NORMAL);
-// FillMeshVertexAttr(mesh, ai_mesh->mNumVertices, ai_mesh->mTextureCoords[0], VertexAttributeType::UV0);
-// return mesh;
-// }
+auto AssetLoader::ParseMeshNode(const aiMesh *ai_mesh, const aiScene *ai_scene) -> SubMesh {
+  SubMesh submesh;
+  for (auto i = 0; i < ai_mesh->mNumVertices; i++) {
+    Vertex vertex;
+    auto &position = ai_mesh->mVertices[i];
+    vertex.position = glm::vec3(position.x, position.y, position.z);
+    auto &normal = ai_mesh->mNormals[i];
+    vertex.normal = glm::vec3(normal.x, normal.y, normal.z);
+    if (ai_mesh->mTangents) {
+      auto &tangent = ai_mesh->mTangents[i];
+      vertex.tangent = glm::vec3(tangent.x, tangent.y, tangent.z);
+    }
+    // TODO: UV3 and more
+    for (int j = 0; j < 2; ++j) {
+      if (ai_mesh->mTextureCoords[j]) {
+        auto &uv = ai_mesh->mTextureCoords[j][i];
+        // TODO: UV maya be a 1D or 3D vector, check ai_mesh->mNumUVComponents
+        vertex.uv[j] = glm::vec2(uv.x, uv.y);
+      }
+    }
+    submesh.vertices_.emplace_back(std::move(vertex));
+  }
+  return submesh;
+}
 
 } // namespace nanoR
