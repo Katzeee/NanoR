@@ -1,15 +1,18 @@
 #pragma once
 #include "nanorpch.h"
 #include "resource/mesh.h"
-#include "resource/resource.h"
 
 namespace nanoR {
+
+class Model;
+class ModelPart;
+
 class AssetLoader {
 public:
-  static auto LoadModelFromFile(std::string_view path) -> Resource;
+  static auto LoadModelFromFile(std::string_view path) -> Model;
 
 private:
-  static auto LoadModelInternal(const aiNode *ai_node, const aiScene *ai_scene, Resource &resource) -> void;
+  static auto LoadModelInternal(const aiNode *ai_node, const aiScene *ai_scene, ModelPart &model_part) -> void;
   static auto ParseMeshNode(const aiMesh *ai_mesh, const aiScene *ai_scene) -> SubMesh;
 
   // template <typename T>

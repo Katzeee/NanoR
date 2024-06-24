@@ -1,7 +1,6 @@
 #include "scene.hpp"
 #include "asset/asset_loader.h"
 
-
 namespace nanoR {
 
 // HINT: not a template function but defined in tpp means will be include into other cpps, so use inline
@@ -27,6 +26,10 @@ auto Scene::CreatePointLight() -> Entity {
 auto Scene::CreateCube() -> Entity {
   auto cube_model = AssetLoader::LoadModelFromFile("../resources/models/Cube/cube.obj");
   auto cube_go = CreateEntity();
+
+  // *cube_go.GetComponenet<NameComponent>() = *cube_model.GetComponent<NameComponent>();
+  // *cube_go.GetComponenet<TransformComponent>() = *cube_model.GetComponent<TransformComponent>();
+
   // auto cube_mesh = CreateMesh(cube_mesh_data.meshes_.at(0));
   // auto c_name = GetComponent<NameComponent>(cube_go);
   // c_name->name = "Cube";

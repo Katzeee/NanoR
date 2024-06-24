@@ -25,7 +25,14 @@ struct TransformComponent {
 
   TransformComponent *parent = nullptr;
   std::vector<TransformComponent *> children;
-  std::variant<Entity *, Resource *> owner;
+  std::any owner;
+
+  TransformComponent() = default;
+  TransformComponent(const TransformComponent &rhs) {
+    position = rhs.position;
+    rotation = rhs.rotation;
+    scale = rhs.scale;
+  }
 
   auto GetModelMatrix() const -> glm::mat4 {
     auto model = glm::mat4{1};
