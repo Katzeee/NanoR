@@ -1,5 +1,6 @@
 #include "scene.hpp"
 #include "asset/asset_loader.h"
+#include "resource/model.h"
 
 namespace nanoR {
 
@@ -24,20 +25,10 @@ auto Scene::CreatePointLight() -> Entity {
 }
 
 auto Scene::CreateCube() -> Entity {
+  // auto cube_model = AssetLoader::LoadModelFromFile("../resources/models/Cube/cube.obj");
   auto cube_model = AssetLoader::LoadModelFromFile("../resources/models/Cube/cube.obj");
-  auto cube_go = CreateEntity();
-
-  // *cube_go.GetComponenet<NameComponent>() = *cube_model.GetComponent<NameComponent>();
-  // *cube_go.GetComponenet<TransformComponent>() = *cube_model.GetComponent<TransformComponent>();
-
-  // auto cube_mesh = CreateMesh(cube_mesh_data.meshes_.at(0));
-  // auto c_name = GetComponent<NameComponent>(cube_go);
-  // c_name->name = "Cube";
-  // auto c_mesh = cube_go.AddComponent<MeshComponent>();
   // // TODO: get from resource manager
-  // c_mesh->mesh = std::make_shared<Mesh>(cube_mesh[0]);
-  // auto c_mesh_renderer = cube_go.AddComponent<MeshRendererCompoenent>();
-  // c_mesh_renderer->materials.emplace_back(std::make_shared<Material>());
+  auto cube_go = cube_model.ToEntity(this);
   return cube_go;
 }
 

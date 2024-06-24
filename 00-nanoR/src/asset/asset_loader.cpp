@@ -1,4 +1,5 @@
 #include "asset_loader.h"
+#include "resource/mesh.h"
 #include "resource/model.h"
 
 namespace nanoR {

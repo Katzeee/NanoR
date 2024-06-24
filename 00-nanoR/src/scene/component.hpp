@@ -28,11 +28,6 @@ struct TransformComponent {
   std::any owner;
 
   TransformComponent() = default;
-  TransformComponent(const TransformComponent &rhs) {
-    position = rhs.position;
-    rotation = rhs.rotation;
-    scale = rhs.scale;
-  }
 
   auto GetModelMatrix() const -> glm::mat4 {
     auto model = glm::mat4{1};
@@ -56,12 +51,12 @@ struct LightCompoenent {
   std::shared_ptr<Light> light;
 };
 
-struct MeshRendererCompoenent {
+struct MeshRendererComponent {
   std::vector<std::shared_ptr<Material>> materials;
 };
 
 using Components =
-    xac::mpl::type_list<NameComponent, TransformComponent, MeshComponent, LightCompoenent, MeshRendererCompoenent>;
+    xac::mpl::type_list<NameComponent, TransformComponent, MeshComponent, LightCompoenent, MeshRendererComponent>;
 using Settings = xac::ecs::Settings<Components>;
 
 } // namespace nanoR

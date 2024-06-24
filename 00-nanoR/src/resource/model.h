@@ -1,4 +1,5 @@
 #pragma once
+
 #include "resource.h"
 #include "scene/component.hpp"
 
@@ -18,13 +19,20 @@ private:
   MeshComponent mesh_;
 };
 
+class Entity;
+class Scene;
+
 class Model : Resource {
 public:
   friend class AssetLoader;
   Model(std::string_view path)
       : Resource(path) {}
 
+  auto ToEntity(Scene *scene) -> Entity;
+
 private:
+  auto ToEntityInner(Scene *scene, ModelPart *node, Entity &parent) -> TransformComponent *;
+
   ModelPart root_;
 };
 

@@ -4,6 +4,11 @@
 
 namespace nanoR {
 
+SubMesh::SubMesh(const SubMesh &rhs) {
+  vertices_ = rhs.vertices_;
+  indices_ = rhs.indices_;
+}
+
 auto SubMesh::GetVertexBuffer() -> std::shared_ptr<RHIBuffer> {
   const auto &rhi = GlobalContext::Instance().rhi;
   // caculate the stride of vertex data

@@ -1,11 +1,11 @@
 #pragma once
 #include "nanorpch.h"
-#include "resource/mesh.h"
 
 namespace nanoR {
 
 class Model;
 class ModelPart;
+class SubMesh;
 
 class AssetLoader {
 public:

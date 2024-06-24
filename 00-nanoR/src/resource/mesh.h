@@ -14,6 +14,8 @@ struct Vertex {
 class SubMesh {
 public:
   friend class AssetLoader;
+  SubMesh() = default;
+  SubMesh(const SubMesh &rhs);
   // using VertexAttributeData = std::variant<std::vector<glm::vec2>, std::vector<glm::vec3>>;
   auto GetVertexBuffer() -> std::shared_ptr<RHIBuffer>;
   auto GetIndexBuffer() -> std::shared_ptr<RHIBuffer>;

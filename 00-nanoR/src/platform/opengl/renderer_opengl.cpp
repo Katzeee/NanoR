@@ -54,7 +54,7 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   for (auto &&[c_transform, c_mesh, c_mesh_renderer] :
-      scene->View<const TransformComponent, const MeshComponent, const MeshRendererCompoenent>()) {
+      scene->View<const TransformComponent, const MeshComponent, const MeshRendererComponent>()) {
     // TODO: multiple materials
     auto shader = GlobalContext::Instance().resource_manager->GetShader(c_mesh_renderer.materials[0]->GetName());
     auto model = c_transform.GetModelMatrix();

@@ -238,7 +238,7 @@ auto UILayer::Inspector() -> void {
     }
   }
   {
-    auto c_mesh_renderer = selected_entity_.GetComponenet<MeshRendererCompoenent>();
+    auto c_mesh_renderer = selected_entity_.GetComponenet<MeshRendererComponent>();
     if (c_mesh_renderer.get()) {
       auto& c_materials = c_mesh_renderer->materials;
       if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
