@@ -6,8 +6,9 @@
 #include "nanor.h"
 
 class EditorLayer : public nanoR::Layer {
- public:
-  EditorLayer(std::string name) : Layer(name) {
+public:
+  EditorLayer(std::string name)
+      : Layer(name) {
     scene_ = nanoR::GlobalContext::Instance().scene;
     main_camera_ = nanoR::GlobalContext::Instance().main_camera.get();
   }
@@ -29,22 +30,22 @@ class EditorLayer : public nanoR::Layer {
 
   auto Tick(uint64_t delta_time) -> void override {
     main_camera_->Tick(delta_time);
-    auto* fbo = nanoR::GlobalContext::Instance().ui_layer->GetSceneFramebuffer();
+    auto fbo = nanoR::GlobalContext::Instance().ui_layer->GetSceneFramebuffer();
     nanoR::GlobalContext::Instance().renderer->Render(&rhi_, scene_.get(), main_camera_, fbo);
   }
 
-  auto OnEvent(const std::shared_ptr<nanoR::Event>& event) -> bool override {
+  auto OnEvent(const std::shared_ptr<nanoR::Event> &event) -> bool override {
     return true;
   }
 
- private:
+private:
   std::shared_ptr<nanoR::Scene> scene_;
   nanoR::RHIOpenGL4 rhi_;
-  nanoR::PrespCamera* main_camera_;
+  nanoR::PrespCamera *main_camera_;
 };
 
 class Sandbox : public nanoR::ApplicationOpenGL {
- public:
+public:
   Sandbox() = default;
 };
 

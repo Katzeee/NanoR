@@ -17,10 +17,10 @@ auto UILayer::OnAttach() -> void {
   CreateSceneFramebuffer();
 
   ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
+  ImGuiIO &io = ImGui::GetIO();
   (void)io;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-  auto window = static_cast<GLFWwindow*>(GlobalContext::Instance().window->GetRawWindow());
+  auto window = static_cast<GLFWwindow *>(GlobalContext::Instance().window->GetRawWindow());
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 450 core");
   ImGui::StyleColorsDark();
@@ -50,8 +50,8 @@ auto UILayer::CreateSceneFramebuffer() -> void {
   rhi_->AttachTexture(attach_info, scene_framebuffer_.get(), scene_depth_attachment_.get());
 }
 
-auto UILayer::GetSceneFramebuffer() -> RHIFramebuffer* {
-  return scene_framebuffer_.get();
+auto UILayer::GetSceneFramebuffer() -> const std::shared_ptr<RHIFramebuffer> & {
+  return scene_framebuffer_;
 }
 
 auto UILayer::OnDetach() -> void {
@@ -70,7 +70,7 @@ auto UILayer::Tick(uint64_t delta_time) -> void {
   End();
 }
 
-auto UILayer::OnEvent(std::shared_ptr<Event> const& event) -> bool {
+auto UILayer::OnEvent(std::shared_ptr<Event> const &event) -> bool {
   return passthough_event_;
 }
 
@@ -91,7 +91,7 @@ auto UILayer::DockSpace() -> void {
 
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
   if (opt_fullscreen) {
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
@@ -102,18 +102,20 @@ auto UILayer::DockSpace() -> void {
     window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
   }
 
-  if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) window_flags |= ImGuiWindowFlags_NoBackground;
+  if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+    window_flags |= ImGuiWindowFlags_NoBackground;
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
   ImGui::PopStyleVar();
 
-  if (opt_fullscreen) ImGui::PopStyleVar(2);
+  if (opt_fullscreen)
+    ImGui::PopStyleVar(2);
 
   // DockSpace
-  ImGuiIO& io = ImGui::GetIO();
+  ImGuiIO &io = ImGui::GetIO();
   io.ConfigWindowsMoveFromTitleBarOnly = true;
-  ImGuiStyle& style = ImGui::GetStyle();
+  ImGuiStyle &style = ImGui::GetStyle();
   float minWinSizeX = style.WindowMinSize.x;
   style.WindowMinSize.x = 370.0f;
   if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
@@ -152,9 +154,8 @@ auto UILayer::Scene() -> void {
     GlobalContext::Instance().main_camera->SetAspect(scene_size.x / scene_size.y);
   }
   ImGui::Image(
-      reinterpret_cast<void*>((dynamic_cast<nanoR::RHITextureOpenGL*>(scene_color_attachment_.get())->id)), scene_size,
-      {0, 1}, {1, 0}
-  );
+      reinterpret_cast<void *>((dynamic_cast<nanoR::RHITextureOpenGL *>(scene_color_attachment_.get())->id)), scene_size,
+      {0, 1}, {1, 0});
   ImGui::End();
 }
 
@@ -178,13 +179,13 @@ auto UILayer::Hierarchy() -> void {
   ImGui::Begin("Hierarchy");
   if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen)) {
     static int selected = -1;
-    GlobalContext::Instance().scene->Each([&](Entity& entity, uint32_t i) {
+    GlobalContext::Instance().scene->Each([&](Entity &entity, uint32_t i) {
       auto c_name = entity.GetComponenet<NameComponent>();
       auto node_flags = base_flags | ImGuiTreeNodeFlags_Leaf;
       if (selected == i) {
         node_flags |= ImGuiTreeNodeFlags_Selected;
       }
-      bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "%s", c_name->name.c_str());
+      bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)i, node_flags, "%s", c_name->name.c_str());
 
       if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
         selected = i;
@@ -240,15 +241,15 @@ auto UILayer::Inspector() -> void {
   {
     auto c_mesh_renderer = selected_entity_.GetComponenet<MeshRendererComponent>();
     if (c_mesh_renderer.get()) {
-      auto& c_materials = c_mesh_renderer->materials;
+      auto &c_materials = c_mesh_renderer->materials;
       if (ImGui::TreeNodeEx("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::TreeNodeEx("Material", ImGuiTreeNodeFlags_DefaultOpen)) {
           for (auto i = 0; i < c_materials.size(); ++i) {
             ImGui::Text("%d. %s", i + 1, c_materials[i]->GetName().data());
-            for (auto& ubo_desc : c_materials[i]->GetUniformDescs()) {
-              for (auto& var : ubo_desc.second.vars) {
+            for (auto &ubo_desc : c_materials[i]->GetUniformDescs()) {
+              for (auto &var : ubo_desc.second.vars) {
                 std::visit(
-                    [&](auto&& arg) {
+                    [&](auto &&arg) {
                       using T = std::decay_t<decltype(arg)>;
                       // auto* arg_p = std::get_if<T>(&uniform.second.value);
                       if constexpr (std::is_same_v<T, int>) {
@@ -260,8 +261,7 @@ auto UILayer::Inspector() -> void {
                         ImGui::ColorEdit4(var.first.c_str(), glm::value_ptr(arg));
                       }
                     },
-                    var.second.value
-                );
+                    var.second.value);
               }
             }
             // TODO: opengl
@@ -284,4 +284,4 @@ auto UILayer::End() -> void {
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-}  // namespace nanoR
+} // namespace nanoR

@@ -31,4 +31,8 @@ auto SubMesh::GetIndexBuffer() -> std::shared_ptr<RHIBuffer> {
 constexpr auto SubMesh::GetAttributesStride() -> uint32_t {
   return sizeof(Vertex);
 }
+
+auto Mesh::GetSubMeshes() -> std::vector<SubMesh> & {
+  return submeshes_;
+}
 } // namespace nanoR

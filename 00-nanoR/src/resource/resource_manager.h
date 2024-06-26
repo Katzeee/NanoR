@@ -7,7 +7,7 @@
 namespace nanoR {
 
 class ResourceManager {
- public:
+public:
   ResourceManager();
   auto Init() -> void;
   auto GetShader(std::string_view name) -> std::shared_ptr<RHIShaderProgram>;
@@ -16,14 +16,14 @@ class ResourceManager {
   static auto GetQuadMeshData() -> MeshData;
   static auto GetSpereMeshData() -> MeshData;
 
-//  private:
+  //  private:
   static auto ReadTextFromFile(char const *file_path) -> std::string;
   // Load shader from file
   auto LoadShader(std::string_view name, char const *vs_path, char const *fs_path) -> void;
   // Load texture from file
   auto LoadTexture(std::string_view name, std::string_view file_path) -> void;
 
- private:
+private:
   std::unordered_map<std::string, std::shared_ptr<RHIShaderProgram>> shaders_;
   std::unordered_map<std::string, std::shared_ptr<RHITexture>> textures_;
   // std::unordered_map<std::string, >
@@ -148,4 +148,4 @@ class ResourceManager {
 //   }
 // };
 
-}  // namespace nanoR
+} // namespace nanoR

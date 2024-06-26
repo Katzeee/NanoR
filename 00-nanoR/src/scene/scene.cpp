@@ -1,5 +1,6 @@
 #include "scene.hpp"
 #include "asset/asset_loader.h"
+#include "global/global_context.h"
 #include "resource/model.h"
 
 namespace nanoR {
@@ -29,6 +30,8 @@ auto Scene::CreateCube() -> Entity {
   auto cube_model = AssetLoader::LoadModelFromFile("../resources/models/Cube/cube.obj");
   // // TODO: get from resource manager
   auto cube_go = cube_model.ToEntity(this);
+
+  cube_go.GetComponenet<MeshRendererComponent>()->materials.emplace_back(std::make_shared<Material>("unlit"));
   return cube_go;
 }
 

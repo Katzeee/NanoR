@@ -48,6 +48,7 @@ auto AssetLoader::LoadModelInternal(const aiNode *ai_node, const aiScene *ai_sce
 
 auto AssetLoader::ParseMeshNode(const aiMesh *ai_mesh, const aiScene *ai_scene) -> SubMesh {
   SubMesh submesh;
+  submesh.vertices_.reserve(ai_mesh->mNumVertices);
   for (auto i = 0; i < ai_mesh->mNumVertices; i++) {
     Vertex vertex;
     auto &position = ai_mesh->mVertices[i];
@@ -59,14 +60,24 @@ auto AssetLoader::ParseMeshNode(const aiMesh *ai_mesh, const aiScene *ai_scene) 
       vertex.tangent = glm::vec3(tangent.x, tangent.y, tangent.z);
     }
     // TODO: UV3 and more
-    for (int j = 0; j < 2; ++j) {
-      if (ai_mesh->mTextureCoords[j]) {
-        auto &uv = ai_mesh->mTextureCoords[j][i];
-        // TODO: UV may be a 1D or 3D vector, check ai_mesh->mNumUVComponents
-        vertex.uv[j] = glm::vec2(uv.x, uv.y);
-      }
-    }
+#define REPEAT_COMMAND(X)                     \
+  if (ai_mesh->mTextureCoords[X]) {           \
+    auto &uv = ai_mesh->mTextureCoords[X][i]; \
+    vertex.uv##X = glm::vec2(uv.x, uv.y);     \
+  }
+    // TODO: UV may be a 1D or 3D vector, check ai_mesh->mNumUVComponents
+    REPEAT_COMMAND(0)
+    REPEAT_COMMAND(1)
+#undef REPEAT_COMMAND
     submesh.vertices_.emplace_back(std::move(vertex));
+  }
+  // load indices
+  submesh.indices_.reserve(ai_mesh->mNumFaces * 3);
+  for (auto i = 0; i < ai_mesh->mNumFaces; ++i) {
+    auto face = ai_mesh->mFaces[i];
+    for (auto j = 0; j < face.mNumIndices; j++) {
+      submesh.indices_.emplace_back(face.mIndices[j]);
+    }
   }
   return submesh;
 }

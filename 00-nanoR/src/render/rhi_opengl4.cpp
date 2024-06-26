@@ -8,6 +8,7 @@
 #include <spirv_glsl.hpp>
 
 #include "nanorpch.h"
+#include "resource/mesh.h"
 #include "rhi_type_opengl.h"
 
 namespace nanoR {
@@ -46,9 +47,34 @@ auto RHIOpenGL4::UpdateBufferData(const RHIUpdateBufferDataInfo &info, const std
 }
 
 void RHIOpenGL4::DrawIndexed(const std::shared_ptr<RHIBuffer> &vertex_buffer, const std::shared_ptr<RHIBuffer> &index_buffer,
-    RHIShaderProgram const *shader_program, std::optional<RHIFramebuffer const *> framebuffer) {
-  unsigned int VAO;
-  OpenGLCheck(glCreateVertexArrays(1, &VAO));
+    const std::shared_ptr<RHIShaderProgram> shader_program, std::shared_ptr<RHIFramebuffer> framebuffer) {
+  auto vao = std::make_shared<RHIVertexArrayOpenGL>();
+  OpenGLCheck(glCreateVertexArrays(1, &vao->id));
+  // bind vertex buffer
+  RHIBindVertexBufferInfoOpenGL bind_vertex_buffer_info{};
+  bind_vertex_buffer_info.bind_index = 0;
+  bind_vertex_buffer_info.vertex_format.emplace_back(0, 3, offsetof(Vertex, position));
+  bind_vertex_buffer_info.vertex_format.emplace_back(1, 3, offsetof(Vertex, normal));
+  bind_vertex_buffer_info.vertex_format.emplace_back(2, 3, offsetof(Vertex, tangent));
+  bind_vertex_buffer_info.vertex_format.emplace_back(3, 2, offsetof(Vertex, uv0));
+  bind_vertex_buffer_info.vertex_format.emplace_back(4, 2, offsetof(Vertex, uv1));
+  bind_vertex_buffer_info.normalized = GL_FALSE;
+  bind_vertex_buffer_info.offset = 0;
+  bind_vertex_buffer_info.stride = sizeof(Vertex);
+  bind_vertex_buffer_info.type = GL_FLOAT;
+  BindVertexBuffer(bind_vertex_buffer_info, vao, vertex_buffer);
+  // bind index buffer
+  RHIBindIndexBufferInfoOpenGL bind_index_buffer_info;
+  bind_index_buffer_info.count = index_buffer->desc.size;
+  BindIndexBuffer(bind_index_buffer_info, vao, index_buffer);
+  // draw
+  OpenGLCheck(glBindFramebuffer(GL_FRAMEBUFFER, dynamic_cast<RHIFramebufferOpenGL *>(framebuffer.get())->id));
+  OpenGLCheck(glUseProgram(dynamic_cast<RHIShaderProgramOpenGL const *>(shader_program.get())->id));
+  OpenGLCheck(glBindVertexArray(vao->id));
+  OpenGLCheck(glDrawElements(GL_TRIANGLES, vao->count, GL_UNSIGNED_INT, nullptr));
+  OpenGLCheck(glBindVertexArray(0));
+  OpenGLCheck(glUseProgram(0));
+  OpenGLCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
   // OpenGLCheck(glVertexArrayVertexBuffer(VAO, 0, dynamic_cast<RHIBufferOpenGL *>(vertex_buffer.get())->id, 0, ))
   // OpenGLCheck(glEnableVertexArrayAttrib(VAO, ))
 }
@@ -60,34 +86,34 @@ auto RHIOpenGL4::BindUniformBuffer(const RHIBindUniformBufferInfoOpenGL &bind_un
   return OpenGLCheckError();
 }
 
-auto RHIOpenGL4::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) -> bool {
-  auto *vertex_array_opengl = new RHIVertexArrayOpenGL{};
-  glCreateVertexArrays(1, &vertex_array_opengl->id);
-  vertex_array.reset(vertex_array_opengl);
-  return OpenGLCheckError();
-}
+// auto RHIOpenGL4::CreateVertexArray(std::shared_ptr<RHIVertexArray> &vertex_array) -> bool {
+//   auto *vertex_array_opengl = new RHIVertexArrayOpenGL{};
+//   glCreateVertexArrays(1, &vertex_array_opengl->id);
+//   vertex_array.reset(vertex_array_opengl);
+//   return OpenGLCheckError();
+// }
 
 auto RHIOpenGL4::BindVertexBuffer(
-    const RHIBindVertexBufferInfo &bind_vertex_buffer_info, std::shared_ptr<RHIVertexArray> vertex_array,
+    const RHIBindVertexBufferInfo &bind_vertex_buffer_info, std::shared_ptr<RHIVertexArrayOpenGL> vertex_array,
     std::shared_ptr<RHIBuffer> vertex_buffer) -> bool {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(vertex_buffer.get());
   const auto &[bind_index, type, normalized, offset, stride, vertex_format] =
       dynamic_cast<const RHIBindVertexBufferInfoOpenGL &>(bind_vertex_buffer_info);
   // Bind vbo to vao via binding index
-  glVertexArrayVertexBuffer(vertex_array_opengl->id, bind_index, buffer_opengl->id, offset, stride);
+  OpenGLCheck(glVertexArrayVertexBuffer(vertex_array_opengl->id, bind_index, buffer_opengl->id, offset, stride));
   for (auto &&[attr_index, attr_size, reletive_offset] : vertex_format) {
     // Enable the attribute.
-    glEnableVertexArrayAttrib(vertex_array_opengl->id, attr_index);
+    OpenGLCheck(glEnableVertexArrayAttrib(vertex_array_opengl->id, attr_index));
     // Tell OpenGL what the format of the attribute is.
-    glVertexArrayAttribFormat(vertex_array_opengl->id, attr_index, attr_size, type, normalized, reletive_offset);
+    OpenGLCheck(glVertexArrayAttribFormat(vertex_array_opengl->id, attr_index, attr_size, type, normalized, reletive_offset));
     // Tell OpenGL which vertex buffer binding to use for this attribute.
-    glVertexArrayAttribBinding(vertex_array_opengl->id, attr_index, bind_index);
+    OpenGLCheck(glVertexArrayAttribBinding(vertex_array_opengl->id, attr_index, bind_index));
   }
   return OpenGLCheckError();
 }
 auto RHIOpenGL4::BindIndexBuffer(
-    const RHIBindIndexBufferInfo &bind_index_buffer_info, std::shared_ptr<RHIVertexArray> vertex_array,
+    const RHIBindIndexBufferInfo &bind_index_buffer_info, std::shared_ptr<RHIVertexArrayOpenGL> vertex_array,
     std::shared_ptr<RHIBuffer> index_buffer) -> bool {
   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL *>(vertex_array.get());
   auto *buffer_opengl = dynamic_cast<RHIBufferOpenGL *>(index_buffer.get());
@@ -295,23 +321,23 @@ auto RHIOpenGL4::AttachTexture(
 // auto RHIOpenGL::AttachStencilAttachment();
 // auto RHIOpenGL::AttachDepthStencilAttachment();
 
-auto RHIOpenGL4::Draw(
-    RHIVertexArray const *vertex_array, RHIShaderProgram const *shader_program,
-    std::optional<RHIFramebuffer const *> framebuffer) -> bool {
-  OpenGLCheckError();
-  if (framebuffer.has_value()) {
-    auto fbo = dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer.value())->id;
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    OpenGLCheckError();
-  }
-  glUseProgram(dynamic_cast<RHIShaderProgramOpenGL const *>(shader_program)->id);
-  auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL const *>(vertex_array);
-  glBindVertexArray(vertex_array_opengl->id);
-  glDrawElements(GL_TRIANGLES, vertex_array_opengl->count, GL_UNSIGNED_INT, nullptr);
-  glBindVertexArray(0);
-  glUseProgram(0);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  return OpenGLCheckError();
-}
+// auto RHIOpenGL4::Draw(
+//     RHIVertexArray const *vertex_array, RHIShaderProgram const *shader_program,
+//     std::optional<RHIFramebuffer const *> framebuffer) -> bool {
+//   OpenGLCheckError();
+//   if (framebuffer.has_value()) {
+//     auto fbo = dynamic_cast<RHIFramebufferOpenGL const *>(framebuffer.value())->id;
+//     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+//     OpenGLCheckError();
+//   }
+//   glUseProgram(dynamic_cast<RHIShaderProgramOpenGL const *>(shader_program)->id);
+//   auto *vertex_array_opengl = dynamic_cast<RHIVertexArrayOpenGL const *>(vertex_array);
+//   glBindVertexArray(vertex_array_opengl->id);
+//   glDrawElements(GL_TRIANGLES, vertex_array_opengl->count, GL_UNSIGNED_INT, nullptr);
+//   glBindVertexArray(0);
+//   glUseProgram(0);
+//   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//   return OpenGLCheckError();
+// }
 
 } // namespace nanoR

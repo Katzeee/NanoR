@@ -4,6 +4,7 @@
 #include "render/rhi.h"
 #include "render/rhi_opengl4.h"
 #include "render/rhi_type_opengl.h"
+#include "resource/mesh.h"
 #include "scene/scene.hpp"
 
 namespace nanoR {
@@ -45,11 +46,11 @@ auto RendererOpenGL::PrepareUniforms(RHI *rhi, Camera *camera) -> void {
   rhi->UpdateBufferData(update_buffer_data_info, ubo_engine_);
 }
 
-auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuffer *framebuffer) -> void {
+auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, const std::shared_ptr<RHIFramebuffer> framebuffer) -> void {
   PrepareUniforms(rhi, camera);
   RHIUpdateBufferDataInfo update_buffer_data_info;
 
-  glBindFramebuffer(GL_FRAMEBUFFER, dynamic_cast<RHIFramebufferOpenGL *>(framebuffer)->id);
+  glBindFramebuffer(GL_FRAMEBUFFER, dynamic_cast<RHIFramebufferOpenGL *>(framebuffer.get())->id);
   glClearColor(0.2, 0.2, 0.2, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -63,7 +64,9 @@ auto RendererOpenGL::Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuff
     update_buffer_data_info.size = sizeof(glm::mat4);
     RHIOpenGL4::Get(rhi)->UpdateBufferData(update_buffer_data_info, ubo_engine_);
     c_mesh_renderer.materials[0]->PrepareUniforms(rhi);
-    // rhi->Draw(c_mesh.mesh.get(), shader.get(), framebuffer);
+    auto &sub_meshes = c_mesh.mesh->GetSubMeshes();
+
+    rhi->DrawIndexed(sub_meshes[0].GetVertexBuffer(), sub_meshes[0].GetIndexBuffer(), shader, framebuffer);
   }
 
   // SECTION: Render lights

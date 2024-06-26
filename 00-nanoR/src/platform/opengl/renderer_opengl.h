@@ -9,12 +9,12 @@ class RHIFramebuffer;
 class RHIBuffer;
 
 class RendererOpenGL : public Renderer {
- public:
+public:
   explicit RendererOpenGL(RHI *rhi);
-  auto Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuffer *framebuffer) -> void override;
+  auto Render(RHI *rhi, Scene *scene, Camera *camera, std::shared_ptr<RHIFramebuffer> framebuffer) -> void override;
 
- private:
+private:
   auto PrepareUniforms(RHI *rhi, Camera *camera) -> void;
 };
 
-}  // namespace nanoR
+} // namespace nanoR

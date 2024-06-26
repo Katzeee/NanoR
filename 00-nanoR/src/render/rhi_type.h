@@ -27,10 +27,6 @@ struct RHIUpdateBufferDataInfo {
   uint16_t offset;
 };
 
-struct RHIVertexArray {
-  virtual ~RHIVertexArray() = default;
-};
-
 struct RHIBindVertexBufferInfo {
   virtual ~RHIBindVertexBufferInfo() = default;
 };

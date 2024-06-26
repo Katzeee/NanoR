@@ -1,15 +1,16 @@
 #pragma once
 #include "layer.h"
-#include "render/rhi_type_opengl.h"
 #include "render/rhi.h"
 #include "render/rhi_type.h"
+#include "render/rhi_type_opengl.h"
 #include "scene/entity.hpp"
 
 namespace nanoR {
 class Entity;
 class UILayer final : public Layer {
- public:
-  UILayer(std::string name) : Layer(name) {}
+public:
+  UILayer(std::string name)
+      : Layer(name) {}
   auto Tick(uint64_t delta_time) -> void override final;
   // auto TickUI() -> void override final {}
   auto SetBlockEvent(bool block) -> void {
@@ -18,10 +19,10 @@ class UILayer final : public Layer {
 
   auto OnAttach() -> void override;
   auto OnDetach() -> void override;
-  auto OnEvent(std::shared_ptr<Event> const& event) -> bool override;
-  auto GetSceneFramebuffer() -> RHIFramebuffer*;
+  auto OnEvent(std::shared_ptr<Event> const &event) -> bool override;
+  auto GetSceneFramebuffer() -> const std::shared_ptr<RHIFramebuffer> &;
 
- protected:
+protected:
   bool passthough_event_ = true;
   std::shared_ptr<RHIFramebuffer> scene_framebuffer_;
   RHITextureCreateInfoOpenGL scene_color_attachment_create_info_;
@@ -40,4 +41,4 @@ class UILayer final : public Layer {
   auto Inspector() -> void;
   auto End() -> void;
 };
-}  // namespace nanoR
+} // namespace nanoR

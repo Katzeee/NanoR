@@ -17,6 +17,7 @@ auto ResourceManager::Init() -> void {
   // LoadShader("pbr", "../nanoR/shader/common.vert.glsl", "../nanoR/shader/pbr.frag.glsl");
   LoadShader("ui", "../00-nanoR/shader/common.vert.glsl", "../00-nanoR/shader/test.frag.glsl");
   LoadShader("lit", "../00-nanoR/shader/common.vert.glsl", "../00-nanoR/shader/test.frag.glsl");
+  LoadShader("unlit", "../00-nanoR/shader/common.vert.glsl", "../00-nanoR/shader/unlit.frag.glsl");
   LoadTexture("white", "../resources/textures/white.png");
   LoadTexture("point-light", "../resources/textures/point-light.png");
 }

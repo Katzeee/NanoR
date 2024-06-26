@@ -8,7 +8,8 @@ struct Vertex {
   glm::vec3 position;
   glm::vec3 normal;
   glm::vec3 tangent;
-  glm::vec2 uv[2];
+  glm::vec2 uv0;
+  glm::vec2 uv1;
 };
 
 class SubMesh {
@@ -29,6 +30,7 @@ private:
 class Mesh {
 public:
   friend class AssetLoader;
+  auto GetSubMeshes() -> std::vector<SubMesh> &;
 
 private:
   std::vector<SubMesh> submeshes_;

@@ -16,8 +16,8 @@ struct RHIBufferOpenGL : public RHIBuffer {
   GLuint id;
 };
 
-struct RHIVertexArrayOpenGL : public RHIVertexArray {
-  ~RHIVertexArrayOpenGL() override {
+struct RHIVertexArrayOpenGL {
+  ~RHIVertexArrayOpenGL() {
     if (id != 0) {
       glDeleteVertexArrays(1, &id);
       id = 0;

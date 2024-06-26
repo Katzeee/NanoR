@@ -9,7 +9,7 @@ class RHIBuffer;
 
 class Renderer {
  public:
-  virtual auto Render(RHI *rhi, Scene *scene, Camera *camera, RHIFramebuffer *framebuffer) -> void = 0;
+  virtual auto Render(RHI *rhi, Scene *scene, Camera *camera, std::shared_ptr<RHIFramebuffer> framebuffer) -> void = 0;
   virtual ~Renderer() = default;
 
  protected:
